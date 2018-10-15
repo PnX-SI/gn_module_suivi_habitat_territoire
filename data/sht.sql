@@ -26,7 +26,7 @@ COMMENT ON TABLE pr_monitoring_habitat_territory.t_infos_site IS 'Extension de t
 CREATE TABLE cor_visit_taxons (
     id_cor_visite_taxons serial NOT NULL,
     id_base_visit integer NOT NULL,
-    cd_nom integer NOT NULL,
+    cd_nom integer NOT NULL
 );
 COMMENT ON TABLE pr_monitoring_habitat_territory.cor_visit_taxons IS 'Enregistrer la présence d\une espèce dans une maille définie lors d\une visite';
 
@@ -34,7 +34,7 @@ COMMENT ON TABLE pr_monitoring_habitat_territory.cor_visit_taxons IS 'Enregistre
 CREATE TABLE cor_visit_perturbation (
     id_base_visit integer NOT NULL,
     id_nomenclature_perturbation integer NOT NULL,
-    create_date timestamp without time zone NOT NULL,  
+    create_date timestamp without time zone NOT NULL
 );
 COMMENT ON TABLE pr_monitoring_habitat_territory.cor_visit_perturbation IS 'Enregistrer les perturbations constatées lors d\une visite';
 
@@ -42,7 +42,7 @@ COMMENT ON TABLE pr_monitoring_habitat_territory.cor_visit_perturbation IS 'Enre
 CREATE TABLE cor_habitat_taxon (
     id_cor_habitat_taxon serial NOT NULL,
     id_habitat integer NOT NULL,
-    cd_nom integer NOT NULL,
+    cd_nom integer NOT NULL
 );
 COMMENT ON TABLE pr_monitoring_habitat_territory.cor_visit_perturbation IS 'Enregistrer les taxons de chaque habitat';
 
@@ -76,7 +76,7 @@ ALTER TABLE ONLY cor_visit_taxons
     ADD CONSTRAINT fk_cor_visit_taxons_id_base_visit FOREIGN KEY (id_base_visit) REFERENCES gn_monitoring.t_base_visits (id_base_visit) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_visit_taxons
-    ADD CONSTRAINT fk_cor_visit_taxons_cd_nom FOREIGN KEY (cd_nom) REFERENCES taxonomy.taxref (cd_nom);
+    ADD CONSTRAINT fk_cor_visit_taxons_cd_nom FOREIGN KEY (cd_nom) REFERENCES taxonomie.taxref (cd_nom);
 
 
 ALTER TABLE ONLY cor_visit_perturbation 
