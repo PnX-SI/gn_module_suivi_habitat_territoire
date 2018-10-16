@@ -51,3 +51,8 @@ SELECT id_base_site, zh.cd_hab
 FROM gn_monitoring.t_base_sites bs
 JOIN pr_monitoring_habitat_territory.zh_tmp zp ON zh.id::character varying = bs.base_site_code;
 */
+
+-- insérer les données cor_habitat_taxon : liaison un taxon et son habitat
+INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
+VALUES (16265, 104123);
+
