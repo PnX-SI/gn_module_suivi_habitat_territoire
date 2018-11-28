@@ -1,0 +1,23 @@
+.inputSearch {
+    margin-top: 2px;
+    width: 120%;
+    height: 27px;
+    border: none;
+}
+
+.list-sft {
+    max-height: 94vh;
+    overflow-y: auto;
+    padding-bottom: 5px;
+}
+
+.searchZP {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    margin-right: 100px;
+}
+
+.box-shadow {
+    box-shadow: 4px 5px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
