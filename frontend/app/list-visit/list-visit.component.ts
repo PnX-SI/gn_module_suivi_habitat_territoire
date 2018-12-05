@@ -9,7 +9,7 @@ import { GeojsonComponent } from '@geonature_common/map/geojson/geojson.componen
 
 import { DataService } from '../services/data.service';
 import { StoreService } from '../services/store.service';
-
+import { ModuleConfig } from '../module.config';
 
 @Component({
   selector: 'pnx-list-visit',
@@ -30,13 +30,14 @@ export class ListVisitComponent implements OnInit {
     public mapListService: MapListService,
     public storeService: StoreService,
     private _location: Location,
-    public _api: DataService
-
+    public _api: DataService,
+    public activatedRoute: ActivatedRoute
   ) {}
 
-  ngOnInit() {  
+  ngOnInit() {
+    this.idSite = this.activatedRoute.snapshot.params['idSite'];
+
     this._api.getVisits({ id_base_site: this.idSite }).subscribe(data => {
-      console.log("data visits",data);
       data.forEach(visit => {
         let fullName;
         visit.observers.forEach(obs => {
@@ -45,8 +46,8 @@ export class ListVisitComponent implements OnInit {
         visit.observers = fullName;
         let pres = 0;
 
-        visit.cor_visit_taxons.forEach(maille => {
-          if (maille.cd_nom) {
+        visit.cor_visit_taxons.forEach(taxon => {
+          if (taxon.cd_nom) {
             pres += 1;
           } 
         });
@@ -57,6 +58,21 @@ export class ListVisitComponent implements OnInit {
       this.rows = data;
     });
   }
+
+  ngAfterViewInit() {
+    this.mapService.map.doubleClickZoom.disable();
+    const parametre = {
+      id_base_site: this.idSite,
+      id_application: ModuleConfig.id_application
+    };
+
+    this._api.getSites(parametre).subscribe(data => {
+      this.site = data;
+      this.geojson.currentGeoJson$.subscribe(currentLayer => {
+        this.mapService.map.fitBounds(currentLayer.getBounds());
+      });
+    });
+}
  
 
   onEachFeature(feature, layer) {
