@@ -15,9 +15,9 @@ from geonature.utils.utilssqlalchemy import (
     GenericQuery,
 )
 from geonature.utils.utilsgeometry import shapeserializable
-from geonature.core.gn_synthese.models import synthese_export_serialization
+#from geonature.core.gn_synthese.models import synthese_export_serialization
 from geonature.core.gn_monitoring.models import TBaseSites, TBaseVisits, corVisitObserver
-from geonature.core.taxonomie.models import Taxref
+# from geonature.core.taxonomie.models import Taxref
 from pypnnomenclature.models import TNomenclatures
 from geonature.core.users.models import TRoles
 
@@ -183,9 +183,9 @@ class CorHabitatTaxon(DB.Model):
 
     id_cor_habitat_taxon = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
     id_habitat = DB.Column(DB.ForeignKey('habitat.habref.cd_hab', onupdate='CASCADE'), nullable=False)
-    cd_nom = DB.Column(DB.Integer)
+    cd_nom = DB.Column(DB.Integer, nullable=False)
 
-    # taxref = DB.relationship('Taxref', primaryjoin='CorHabitatTaxon.cd_nom == Taxref.cd_nom', backref='cor_habitat_taxons')
+    #taxref = DB.relationship('Taxref', primaryjoin='CorHabitatTaxon.cd_nom == Taxref.cd_nom', backref='cor_habitat_taxons')
     habref = DB.relationship('Habref', primaryjoin='CorHabitatTaxon.id_habitat == Habref.cd_hab', backref='cor_habitat_taxons')
 
 
@@ -227,12 +227,13 @@ class TInfosSite(DB.Model):
     __tablename__ = 't_infos_site'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
-    id_infos_site = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    id_base_site = DB.Column(DB.ForeignKey('gn_monitoring.t_base_sites.id_base_site', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
-    cd_hab = DB.Column(DB.ForeignKey('habitat.habref.cd_hab', onupdate='CASCADE'), nullable=False)
+    id_infos_site = DB.Column(DB.Integer, primary_key=True)
+    id_base_site = DB.Column(DB.ForeignKey('gn_monitoring.t_base_sites.id_base_site'), nullable=False)
+    cd_hab = DB.Column(DB.ForeignKey('habitat.habref.cd_hab'), nullable=False)
 
-    habref = DB.relationship('Habref', primaryjoin='TInfosSite.cd_hab == Habref.cd_hab', backref='t_infos_sites')
-    t_base_site = DB.relationship('TBaseSite', primaryjoin='TInfosSite.id_base_site == TBaseSite.id_base_site', backref='t_infos_sites')
+    # habref = DB.relationship('Habref', primaryjoin='TInfosSite.cd_hab == Habref.cd_hab', backref='t_infos_sites')
+    #t_base_site = DB.relationship('TBaseSite', primaryjoin='TInfosSite.id_base_site == TBaseSite.id_base_site', backref='t_infos_sites')
+    t_base_site = DB.relationship('TBaseSite')
     geom = association_proxy('t_base_site', 'geom')
 
     def get_geofeature(self, recursif=True):
@@ -241,3 +242,17 @@ class TInfosSite(DB.Model):
             'id_infos_site',
             recursif
         )
+
+@serializable
+class Taxonomie(DB.Model):
+    __tablename__ = 'taxref'
+    __table_args__ = {
+        'schema': 'taxonomie',
+        'extend_existing': True
+    }
+
+    cd_nom = DB.Column(
+        DB.Integer,
+        primary_key=True
+    )
+    nom_complet = DB.Column(DB.Unicode)
