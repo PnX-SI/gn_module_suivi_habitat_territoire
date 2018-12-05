@@ -1,60 +1,68 @@
+<div id="cover-spin" *ngIf="!dataLoaded"></div>
 <div class="row row-0">
-
-    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm tab-container list-sft">
-        <h3> Sites </h3>
-        <div class="wrapper-filter">
-            <div id="blocSearch" class="row row-0 ">
-                <div class="searchZP">
-                    <small> Année de visite </small>
-                    <input type="number">
-                </div>
-            </div>
-            <div class="searchZP">
-                <small> Habitat </small>
-                <select class="form-control form-control-sm" name="monSelect" >
-                    <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
-                    <option [ngValue]=null> Tous </option>
-                </select>
-            </div>
-            <div class="searchZP">
-                <small> Organisme </small>
-                <select class="form-control form-control-sm" name="monSelect" >
-                    <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
-                    <option [ngValue]=null> Tous </option>
-                </select>
-            </div>
-            <div class="searchZP">
-                <small> Commune </small>
-                <select class="form-control form-control-sm" name="monSelect" >
-                    <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
-                    <option [ngValue]=null> Tous </option>
-                </select>
-            </div>
-        </div>
-        <div class="wrapper-datatable">
-            <ngx-datatable #table class="material" [rows]="filteredData" maxWidth="90" [headerHeight]="50" [footerHeight]="50" [rowHeight]="'auto'"
-            [columnMode]="'force'" [selected]="mapListService.selectedRow" [selectionType]="'single'" (select)="mapListService.onRowSelect($event)"
-            [rowClass]="mapListService.getRowClass" [offset]="mapListService.page.pageNumber" [limit]="mapListService.page.size"
-            [messages]="storeService.shtConfig.site_message">
-            <ngx-datatable-column *ngFor="let col of storeService.shtConfig.default_site_columns" [name]="col.name" [prop]="col.prop" [maxWidth]="col.width"> 
-            </ngx-datatable-column> 
-        
-                <ngx-datatable-column maxWidth="90">
-                    <ng-template let-row="row" ngx-datatable-cell-template>
-                        <button type="button" class="btn btn-info fa fa-eye" title="Visualiser">
-                        </button>
-                    </ng-template>
-                </ngx-datatable-column>
+    <div class="card col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm tab-container list-sht">
+        <div class="card-body">
+            <form class="wrapper wrapper-filter">
+                <fieldset>
+                    <legend> <h3>Consultation des Sites</h3> </legend>
+                    <div class="row">
+                        <div class="searchSite col">
+                            <small> Année de visite </small>
+                            <input type="number" class="form-control">
+                        </div>
+                        <div class="searchSite col">
+                            <small> Habitat </small>
+                            <select class="form-control form-control-sm" name="monSelect" >
+                                <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option [ngValue]=null> Tous </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="searchSite col">
+                            <small> Organisme </small>
+                            <select class="form-control form-control-sm" name="monSelect" >
+                                <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option [ngValue]=null> Tous </option>
+                            </select>
+                        </div>
+                        <div class="searchSite col">
+                            <small> Commune </small>
+                            <select class="form-control form-control-sm" name="monSelect" >
+                                <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option [ngValue]=null> Tous </option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+            <div class="wrapper wrapper-datatable">
+                <ngx-datatable #table class="material" [rows]="filteredData" maxWidth="90" [headerHeight]="50" [footerHeight]="50" [rowHeight]="'auto'"
+                [columnMode]="'force'" [selected]="mapListService.selectedRow" [selectionType]="'single'" (select)="mapListService.onRowSelect($event)"
+                [rowClass]="mapListService.getRowClass" [offset]="mapListService.page.pageNumber" [limit]="mapListService.page.size"
+                [messages]="storeService.shtConfig.site_message">
+                <ngx-datatable-column *ngFor="let col of storeService.shtConfig.default_site_columns" [name]="col.name" [prop]="col.prop" [maxWidth]="col.width"> 
+                </ngx-datatable-column> 
             
-            </ngx-datatable>
+                    <ngx-datatable-column maxWidth="90">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <button type="button" class="btn btn-outline-shadow btn-no-padding btn-ghost" (click)="onInfo(row.id_infos_site)" title="Visualiser/Editer">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                        </ng-template>
+                    </ngx-datatable-column>
+                
+                </ngx-datatable>
+            </div>
+
         </div>
     </div>
 
  
 
     <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm">
-        <pnx-map height="94vh" [center]="storeService.shtConfig.zoom_center" [zoom]="12">
-                <pnx-geojson [geojson]="sites">
+        <pnx-map height="94vh" [center]="storeService.shtConfig.zoom_center" [zoom]="storeService.shtConfig.zoom">
+                <pnx-geojson [onEachFeature]="onEachFeature.bind(this)" [geojson]="sites">
                 </pnx-geojson>
         </pnx-map>
     </div>

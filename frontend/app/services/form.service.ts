@@ -7,7 +7,7 @@ export class FormService {
 
   constructor(private _fb: FormBuilder) {}
 
-  initFormSFT(): FormGroup {
+  initFormSHT(): FormGroup {
     const formSuivi = this._fb.group({
       id_base_site: null,
       id_base_visit: null,

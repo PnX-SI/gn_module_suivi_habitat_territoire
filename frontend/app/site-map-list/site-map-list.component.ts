@@ -16,60 +16,65 @@ import { ModuleConfig } from '../module.config';
 export class SiteMapListComponent implements OnInit, AfterViewInit {
   public sites;
   public filteredData = [];
-  public columns = [
-    {
-     "name": "Identifiant",
-     "prop": "id_base_site",
-     "width": 90
-    },
-    {
-     "name": "Habitat",
-     "prop": "nom_habitat",
-     "width": 350
-    },
-    {
-     "name": "Nombre de visites",
-     "prop": "nb_visit",
-     "width": 120
-    },
-    {
-     "name": "Date de la derni\u00e8re visite",
-     "prop": "date_max",
-     "width": 160
-    },
-    {
-     "name": "Organisme",
-     "prop": "organisme",
-     "width": 200
-    }
-   ];
   public paramApp = {
+    id_application: ModuleConfig.id_application
   };
+  public tabCom = [];
+  public dataLoaded = false;
 
   constructor(
     public mapService: MapService,
     private _api: DataService,
     public storeService: StoreService,
-    public mapListService: MapListService
+    public mapListService: MapListService,
+    public router: Router
   ) {}
 
   ngOnInit() {
-    //TODO params
+    this.mapListService.idName = 'id_infos_site';
     this.onChargeList(this.paramApp);
   }
 
   ngAfterViewInit() {
     this.mapListService.enableMapListConnexion(this.mapService.getMap());
+
+    // FIXME: 404 id_commune ?
+    /*this._api
+    .getCommune(ModuleConfig.id_application, {
+      id_area_type: this.storeService.shtConfig.id_type_commune
+    })
+    .subscribe(info => {
+      info.forEach(com => {
+        this.tabCom.push(com.nom_commune);
+        this.tabCom.sort((a, b) => {
+          return a.localeCompare(b);
+        });
+      });
+    });*/
   }
   
-  //TODO params
   onChargeList(param) {
     this._api.getSites(param).subscribe(data => {
       this.sites = data;
       this.mapListService.loadTableData(data);
       this.filteredData = this.mapListService.tableData;
-      console.log(this.filteredData);
+
+      this.dataLoaded = true;
 
     });
+  }
+
+  onEachFeature(feature, layer) {
+    this.mapListService.layerDict[feature.id] = layer;
+    layer.on({
+      click: e => {
+        this.mapListService.toggleStyle(layer);
+        this.mapListService.mapSelected.next(feature.id);
+      }
+    });
+  }
+
+  onInfo(id_base_site) {
+    this.router.navigate([`${ModuleConfig.api_url}/listVisit`, id_base_site]);
   }
 }

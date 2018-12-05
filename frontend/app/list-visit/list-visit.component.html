@@ -1,0 +1,81 @@
+<div class="row row-0">
+    <div class="card col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm tab-container list-sht">
+        <button type="button" class="btn btn-link btn-sm" (click)="backToSites()">
+            <i class="fa fa-arrow-left" aria-hidden="true"> </i>
+            Retour à la liste des sites
+        </button>
+        <h3> Consultation des relevés pour le site</h3>
+        <div class="wrapper">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#infoGen" role="tab">
+                        <i class="fa fa-info-circle"> </i> Informations Générales </a>
+                </li>
+                <li class="nav-item" *ngIf="show">
+                    <a class="nav-link" data-toggle="tab" href="#details" role="tab">
+                        <i class="fa fa-search police"> </i> Détails </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane active modal-header  list-group-item" id="infoGen" role="tabpanel">
+                    <p> <span> Code site : </span> <span class="strong "> {{idSite}} </span></p>
+                    <p> <span> Habitat : </span> <span class="strong"> </span></p>
+                    <p> <span> Organisme : </span> <span class="strong"> </span></p>
+                    <p> <span> Commune : </span> <span class="strong "> {{nomCommune}} </span></p>
+                </div>
+
+                <div class="tab-pane modal-header list-group-item " id="details" role="tabpanel">
+                    <p> <span> Nom du site : </span> <span class="strong"> {{nomSite}} </span></p>
+                    <p> <span> Description du site : </span> <span class="strong"> {{descriSite}} </span></p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="wrapper">
+            <ngx-datatable class="material" [columnMode]="'force'" [rows]="rows" [headerHeight]="50" [footerHeight]="50"
+                [rowHeight]="'auto'" [messages]="storeService.shtConfig.list_visit_message" [offset]="mapListService.page.pageNumber"
+                [limit]="mapListService.page.size">
+
+                <ngx-datatable-column *ngFor="let col of storeService.shtConfig.default_list_visit_columns" [name]="col.name"
+                    [prop]="col.prop" maxWidth="220">
+                </ngx-datatable-column>
+
+                <ngx-datatable-column maxWidth="90">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        <button type="button" class="btn btn-info fa fa-info-circle" (click)="onInfo(row.id_base_visit)"
+                            title="Visualiser">
+                        </button>
+                    </ng-template>
+                </ngx-datatable-column>
+
+                <ngx-datatable-column maxWidth="90">
+                    <ng-template let-row="row" ngx-datatable-cell-template>
+                        <button type="button" class="btn btn-outline-shadow btn-no-padding btn-ghost" (click)="onInfo(row.id_base_visit)"
+                            title="Editer">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                    </ng-template>
+                </ngx-datatable-column>
+
+            </ngx-datatable>
+        </div>
+
+        <div id="end-btn">
+            <pnx-modal-download labelButton='Télécharger ces visites'>
+            </pnx-modal-download>
+
+            <modal-sht class="pull-right" labelButton='Ajouter une nouvelle visite'>
+            </modal-sht>
+            
+        </div>
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm">
+        <pnx-map height="94vh">
+            <pnx-geojson #geojson [onEachFeature]="onEachFeature.bind(this)" [geojson]="site">
+            </pnx-geojson>
+        </pnx-map>
+    </div>
+
+</div>
