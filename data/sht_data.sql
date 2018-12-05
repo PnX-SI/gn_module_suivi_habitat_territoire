@@ -22,20 +22,14 @@ INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemoni
 VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone de habitat', 'Zone de habitat - suivi habitat territoire', 'Zone d''habitat',  'Zone d''habitat issu du module suivi habitat territoire', 'CBNA');
 
 
--- TODO: insérer les données dans t_base_sites grâce à celles dans la table zb_tmp
-
 
 
 -- insérer les données dans t_base_sites grâce à celles dans la table maille_tmp
--- ATTENTION: il faut que le zp_tmp.shp soit en 2154, sinon ça donne des erreurs pour afficher les Zp.  
-/*INSERT INTO gn_monitoring.t_base_sites
-(id_nomenclature_type_site, base_site_name, base_site_description,  base_site_code, first_use_date, geom )
-SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'), 'HAB-', '', name, now(), ST_TRANSFORM(ST_SetSRID(geom, MY_SRID_LOCAL), MY_SRID_WORLD)
-FROM pr_monitoring_flora_territory.maille_tmp;*/
+-- ATTENTION: il faut que le maille_tmp.shp soit en 2154, sinon ça donne des erreurs pour afficher les sites.  
 INSERT INTO gn_monitoring.t_base_sites
 (id_nomenclature_type_site, base_site_name, base_site_description,  base_site_code, first_use_date, geom )
 SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'), 'HAB-', '', name, now(), ST_TRANSFORM(ST_SetSRID(geom, MY_SRID_LOCAL), MY_SRID_WORLD)
-FROM pr_monitoring_flora_territory.maille_tmp;
+FROM pr_monitoring_habitat_territory.maille_tmp;
 
 --- update le nom du site pour y ajouter l'identifiant du site
 UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site); 
@@ -44,15 +38,17 @@ UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_
 -- TEST --
 INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
 VALUES (17,16265);
+
 -- TEST --
 /*
 INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
 SELECT id_base_site, zh.cd_hab
 FROM gn_monitoring.t_base_sites bs
-JOIN pr_monitoring_habitat_territory.zh_tmp zp ON zh.id::character varying = bs.base_site_code;
+JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying = bs.base_site_code;
 */
 
 -- insérer les données cor_habitat_taxon : liaison un taxon et son habitat
 INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
 VALUES (16265, 104123);
 
+-- TODO insert visit
