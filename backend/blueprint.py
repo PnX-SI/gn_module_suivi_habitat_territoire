@@ -25,18 +25,13 @@ def get_habitats():
     return [d.as_dict(True) for d in data]
 
 
-@blueprint.route('/taxons', methods=['GET'])
+@blueprint.route('/taxons/<cd_hab>', methods=['GET'])
 @json_resp
-def get_taxa_by_habitats():
+def get_taxa_by_habitats(cd_hab):
     '''
     tous les taxons d'un habitat
-    param:
-        cd_hab
     '''
-    parameters = request.args
-    if 'cd_hab' not in parameters :
-        return abort(400, "cd_hab parameter is mandatory")
-   
+     
     q = DB.session.query(
         CorHabitatTaxon.cd_nom,
         Taxonomie.nom_complet
@@ -44,7 +39,7 @@ def get_taxa_by_habitats():
             Taxonomie, CorHabitatTaxon.cd_nom == Taxonomie.cd_nom
         ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxonomie.nom_complet)
         
-    q = q.filter(CorHabitatTaxon.id_habitat == parameters['cd_hab'])
+    q = q.filter(CorHabitatTaxon.id_habitat == cd_hab)
     data = q.all()
 
     taxons = []
