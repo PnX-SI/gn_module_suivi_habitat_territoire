@@ -31,7 +31,7 @@ def get_taxa_by_habitats(cd_hab):
     '''
     tous les taxons d'un habitat
     '''
-     
+
     q = DB.session.query(
         CorHabitatTaxon.cd_nom,
         Taxonomie.nom_complet
@@ -53,6 +53,7 @@ def get_taxa_by_habitats(cd_hab):
             taxons.append(taxon)
         return taxons
     return None
+
 
 @blueprint.route('/sites', methods=['GET'])
 @json_resp
