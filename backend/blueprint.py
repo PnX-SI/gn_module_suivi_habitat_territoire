@@ -62,6 +62,11 @@ def get_all_sites():
     Retourne tous les sites
     '''
     parameters = request.args
+
+    # TODO Blueprint config ne fonctionne pas ??
+    #id_type_commune = blueprint.config['id_type_commune']
+    id_type_commune = 25
+
     q = (
         DB.session.query(
             TInfosSite,
@@ -72,7 +77,7 @@ def get_all_sites():
             func.string_agg(LAreas.area_name, ', ')
             ).outerjoin(
             TBaseVisit, TBaseVisit.id_base_site == TInfosSite.id_base_site
-            # get taxonomy lb_nom
+            # get habitat cd_hab
             ).outerjoin(
                 Habref, TInfosSite.cd_hab == Habref.cd_hab
             # get organisms of a site
@@ -86,6 +91,8 @@ def get_all_sites():
             # get municipalities of a site
             .outerjoin(
                 corSiteArea, corSiteArea.c.id_base_site == TInfosSite.id_base_site
+            ).outerjoin(
+                LAreas, and_(LAreas.id_area == corSiteArea.c.id_area, LAreas.id_type == id_type_commune)
             )
             .group_by(
                 TInfosSite, Habref.lb_hab_fr_complet
@@ -100,6 +107,9 @@ def get_all_sites():
 
     if 'organisme' in parameters:
         q = q.filter(BibOrganismes.nom_organisme == parameters['organisme'])
+
+    if 'commune' in parameters:
+        q = q.filter(LAreas.area_name == parameters['commune'])
 
     if 'year' in parameters:
         # relance la requête pour récupérer la date_max exacte si on filtre sur l'année
@@ -119,26 +129,36 @@ def get_all_sites():
 
     features = []
 
-    for d in data:
-        feature = d[0].get_geofeature()
-        id_site = feature['properties']['id_base_site']
-        if feature['properties']['t_base_site']:
-            del feature['properties']['t_base_site']
-        if 'year' in parameters:
-            for dy in data_year:
-                #  récupérer la bonne date max du site si on filtre sur année
-                if id_site == dy[0]:
-                    feature['properties']['date_max'] = str(dy[1])
-        else:
-            feature['properties']['date_max'] = str(d[1])
-            if d[1] == None:
-                feature['properties']['date_max'] = 'Aucune visite'
-        feature['properties']['nom_habitat'] = str(d[2])
-        feature['properties']['nb_visit'] = str(d[3])
-        feature['properties']['organisme'] = str(d[4])
-        if d[4] == None:
-            feature['properties']['organisme'] = 'Aucun'
-        features.append(feature)
+    print("data", data)
+    if data:
+        for d in data:
+            feature = d[0].get_geofeature()
+            id_site = feature['properties']['id_base_site']
+            base_site_code = feature['properties']['t_base_site']['base_site_code']
+            base_site_description = feature['properties']['t_base_site']['base_site_description'] or 'Aucune description'
+            base_site_name = feature['properties']['t_base_site']['base_site_name']
+            if feature['properties']['t_base_site']:
+                del feature['properties']['t_base_site']
+            if 'year' in parameters:
+                for dy in data_year:
+                    #  récupérer la bonne date max du site si on filtre sur année
+                    if id_site == dy[0]:
+                        feature['properties']['date_max'] = str(dy[1])
+            else:
+                feature['properties']['date_max'] = str(d[1])
+                if d[1] == None:
+                    feature['properties']['date_max'] = 'Aucune visite'
+            feature['properties']['nom_habitat'] = str(d[2])
+            feature['properties']['nb_visit'] = str(d[3])
+            feature['properties']['organisme'] = str(d[4])
+            feature['properties']['nom_commune'] = str(d[5])
+            if d[4] == None:
+                feature['properties']['organisme'] = 'Aucun'
+            feature['properties']['base_site_code'] = base_site_code
+            feature['properties']['base_site_description'] = base_site_description
+            feature['properties']['base_site_name'] = base_site_name
+            features.append(feature)
 
-    return FeatureCollection(features)
+        return FeatureCollection(features)
+    return None
 
