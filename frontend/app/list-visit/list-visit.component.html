@@ -1,10 +1,10 @@
 <div class="row row-0">
     <div class="card col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm tab-container list-sht">
-        <button type="button" class="btn btn-link btn-sm" (click)="backToSites()">
+        <button type="button" class="btn btn-link btn-sm back-button" (click)="backToSites()">
             <i class="fa fa-arrow-left" aria-hidden="true"> </i>
             Retour à la liste des sites
         </button>
-        <h3> Consultation des relevés pour le site</h3>
+        <h3> Consultation des relevés du site {{ siteName }} </h3>
         <div class="wrapper">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
@@ -19,15 +19,15 @@
 
             <div class="tab-content">
                 <div class="tab-pane active modal-header  list-group-item" id="infoGen" role="tabpanel">
-                    <p> <span> Code site : </span> <span class="strong "> {{idSite}} </span></p>
-                    <p> <span> Habitat : </span> <span class="strong"> </span></p>
-                    <p> <span> Organisme : </span> <span class="strong"> </span></p>
-                    <p> <span> Commune : </span> <span class="strong "> {{nomCommune}} </span></p>
+                    <p> <span> Code site : </span> <span class="strong "> {{ siteCode }} </span></p>
+                    <p> <span> Habitat : </span> <span class="strong" innerHTML= "{{ nomHabitat }}"> {{ nomHabitat }} </span></p>
+                    <p> <span> Organisme : </span> <span class="strong" > {{ organisme }} </span></p>
+                    <p> <span> Commune : </span> <span class="strong"> {{ nomCommune}} </span></p>
                 </div>
 
                 <div class="tab-pane modal-header list-group-item " id="details" role="tabpanel">
-                    <p> <span> Nom du site : </span> <span class="strong"> {{nomSite}} </span></p>
-                    <p> <span> Description du site : </span> <span class="strong"> {{descriSite}} </span></p>
+                    <p> <span> Nom du site : </span> <span class="strong"> {{ siteName }} </span></p>
+                    <p> <span> Description du site : </span> <span class="strong"> {{ siteDesc }} </span></p>
                 </div>
             </div>
 
@@ -44,15 +44,16 @@
 
                 <ngx-datatable-column maxWidth="90">
                     <ng-template let-row="row" ngx-datatable-cell-template>
-                        <button type="button" class="btn btn-info fa fa-info-circle" (click)="onInfo(row.id_base_visit)"
+                        <button type="button" class="btn btn-lg btn-outline-shadow btn-ghost" (click)="onInfo(row.id_base_visit)"
                             title="Visualiser">
+                            <i class="fa fa-info-circle"></i>
                         </button>
                     </ng-template>
                 </ngx-datatable-column>
 
                 <ngx-datatable-column maxWidth="90">
                     <ng-template let-row="row" ngx-datatable-cell-template>
-                        <button type="button" class="btn btn-outline-shadow btn-no-padding btn-ghost" (click)="onInfo(row.id_base_visit)"
+                        <button type="button" class="btn btn-lg btn-outline-shadow btn-ghost" (click)="onInfo(row.id_base_visit)"
                             title="Editer">
                             <i class="fa fa-edit"></i>
                         </button>
