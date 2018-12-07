@@ -36,7 +36,7 @@ export class DataService {
       "site_date": "2018-12-01",
       "nom_habitat": "Caricion incurvae",
       "id_base_site": 125,
-      "geom": [{ "type": "MultiPolygon", "coordinates": [[[[6.22548499261293, 45.03411830052899], [6.225802182478404, 45.03410910784823], [6.225789217368525, 45.033884199906204], [6.2254720287750605, 45.033893392549466], [6.22548499261293, 45.03411830052899]]]] }],
+      //"geom": [{ "type": "MultiPolygon", "coordinates": [[[[6.22548499261293, 45.03411830052899], [6.225802182478404, 45.03410910784823], [6.225789217368525, 45.033884199906204], [6.2254720287750605, 45.033893392549466], [6.22548499261293, 45.03411830052899]]]] }],
       "site_description": "description du site"
     }]
     return Observable.of(mock)
@@ -135,7 +135,7 @@ export class DataService {
   getTaxons(cd_hab) {
     if (! cd_hab) cd_hab = 16265;
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/taxons/${cd_hab}`
+      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/habitats/${cd_hab}/taxons`
     )
   }
 }

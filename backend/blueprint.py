@@ -25,7 +25,7 @@ def get_habitats():
     return [d.as_dict(True) for d in data]
 
 
-@blueprint.route('/taxons/<cd_hab>', methods=['GET'])
+@blueprint.route('/habitats/<cd_hab>/taxons', methods=['GET'])
 @json_resp
 def get_taxa_by_habitats(cd_hab):
     '''
