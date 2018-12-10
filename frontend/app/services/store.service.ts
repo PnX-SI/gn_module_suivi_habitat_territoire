@@ -1,9 +1,8 @@
 import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Layer } from 'leaflet';
-import { AppConfig } from '@geonature_config/app.config';
 import { ModuleConfig } from '../module.config';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class StoreService {
@@ -22,4 +21,16 @@ export class StoreService {
 
   public queryString = new HttpParams();
 
+  public currentSite$: BehaviorSubject<any> = new BehaviorSubject();
+
+
+  getCurrentSite() {
+    return this.currentSite$.asObservable();
+  }
+
+  setCurrentSite(cd_hab, nomhab, idBaseSite) {
+    this.currentSite$.next({"cd_hab":cd_hab, "nom_habitat": nomhab, "id_base_site": idBaseSite});
+  }
 }
+
+

@@ -44,19 +44,12 @@
 
                 <ngx-datatable-column maxWidth="90">
                     <ng-template let-row="row" ngx-datatable-cell-template>
-                        <button type="button" class="btn btn-lg btn-outline-shadow btn-ghost" (click)="onInfo(row.id_base_visit)"
-                            title="Visualiser">
-                            <i class="fa fa-info-circle"></i>
-                        </button>
-                    </ng-template>
-                </ngx-datatable-column>
-
-                <ngx-datatable-column maxWidth="90">
-                    <ng-template let-row="row" ngx-datatable-cell-template>
-                        <button type="button" class="btn btn-lg btn-outline-shadow btn-ghost" (click)="onInfo(row.id_base_visit)"
-                            title="Editer">
-                            <i class="fa fa-edit"></i>
-                        </button>
+                        <modal-sht
+                        classStyle="btn btn-lg btn-outline-shadow btn-ghost"
+                        title="Visualiser"
+                        iconStyle = "fa fa-info-circle"
+                        idVisit = "{{ row.id_visit }}" >
+                        </modal-sht>
                     </ng-template>
                 </ngx-datatable-column>
 
@@ -67,7 +60,7 @@
             <pnx-modal-download labelButton='Télécharger ces visites'>
             </pnx-modal-download>
 
-            <modal-sht class="pull-right" labelButton='Ajouter une nouvelle visite'>
+            <modal-sht classStyle="btn btn-sm btn-success pull-right" labelButton='Ajouter une nouvelle visite' iconStyle = "fa fa-plus-circle">
             </modal-sht>
             
         </div>

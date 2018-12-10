@@ -88,7 +88,7 @@ export class DataService {
       "id_visit": 1,
       "visit_date": "2018-12-01",
       "id_site": 1,
-      "observers": [{ "nom_role": "Nom-agent1", "prenom_role": "Prénom-agent1" }],
+      "observers": [{"id_menu": 1, "id_role": 4, "nom_complet": "PAUL Pierre","nom_role": "Paul","prenom_role": "Pierre"}],
       "cor_visit_taxons": [{ "cd_nom": "Juncus arcticus" }]
     }]
     return Observable.of(mock);
