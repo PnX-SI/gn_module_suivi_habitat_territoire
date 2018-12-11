@@ -22,6 +22,16 @@ cp data/habitat_data.sql /tmp/habitat_data.sql
 cp data/sht_data.sql /tmp/sht_data.sql
 
 
+sudo sed -i "s/MY_SRID_WORLD/$srid_world/g" /tmp/sht.sql
+
+#Dont ask for a module ID as we dont know it...
+#sudo sed -i "s/MY_ID_MODULE/$id_module_suivi_flore_territoire/g" /tmp/data_suivi_territoire.sql
+
+sudo sed -i "s/MY_SRID_LOCAL/$srid_local/g" /tmp/sht_data.sql
+
+sudo sed -i "s/MY_SRID_WORLD/$srid_world/g" /tmp/sht_data.sql
+
+
 # Create habitat schema into GeoNature database
 export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/habitat.sql &>> var/log/install_habitat.log
 
