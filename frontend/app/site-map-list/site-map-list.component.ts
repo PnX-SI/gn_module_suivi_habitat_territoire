@@ -61,6 +61,10 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
 
       this.dataLoaded = true;
 
+    }, error => {
+      this.dataLoaded = true;
+      //TODO display error
+      console.log("error getsites: ", error)
     });
   }
 
