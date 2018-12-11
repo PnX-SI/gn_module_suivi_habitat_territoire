@@ -1,3 +1,7 @@
+----------------------
+-- Insérer geom
+----------------------
+
 -- parametrer ref_geo.bib_areas_types -- 
 -- créer le type de mailles 100*100 
 -- problème : ne supporte pas dimension Z => suppression info dans QGIS
@@ -16,13 +20,14 @@ FROM ref_geo.l_areas
 WHERE id_type=ref_geo.get_id_area_type('M100m')
 GROUP by area_code, id_area;
 
-
 -- créer nomenclature  HAB --  
 INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, label_fr, definition_fr, source )
 VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone de habitat', 'Zone de habitat - suivi habitat territoire', 'Zone d''habitat',  'Zone d''habitat issu du module suivi habitat territoire', 'CBNA');
 
 
-
+----------------------
+-- Insérer les sites
+----------------------
 
 -- insérer les données dans t_base_sites grâce à celles dans la table maille_tmp
 -- ATTENTION: il faut que le maille_tmp.shp soit en 2154, sinon ça donne des erreurs pour afficher les sites.  
@@ -30,6 +35,7 @@ INSERT INTO gn_monitoring.t_base_sites
 (id_nomenclature_type_site, base_site_name, base_site_description,  base_site_code, first_use_date, geom )
 SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'), 'HAB-', '', name, now(), ST_TRANSFORM(ST_SetSRID(geom, MY_SRID_LOCAL), MY_SRID_WORLD)
 FROM pr_monitoring_habitat_territory.maille_tmp;
+
 
 --- update le nom du site pour y ajouter l'identifiant du site
 UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site); 
@@ -47,8 +53,34 @@ FROM gn_monitoring.t_base_sites bs
 JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying = bs.base_site_code;
 */
 
+----------------------
+-- Insérer les espèces
+----------------------
+-- Créer la liste des taxons suivis dans le protocoles SHT "Angiosperme ?"
+/*INSERT INTO taxonomie.bib_listes ( nom_liste, desc_liste, regne, group2_inpn) 
+VALUES ('Suivi Habitat Territoire', 'Taxons suivis dans le protocole Suivi Habitat Territoire', 'Plantae', 'Angiospermes');*/
+-- ERREUR:  une valeur NULL viole la contrainte NOT NULL de la colonne « id_liste »
+
+-- Insérer les taxons suivis dans le protocole SFT dans bib_noms et les ajouter dans la liste SFT
+/*INSERT INTO taxonomie.bib_noms (cd_nom, cd_ref, nom_francais) VALUES (104123, 104123, 'Jonc arctique - Juncus arcticus');
+INSERT INTO taxonomie.cor_nom_liste (id_nom, id_liste) VALUES 
+((SELECT max(id_nom) FROM taxonomie.bib_noms), (select id_liste from taxonomie.bib_listes WHERE nom_liste='Suivi Habitat Territoire'));*/
+
+
+
 -- insérer les données cor_habitat_taxon : liaison un taxon et son habitat
 /*INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
-VALUES (16265, 104123);*/
+VALUES 
+(16265, 104123),
+(16265, 88386),
+(16265, 88662),
+(16265, 88675),
+(16265, 88380),
+(16265, 88360),
+(16265, 127195),
+(16265, 126806)
+;
+
+*/
 
 -- TODO insert visit
