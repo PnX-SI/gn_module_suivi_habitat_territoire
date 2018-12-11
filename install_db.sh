@@ -22,9 +22,6 @@ cp data/habitat_data.sql /tmp/habitat_data.sql
 cp data/sht_data.sql /tmp/sht_data.sql
 
 
-sudo sed -i "s/MY_SRID_WORLD/$srid_world/g" /tmp/sht.sql
-
-#Dont ask for a module ID as we dont know it...
 
 sudo sed -i "s/MY_SRID_LOCAL/$srid_local/g" /tmp/sht_data.sql
 
