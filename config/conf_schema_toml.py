@@ -11,21 +11,21 @@ id_type_commune = 25
 zoom_center = [44.863664, 6.268670]
 zoom= 13
 
-site_message = {emptyMessage = "Aucun site à afficher ", totalMessage = "sites(s) au total"}
-list_visit_message = {emptyMessage = "Aucune visite sur ce site ", totalMessage = "visites au total"}
-detail_list_visit_message = {emptyMessage = "Aucune autre visite sur ce site ", totalMessage = "visites au total"}
+site_message = {"emptyMessage" : "Aucun site à afficher ", "totalMessage" : "sites(s) au total"}
+list_visit_message = {"emptyMessage" : "Aucune visite sur ce site ", "totalMessage" : "visites au total"}
+detail_list_visit_message = {"emptyMessage" : "Aucune autre visite sur ce site ", "totalMessage" : "visites au total"}
 default_site_columns = [
-    { name = "Identifiant", prop = "id_base_site", width = "90"},
-    { name = "Habitat", prop = "nom_habitat", width = "350"},
-    { name = "Nombre de visites", prop = "nb_visit", width = "120"},
-    { name = "Date de la dernière visite", prop = "date_max", width = "160"},
-    { name = "Organisme", prop = "organisme", width = "200"}
+    { "name" : "Identifiant", "prop" : "id_base_site", "width" : "90"},
+    { "name" : "Habitat", "prop" : "nom_habitat", "width" : "350"},
+    { "name" : "Nombre de visites", "prop" : "nb_visit", "width" : "120"},
+    { "name" : "Date de la dernière visite", "prop" : "date_max", "width" : "160"},
+    { "name" : "Organisme", "prop" : "organisme", "width" : "200"}
 ]
 
 default_list_visit_columns = [
-    { name = "Date", prop = "visit_date_min"},
-    { name = "Observateur(s)", prop = "observers"},
-    { name = "Espèce(s) présente(s)", prop = "state"}
+    { "name" : "Date", "prop" : "visit_date_min"},
+    { "name" : "Observateur(s)", "prop" : "observers"},
+    { "name" : "Espèce(s) présente(s)", "prop" : "state"}
 ]
 id_menu_list_user = 1
 
@@ -40,4 +40,4 @@ class GnModuleSchemaConf(GnModuleProdConf):
     id_menu_list_user = fields.Integer(missing=1)
     export_srid = fields.Integer(missing=2154)
     zoom_center = fields.List(fields.Float(), missing=zoom_center)
-    zoom=13
+    zoom=fields.Integer(missing=13)
