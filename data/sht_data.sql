@@ -35,12 +35,12 @@ FROM pr_monitoring_habitat_territory.maille_tmp;
 UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site); 
 
 -- extension de la table t_base_sites : mettre les données dans t_infos_site
--- TEST --
-/*INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
-VALUES (17,16265);*/
+INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
+SELECT id_base_site, 16265    
+FROM gn_monitoring.t_base_sites bs
+JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying = bs.base_site_code;
 
--- TEST --
-/*
+/* Ajouter cd_hab au niveau de la maille ?
 INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
 SELECT id_base_site, zh.cd_hab
 FROM gn_monitoring.t_base_sites bs
