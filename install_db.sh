@@ -25,7 +25,6 @@ cp data/sht_data.sql /tmp/sht_data.sql
 sudo sed -i "s/MY_SRID_WORLD/$srid_world/g" /tmp/sht.sql
 
 #Dont ask for a module ID as we dont know it...
-#sudo sed -i "s/MY_ID_MODULE/$id_module_suivi_flore_territoire/g" /tmp/data_suivi_territoire.sql
 
 sudo sed -i "s/MY_SRID_LOCAL/$srid_local/g" /tmp/sht_data.sql
 
@@ -42,8 +41,7 @@ export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp
 # Include sample data into database
 if $insert_sample_data
 then
-    #sudo -n -u postgres -s shp2pgsql -W "UTF-8" -s 2154 -D -I /tmp/mailles100z.shp pr_monitoring_habitat_territory.maille_tmp | psql -h localhost -U geonatuser -d geonaturedb &>> var/log/install_sft.log
-    sudo -n -u postgres -s shp2pgsql -W "UTF-8" -s 2154 -D -I /tmp/Mailles100.shp pr_monitoring_habitat_territory.maille_tmp | psql -h $db_host -U $user_pg -d $db_name &>> var/log/install_sht.log
+    sudo -n -u postgres -s shp2pgsql -W "UTF-8" -s 2154 -D -I /tmp/Mailles100.shp pr_monitoring_habitat_territory.maille_tmp | psql -h $db_host -U $user_pg -d $db_name &>> var/log/install_maille.log
     export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/habitat_data.sql &>> var/log/install_habitat_data.log
     export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht_perturbations.sql &>> var/log/install_sht_perturbations.log
     export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht_data.sql &>>  var/log/install_sht_data.log

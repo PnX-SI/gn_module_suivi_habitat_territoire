@@ -36,8 +36,8 @@ UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_
 
 -- extension de la table t_base_sites : mettre les données dans t_infos_site
 -- TEST --
-INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
-VALUES (17,16265);
+/*INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
+VALUES (17,16265);*/
 
 -- TEST --
 /*
@@ -48,7 +48,7 @@ JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying
 */
 
 -- insérer les données cor_habitat_taxon : liaison un taxon et son habitat
-INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
-VALUES (16265, 104123);
+/*INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
+VALUES (16265, 104123);*/
 
 -- TODO insert visit
