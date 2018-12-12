@@ -1,9 +1,8 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { FormControl, FormGroup, FormBuilder, FormArray } from '@angular/forms';
+import { NgbModal, NgbModalRef, NgbDateParserFormatter } from '@ng-bootstrap/ng-bootstrap';
+import { FormGroup, FormBuilder, FormArray } from '@angular/forms';
 
 import { forkJoin } from "rxjs/observable/forkJoin";
-import { mergeMap } from 'rxjs/operators';
 import { Observable } from 'rxjs/Observable';
 
 import { DataService } from '../services/data.service';
@@ -28,7 +27,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   public nom_habitat;
   public id_base_site;
   private _currentSite;
-  private visit = [{"id_visit": "", "visit_date": "", "observers": [], "cor_visit_taxons": [] }];
+  private visit = [{ "id_visit": "", "visit_date": "", "observers": [], "cor_visit_taxons": [], "cor_visit_perturbation": [], "comments": "" }];
   public modalTitle = "Saisie d'un relevé";
 
   constructor(
@@ -36,7 +35,8 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     public formService: FormService,
     public storeService: StoreService,
     private _api: DataService,
-    private _fb: FormBuilder
+    private _fb: FormBuilder,
+    public dateParser: NgbDateParserFormatter,
   ) { }
 
   ngOnInit() {
@@ -55,12 +55,12 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
         this.cd_hab = cdhab.cd_hab;
         this.nom_habitat = cdhab.nom_habitat;
         this.id_base_site = cdhab.id_base_site;
-    });
+      });
 
     let datas = [];
     let currentVisit;
-    if ( this.idVisit ) {
-      currentVisit= this._api.getOneVisit(this.idVisit)
+    if (this.idVisit) {
+      currentVisit = this._api.getOneVisit(this.idVisit)
       this.modalTitle = "Rélevé " + this.idVisit;
     } else {
       currentVisit = Observable.of([]);
@@ -79,30 +79,38 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     });
   }
 
-  addSpeciesControl(){
+  addSpeciesControl() {
     const arr: FormArray = [];
     this.species.forEach(element => {
       element['name'] = element.nom_complet;
       element['id'] = element.cd_nom;
-      element['value'] = false;
+      element['selected'] = false;
+      if (this.visit[0]['cor_visit_taxons'].length > 0) {
+        this.visit[0]['cor_visit_taxons'].forEach(specie => {
+          if (specie.cd_nom == element.cd_nom) {
+            element['selected'] = true;
+          }
+        })
+      }
       arr.push(this._fb.control(element))
-   });
-   return arr;
+    });
+    return arr;
   }
 
-  getSpeciesControl(){
+  getSpeciesControl() {
     return this.formVisit.get('cor_visit_species');
   }
 
-  pachForm(){
+  pachForm() {
     this.formVisit.patchValue({
       "cor_visit_species": this.addSpeciesControl(),
       "id_base_visit": this.visit[0].id_visit,
-      "visit_date": this.visit[0].visit_date,
+      "visit_date": this.dateParser.parse(this.visit[0].visit_date),
       "cor_visit_observer": this.visit[0].observers,
+      "cor_visit_perturbation": this.visit[0].cor_visit_perturbation,
       "id_base_site": this.id_base_site,
       "cor_visit_habitats": this.cd_hab,
-      "comments": ""
+      "comments": this.visit[0].comments
     })
     console.log("this.formVisit", this.formVisit)
 
@@ -110,14 +118,13 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
 
   initData() {
     this.getDatas();
-    console.log("this.cd_hab: ", this.cd_hab );
+    console.log("this.cd_hab: ", this.cd_hab);
   }
 
   open(content) {
-    if( !this.idVisit ) {
-      this._modalRef = this._modalService.open(content, { size: 'lg' });
-      this.initData();
-    }
+    this._modalRef = this._modalService.open(content, { size: 'lg' });
+    this.initData();
+
   }
 
   onModif() {
@@ -126,8 +133,8 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     console.log(currentForm);
   }
 
-  ngOnDestroy(){
-    if( this._currentSite )
+  ngOnDestroy() {
+    if (this._currentSite)
       this._currentSite.unsubscribe();
   }
 }
