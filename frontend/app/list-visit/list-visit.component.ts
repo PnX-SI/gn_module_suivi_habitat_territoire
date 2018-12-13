@@ -69,6 +69,14 @@ export class ListVisitComponent implements OnInit {
 
   ngAfterViewInit() {
     this.mapService.map.doubleClickZoom.disable();
+    this.getVisits();
+  }
+ 
+
+  onEachFeature(feature, layer) {
+  }
+
+  getVisits() {
     const parametre = {
       id_base_site: this.idSite,
       id_application: ModuleConfig.id_application
@@ -94,16 +102,6 @@ export class ListVisitComponent implements OnInit {
     }, error => {
       console.log("error: ", error)
     });
-}
- 
-
-  onEachFeature(feature, layer) {
-  }
-
-  onEdit(id_visit) {
-  }
-
-  onInfo(id_visit) {
   }
 
   backToSites(){

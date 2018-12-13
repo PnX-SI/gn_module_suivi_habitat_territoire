@@ -1,6 +1,7 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, Output, OnDestroy, EventEmitter } from '@angular/core';
 import { NgbModal, NgbModalRef, NgbDateParserFormatter } from '@ng-bootstrap/ng-bootstrap';
 import { FormGroup, FormBuilder, FormArray } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
 import { forkJoin } from "rxjs/observable/forkJoin";
 import { Observable } from 'rxjs/Observable';
@@ -11,7 +12,8 @@ import { FormService } from '../services/form.service';
 
 @Component({
   selector: 'modal-sht',
-  templateUrl: 'modal-sht.component.html'
+  templateUrl: 'modal-sht.component.html',
+  styleUrls: ['./modal-sht.component.scss']
 })
 
 export class ModalSHTComponent implements OnInit, OnDestroy {
@@ -19,6 +21,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   @Input() classStyle: string;
   @Input() iconStyle: string;
   @Input() idVisit: string;
+  @Output() visitsUp = new EventEmitter();
 
   public formVisit: FormGroup;
   private _modalRef: NgbModalRef;
@@ -29,6 +32,9 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   private _currentSite;
   private visit = [{ "id_visit": "", "visit_date": "", "observers": [], "cor_visit_taxons": [], "cor_visit_perturbation": [], "comments": "" }];
   public modalTitle = "Saisie d'un relevé";
+  public disabledForm = false;
+  public onUpVisit = false;
+  public labelUpVisit = "Editer le relevé"
 
   constructor(
     private _modalService: NgbModal,
@@ -37,6 +43,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     private _api: DataService,
     private _fb: FormBuilder,
     public dateParser: NgbDateParserFormatter,
+    private toastr: ToastrService,
   ) { }
 
   ngOnInit() {
@@ -44,9 +51,10 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
 
     this.formVisit = this.formService.initFormSHT();
 
-    if (this.idVisit)
+    if (this.idVisit) {
+      this.disabledForm = true;
       console.log("idvisit: ", this.idVisit);
-
+    }
   }
 
   getDatas() {
@@ -61,7 +69,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     let currentVisit;
     if (this.idVisit) {
       currentVisit = this._api.getOneVisit(this.idVisit)
-      this.modalTitle = "Rélevé " + this.idVisit;
+      this.modalTitle = "Relevé " + this.idVisit;
     } else {
       currentVisit = Observable.of([]);
     }
@@ -112,25 +120,66 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       "cor_visit_habitats": this.cd_hab,
       "comments": this.visit[0].comments
     })
-    console.log("this.formVisit", this.formVisit)
-
   }
 
   initData() {
     this.getDatas();
-    console.log("this.cd_hab: ", this.cd_hab);
   }
 
   open(content) {
     this._modalRef = this._modalService.open(content, { size: 'lg' });
     this.initData();
-
   }
 
-  onModif() {
-    this._modalRef.close();
+  onSave() {
+    this.onClose();
     const currentForm = this.formVisit.value;
     console.log(currentForm);
+    if (this.idVisit)
+      this.patchVisit();
+    else
+      this.postVisit();
+  }
+
+  onClose() {
+    this._modalRef.close();
+    this.onUpVisit = false;
+    if (this.idVisit) {
+      this.disabledForm = true;
+      this.labelUpVisit = "Editer le relevé";
+    }
+  }
+
+  upVisit() {
+    this.onUpVisit = (!this.onUpVisit) ? true : false;
+    this.disabledForm = (this.onUpVisit) ? false : true;
+    this.labelUpVisit = (this.onUpVisit) ? "Annulé" : "Editer le relevé";
+  }
+
+  postVisit() {
+    this._api.postVisit().subscribe(data => {
+      this.visitsUp.emit(data);
+      this.toastr.success('Le relevé est enregistré', '', {
+        positionClass: 'toast-top-right'
+      });
+    }, error => {
+      this.toastr.error('Une erreur est survenue lors de l\'enregistrement de votre relevé', '', {
+        positionClass: 'toast-top-right'
+      });
+    })
+  }
+
+  patchVisit() {
+    this._api.patchVisit(this.idVisit).subscribe(data => {
+      this.visitsUp.emit(data);
+      this.toastr.success('Le relevé a été modifié', '', {
+        positionClass: 'toast-top-right'
+      });
+    }, error => {
+      this.toastr.error('Une erreur est survenue lors de la modification de votre relevé', '', {
+        positionClass: 'toast-top-right'
+      });
+    })
   }
 
   ngOnDestroy() {

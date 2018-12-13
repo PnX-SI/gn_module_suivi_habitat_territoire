@@ -147,4 +147,14 @@ export class DataService {
       `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/habitats/${cd_hab}/taxons`
     )
   }
+
+  postVisit() {
+    let mock = {"status":200, "id":""}
+    return Observable.of(mock);
+  }
+
+  patchVisit(idVisit) {
+    let mock = {"status":200, "id":idVisit};
+    return Observable.of(mock);
+  }
 }

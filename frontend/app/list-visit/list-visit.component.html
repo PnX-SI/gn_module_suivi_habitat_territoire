@@ -20,8 +20,9 @@
             <div class="tab-content">
                 <div class="tab-pane active modal-header  list-group-item" id="infoGen" role="tabpanel">
                     <p> <span> Code site : </span> <span class="strong "> {{ siteCode }} </span></p>
-                    <p> <span> Habitat : </span> <span class="strong" innerHTML= "{{ nomHabitat }}"> {{ nomHabitat }} </span></p>
-                    <p> <span> Organisme : </span> <span class="strong" > {{ organisme }} </span></p>
+                    <p> <span> Habitat : </span> <span class="strong" innerHTML="{{ nomHabitat }}"> {{ nomHabitat }}
+                        </span></p>
+                    <p> <span> Organisme : </span> <span class="strong"> {{ organisme }} </span></p>
                     <p> <span> Commune : </span> <span class="strong"> {{ nomCommune}} </span></p>
                 </div>
 
@@ -44,11 +45,8 @@
 
                 <ngx-datatable-column maxWidth="90">
                     <ng-template let-row="row" ngx-datatable-cell-template>
-                        <modal-sht
-                        classStyle="btn btn-lg btn-outline-shadow btn-ghost"
-                        title="Visualiser"
-                        iconStyle = "fa fa-info-circle"
-                        idVisit = "{{ row.id_visit }}" >
+                        <modal-sht classStyle="btn btn-lg btn-outline-shadow btn-ghost" title="Visualiser" iconStyle="fa fa-info-circle"
+                            idVisit="{{ row.id_visit }}">
                         </modal-sht>
                     </ng-template>
                 </ngx-datatable-column>
@@ -60,9 +58,10 @@
             <pnx-modal-download labelButton='Télécharger ces visites'>
             </pnx-modal-download>
 
-            <modal-sht classStyle="btn btn-sm btn-success pull-right" labelButton='Ajouter une nouvelle visite' iconStyle = "fa fa-plus-circle">
+            <modal-sht classStyle="btn btn-sm btn-success pull-right" labelButton='Ajouter une nouvelle visite'
+                iconStyle="fa fa-plus-circle" (visitsUp)='getVisits()' >
             </modal-sht>
-            
+
         </div>
     </div>
     <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm">
