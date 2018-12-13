@@ -1,5 +1,6 @@
 import { Component, OnInit, AfterViewInit } from "@angular/core";
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 import { MapService } from '@geonature_common/map/map.service';
 import { MapListService } from '@geonature_common/map-list/map-list.service';
@@ -27,8 +28,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
     private _api: DataService,
     public storeService: StoreService,
     public mapListService: MapListService,
-    public router: Router
-  ) {}
+    public router: Router,
+    private toastr: ToastrService,
+  ) { }
 
   ngOnInit() {
     this.mapListService.idName = 'id_infos_site';
@@ -52,7 +54,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
       });
     });*/
   }
-  
+
   onChargeList(param) {
     this._api.getSites(param).subscribe(data => {
       this.sites = data;
@@ -63,7 +65,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
 
     }, error => {
       this.dataLoaded = true;
-      //TODO display error
+      this.toastr.error('Une erreur est survenue lors de la récupération des données', '', {
+        positionClass: 'toast-top-right'
+      });
       console.log("error getsites: ", error)
     });
   }

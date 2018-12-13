@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
+import { ToastrService } from 'ngx-toastr';
 
 import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { MapService } from '@geonature_common/map/map.service';
@@ -39,12 +39,25 @@ export class ListVisitComponent implements OnInit {
     public storeService: StoreService,
     private _location: Location,
     public _api: DataService,
-    public activatedRoute: ActivatedRoute
+    public activatedRoute: ActivatedRoute,
+    private toastr: ToastrService,
   ) {}
 
   ngOnInit() {
     this.idSite = this.activatedRoute.snapshot.params['idSite'];
+    this.getVisits();
+  }
 
+  ngAfterViewInit() {
+    this.mapService.map.doubleClickZoom.disable();
+    this.getSites();
+  }
+ 
+
+  onEachFeature(feature, layer) {
+  }
+
+  getVisits() {
     this._api.getVisits({ id_base_site: this.idSite }).subscribe(data => {
       data.forEach(visit => {
         let fullName;
@@ -64,19 +77,14 @@ export class ListVisitComponent implements OnInit {
       });
 
       this.rows = data;
+    }, error => {
+      this.toastr.error('Une erreur est survenue lors de la modification de votre relevé', '', {
+        positionClass: 'toast-top-right'
+      });
     });
   }
 
-  ngAfterViewInit() {
-    this.mapService.map.doubleClickZoom.disable();
-    this.getVisits();
-  }
- 
-
-  onEachFeature(feature, layer) {
-  }
-
-  getVisits() {
+  getSites() {
     const parametre = {
       id_base_site: this.idSite,
       id_application: ModuleConfig.id_application
@@ -100,6 +108,9 @@ export class ListVisitComponent implements OnInit {
         this.mapService.map.fitBounds(currentLayer.getBounds());
       });
     }, error => {
+      this.toastr.error('Une erreur est survenue lors de la récupération des informations sur le serveur', '', {
+        positionClass: 'toast-top-right'
+      });
       console.log("error: ", error)
     });
   }
