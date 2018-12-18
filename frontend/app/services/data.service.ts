@@ -18,6 +18,12 @@ export class DataService {
     });
   }
 
+ /* getSites(params) {
+    let mock = { "features": [
+      { "properties": { "id_base_site": 17, "base_site_code": "365074625", "organisme": "Aucun", "nb_visit": "0", "nom_commune": "La Grave", "id_infos_site": 1, "cd_hab": 16265, "date_max": "2018-01-01", "base_site_name": "HAB-171717", "nom_habitat": "<em>Caricion incurvae</em> Br.-Bl. in Volk 1940", "base_site_description": "Aucune description" }, "id": "1", "geometry": { "type": "MultiPolygon", "coordinates": [[[[6.22548499261293, 45.03411830052899], [6.225802182478404, 45.03410910784823], [6.225789217368525, 45.033884199906204], [6.2254720287750605, 45.033893392549466], [6.22548499261293, 45.03411830052899]]]] }, "type": "Feature" }, { "properties": { "id_base_site": 18, "base_site_code": "365074625", "organisme": "Aucun", "nb_visit": "0", "nom_commune": "La Grave", "id_infos_site": 2, "cd_hab": 16265, "date_max": "2016-01-01", "base_site_name": "HAB-181818", "nom_habitat": "<em>Caricion incurvae</em> Br.-Bl. in Volk 1940", "base_site_description": "Aucune description" }, "id": "2", "geometry": { "type": "MultiPolygon", "coordinates": [[[[6.225802182478404, 45.03410910784823], [6.226119372239717, 45.03409991426405], [6.2261064058578315, 45.033875006359494], [6.225789217368525, 45.033884199906204], [6.225802182478404, 45.03410910784823]]]] }, "type": "Feature" }, { "properties": { "id_base_site": 19, "base_site_code": "365074625", "organisme": "Aucun", "nb_visit": "0", "nom_commune": "La Grave", "id_infos_site": 3, "cd_hab": 16265, "date_max": "Aucune visite", "base_site_name": "HAB-191919", "nom_habitat": "<em>Caricion incurvae</em> Br.-Bl. in Volk 1940", "base_site_description": "Aucune description" }, "id": "3", "geometry": { "type": "MultiPolygon", "coordinates": [[[[6.225154840077446, 45.03390258428933], [6.2254720287750605, 45.033893392549466], [6.225459065041339, 45.03366848458207], [6.225141877615724, 45.03367767628443], [6.225154840077446, 45.03390258428933]]]] }, "type": "Feature" }, { "properties": { "id_base_site": 20, "base_site_code": "365074625", "organisme": "Aucun", "nb_visit": "0", "nom_commune": "La Grave", "id_infos_site": 4, "cd_hab": 16265, "date_max": "Aucune visite", "base_site_name": "HAB-202020", "nom_habitat": "<em>Caricion incurvae</em> Br.-Bl. in Volk 1940", "base_site_description": "Aucune description" }, "id": "4", "geometry": { "type": "MultiPolygon", "coordinates": [[[[6.2254720287750605, 45.033893392549466], [6.225789217368525, 45.033884199906204], [6.225776252362806, 45.03365929197627], [6.225459065041339, 45.03366848458207], [6.2254720287750605, 45.033893392549466]]]] }, "type": "Feature" }, { "properties": { "id_base_site": 21, "base_site_code": "365074625", "organisme": "Aucun", "nb_visit": "0", "nom_commune": "La Grave", "id_infos_site": 5, "cd_hab": 16265, "date_max": "Aucune visite", "base_site_name": "HAB-212121", "nom_habitat": "<em>Caricion incurvae</em> Br.-Bl. in Volk 1940", "base_site_description": "Aucune description" }, "id": "5", "geometry": { "type": "MultiPolygon", "coordinates": [[[[6.225789217368525, 45.033884199906204], [6.2261064058578315, 45.033875006359494], [6.226093439580115, 45.03365009846706], [6.225776252362806, 45.03365929197627], [6.225789217368525, 45.033884199906204]]]] }, "type": "Feature" }, { "properties": { "id_base_site": 22, "base_site_code": "365074625", "organisme": "Aucun", "nb_visit": "0", "nom_commune": "La Grave", "id_infos_site": 6, "cd_hab": 16265, "date_max": "Aucune visite", "base_site_name": "HAB-222222", "nom_habitat": "<em>Caricion incurvae</em> Br.-Bl. in Volk 1940", "base_site_description": "Aucune description" }, "id": "6", "geometry": { "type": "MultiPolygon", "coordinates": [[[[6.2261064058578315, 45.033875006359494], [6.226423594242966, 45.03386581190939], [6.226410626693254, 45.03364090405443], [6.226093439580115, 45.03365009846706], [6.2261064058578315, 45.033875006359494]]]] }, "type": "Feature" }], "type": "FeatureCollection" }
+    return Observable.of(mock)
+  }
+*/
   /*
  getInfoSite(id_base_site) {
      return this._http.get<any>(
@@ -149,12 +155,12 @@ export class DataService {
   }
 
   postVisit() {
-    let mock = {"status":200, "id":""}
+    let mock = { "status": 200, "id": "" }
     return Observable.of(mock);
   }
 
   patchVisit(idVisit) {
-    let mock = {"status":200, "id":idVisit};
+    let mock = { "status": 200, "id": idVisit };
     return Observable.of(mock);
   }
 }
