@@ -55,6 +55,7 @@ export class ListVisitComponent implements OnInit {
  
 
   onEachFeature(feature, layer) {
+    layer.setStyle(this.storeService.getLayerStyle(this.site))
   }
 
   getVisits() {
