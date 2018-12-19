@@ -122,7 +122,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
     let site = row.selected[0];
     const selectedLayer = this.mapListService.layerDict[id];
     this.toggleStyle(selectedLayer);
-    this.zoomOnSelectedLayer(this._map, selectedLayer, 18);
+    this.zoomOnSelectedLayer(this._map, selectedLayer, 16);
   }
 
   zoomOnSelectedLayer(map, layer, zoom) {
