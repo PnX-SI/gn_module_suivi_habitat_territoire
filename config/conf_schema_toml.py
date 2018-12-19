@@ -9,7 +9,7 @@ export_available_format = ['geojson', 'csv', 'shapefile']
 
 id_type_commune = 25
 zoom_center = [44.863664, 6.268670]
-zoom= 13
+zoom= 10
 
 site_message = {"emptyMessage" : "Aucun site à afficher ", "totalMessage" : "sites(s) au total"}
 list_visit_message = {"emptyMessage" : "Aucune visite sur ce site ", "totalMessage" : "visites au total"}
