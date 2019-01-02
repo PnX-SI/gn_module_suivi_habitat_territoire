@@ -57,9 +57,9 @@ JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying
 -- Insérer les espèces
 ----------------------
 -- Créer la liste des taxons suivis dans le protocoles SHT "Angiosperme ?"
-/*INSERT INTO taxonomie.bib_listes ( nom_liste, desc_liste, regne, group2_inpn) 
-VALUES ('Suivi Habitat Territoire', 'Taxons suivis dans le protocole Suivi Habitat Territoire', 'Plantae', 'Angiospermes');*/
--- ERREUR:  une valeur NULL viole la contrainte NOT NULL de la colonne « id_liste »
+INSERT INTO taxonomie.bib_listes (id_liste, nom_liste, desc_liste, regne, group2_inpn)
+VALUES ((SELECT MAX(id_liste)+1 FROM taxonomie.bib_listes),'Suivi Habitat Territoire', 'Taxons suivis dans le protocole Suivi Habitat Territoire', 'Plantae', 'Angiospermes');
+
 
 -- Insérer les taxons suivis dans le protocole SFT dans bib_noms et les ajouter dans la liste SFT
 /*INSERT INTO taxonomie.bib_noms (cd_nom, cd_ref, nom_francais) VALUES (104123, 104123, 'Jonc arctique - Juncus arcticus');

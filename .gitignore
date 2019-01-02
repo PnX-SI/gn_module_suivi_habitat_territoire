@@ -7,3 +7,4 @@ var/
 log/*
 .vscode
 */venv
+module.config.ts
