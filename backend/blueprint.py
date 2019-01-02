@@ -162,3 +162,53 @@ def get_all_sites():
         return FeatureCollection(features)
     return None
 
+
+@blueprint.route('/visit', methods=['POST', 'PATCH'])
+@json_resp
+def post_visit(info_role=None):
+    '''
+    Poste une nouvelle visite 
+    '''
+    data = dict(request.get_json())
+
+    tab_visit_taxons = data.pop('cor_visit_taxons')
+    tab_observer = data.pop('cor_visit_observer')
+    tab_perturbation = data.pop('cor_visit_perturbation')
+
+    visit = TVisitSHT(**data)
+
+    perturs = DB.session.query(TNomenclatures).filter(
+        TNomenclatures.id_nomenclature.in_(tab_perturbation)).all()
+    for per in perturs:
+        visit.cor_visit_perturbation.append(per)
+   
+
+    for t in tab_visit_taxons:
+        visit_taxons = CorVisitTaxon(**t)
+        visit.cor_visit_taxons.append(visit_taxons)
+
+
+    observers = DB.session.query(TRoles).filter(
+        TRoles.id_role.in_(tab_observer)
+    ).all()
+    for o in observers:
+        visit.observers.append(o)
+
+    visit.as_dict(True)
+    print(visit)
+
+    if visit.id_base_visit:
+        user_cruved = get_or_fetch_user_cruved(
+            session=session,
+            id_role=info_role.id_role,
+            id_application_parent=current_app.config['ID_APPLICATION_GEONATURE']
+        )
+        update_cruved = user_cruved['U']
+        check_user_cruved_visit(info_role, visit, update_cruved)
+        DB.session.merge(visit)
+    else:
+        DB.session.add(visit)
+
+    DB.session.commit()
+
+    return visit.as_dict(recursif=True)
