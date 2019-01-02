@@ -51,7 +51,7 @@ ALTER TABLE ONLY t_infos_site
     ADD CONSTRAINT pk_id_t_infos_site PRIMARY KEY (id_infos_site);
 
 ALTER TABLE ONLY cor_visit_taxons
-    ADD CONSTRAINT pk_cor_visit_taxons PRIMARY KEY (id_base_visit);
+    ADD CONSTRAINT pk_cor_visit_taxons PRIMARY KEY (id_cor_visite_taxons);
 
 ALTER TABLE ONLY cor_visit_perturbation 
     ADD CONSTRAINT pk_cor_visit_perturbation PRIMARY KEY (id_base_visit, id_nomenclature_perturbation);
