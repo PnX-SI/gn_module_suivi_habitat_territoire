@@ -166,6 +166,32 @@ def get_all_sites():
     return None
 
 
+@blueprint.route('/visits', methods=['GET'])
+@json_resp
+def get_visits():
+    '''
+    Retourne toutes les visites du module
+    '''
+    parameters = request.args
+    q = DB.session.query(TVisitSHT)
+    if 'id_base_site' in parameters:
+        q = q.filter(TVisitSHT.id_base_site == parameters['id_base_site'])
+    data = q.all()
+    return [d.as_dict(True) for d in data]
+
+
+@blueprint.route('/visits/<id_visit>', methods=['GET'])
+@json_resp
+def get_visit(id_visit):
+    '''
+    Retourne une visite
+    '''
+    data = DB.session.query(TVisitSHT).get(id_visit)
+    if data:
+        return data.as_dict(recursif=True)
+    return None
+
+
 @blueprint.route('/visit', methods=['POST', 'PATCH'])
 @json_resp
 def post_visit(info_role=None):
@@ -198,7 +224,6 @@ def post_visit(info_role=None):
         visit.observers.append(o)
 
     visit.as_dict(True)
-    print(visit)
 
     if visit.id_base_visit:
         user_cruved = get_or_fetch_user_cruved(
