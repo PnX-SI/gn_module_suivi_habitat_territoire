@@ -1,16 +1,19 @@
+import json
 from flask import Blueprint, request, session, current_app, send_from_directory, abort
 from geojson import FeatureCollection, Feature
 from sqlalchemy.sql.expression import func
 from sqlalchemy import and_ , distinct
+from sqlalchemy.exc import SQLAlchemyError
 
 from geonature.utils.env import DB, ROOT_DIR
 from geonature.utils.utilssqlalchemy import json_resp, to_json_resp, to_csv_resp
-
-from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteApplication
+from pypnnomenclature.models import TNomenclatures
+from pypnusershub import routes as fnauth
+from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteApplication, TBaseVisits
 from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import TRoles, BibOrganismes
 
-from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TBaseVisit, TInfosSite
+from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon
 
 blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
 
@@ -70,19 +73,19 @@ def get_all_sites():
     q = (
         DB.session.query(
             TInfosSite,
-            func.max(TBaseVisit.visit_date_min),
+            func.max(TBaseVisits.visit_date_min),
             Habref.lb_hab_fr_complet,
-            func.count(distinct(TBaseVisit.id_base_visit)),
+            func.count(distinct(TBaseVisits.id_base_visit)),
             func.string_agg(distinct(BibOrganismes.nom_organisme), ', '),
             func.string_agg(LAreas.area_name, ', ')
             ).outerjoin(
-            TBaseVisit, TBaseVisit.id_base_site == TInfosSite.id_base_site
+            TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
             # get habitat cd_hab
             ).outerjoin(
                 Habref, TInfosSite.cd_hab == Habref.cd_hab
             # get organisms of a site
             ).outerjoin(
-                corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisit.id_base_visit
+                corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
             ).outerjoin(
                 TRoles, TRoles.id_role == corVisitObserver.c.id_role
             ).outerjoin(
@@ -116,15 +119,15 @@ def get_all_sites():
         q_year = (
             DB.session.query(
                 TInfosSite.id_base_site,
-                func.max(TBaseVisit.visit_date_min),
+                func.max(TBaseVisits.visit_date_min),
             ).outerjoin(
-                TBaseVisit, TBaseVisit.id_base_site == TInfosSite.id_base_site
+                TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
             ).group_by(TInfosSite.id_base_site)
         )
 
         data_year = q_year.all()
 
-        q = q.filter(func.date_part('year', TBaseVisit.visit_date_min) == parameters['year'])
+        q = q.filter(func.date_part('year', TBaseVisits.visit_date_min) == parameters['year'])
     data = q.all()
 
     features = []

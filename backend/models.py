@@ -22,107 +22,10 @@ from pypnnomenclature.models import TNomenclatures
 from geonature.core.users.models import TRoles
 
 
-@serializable
-class BibNomenclaturesType(DB.Model):
-    __tablename__ = 'bib_nomenclatures_types'
-    __table_args__ = {'schema': 'ref_nomenclatures'}
-
-    id_type = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    mnemonique = DB.Column(DB.String(255), unique=True)
-    label_default = DB.Column(DB.String(255), nullable=False)
-    definition_default = DB.Column(DB.Text)
-    label_fr = DB.Column(DB.String(255), nullable=False)
-    definition_fr = DB.Column(DB.Text)
-    label_en = DB.Column(DB.String(255))
-    definition_en = DB.Column(DB.Text)
-    label_es = DB.Column(DB.String(255))
-    definition_es = DB.Column(DB.Text)
-    label_de = DB.Column(DB.String(255))
-    definition_de = DB.Column(DB.Text)
-    label_it = DB.Column(DB.String(255))
-    definition_it = DB.Column(DB.Text)
-    source = DB.Column(DB.String(50))
-    statut = DB.Column(DB.String(20))
-    meta_create_date = DB.Column(DB.DateTime, server_default=DB.FetchedValue())
-    meta_update_date = DB.Column(DB.DateTime, server_default=DB.FetchedValue())
-
-
-@serializable
-class TNomenclature(DB.Model):
-    __tablename__ = 't_nomenclatures'
-    __table_args__ = {'schema': 'ref_nomenclatures'}
-
-    id_nomenclature = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    id_type = DB.Column(DB.ForeignKey('ref_nomenclatures.bib_nomenclatures_types.id_type', onupdate='CASCADE'), nullable=False, index=True)
-    cd_nomenclature = DB.Column(DB.String(255), nullable=False)
-    mnemonique = DB.Column(DB.String(255))
-    label_default = DB.Column(DB.String(255), nullable=False)
-    definition_default = DB.Column(DB.Text)
-    label_fr = DB.Column(DB.String(255), nullable=False)
-    definition_fr = DB.Column(DB.Text)
-    label_en = DB.Column(DB.String(255))
-    definition_en = DB.Column(DB.Text)
-    label_es = DB.Column(DB.String(255))
-    definition_es = DB.Column(DB.Text)
-    label_de = DB.Column(DB.String(255))
-    definition_de = DB.Column(DB.Text)
-    label_it = DB.Column(DB.String(255))
-    definition_it = DB.Column(DB.Text)
-    source = DB.Column(DB.String(50))
-    statut = DB.Column(DB.String(20))
-    id_broader = DB.Column(DB.ForeignKey('ref_nomenclatures.t_nomenclatures.id_nomenclature'))
-    hierarchy = DB.Column(DB.String(255))
-    meta_create_date = DB.Column(DB.DateTime, server_default=DB.FetchedValue())
-    meta_update_date = DB.Column(DB.DateTime)
-    active = DB.Column(DB.Boolean, nullable=False, server_default=DB.FetchedValue())
-
-    parent = DB.relationship('TNomenclature', remote_side=[id_nomenclature], primaryjoin='TNomenclature.id_broader == TNomenclature.id_nomenclature', backref='t_nomenclatures')
-    bib_nomenclatures_type = DB.relationship('BibNomenclaturesType', primaryjoin='TNomenclature.id_type == BibNomenclaturesType.id_type', backref='t_nomenclatures')
  
 
 @serializable
-class TBaseSite(DB.Model):
-    __tablename__ = 't_base_sites'
-    __table_args__ = (
-        DB.CheckConstraint("ef_nomenclatures.check_nomenclature_type_by_mnemonique(id_nomenclature_type_site, 'TYPE_SITE'::character varying"),
-        DB.CheckConstraint('public.st_ndims(geom) = 2'),
-        DB.CheckConstraint('public.st_srid(geom) = 4326'),
-        {'schema': 'gn_monitoring', 'extend_existing': True}
-    )
-
-    id_base_site = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    id_inventor = DB.Column(DB.ForeignKey('utilisateurs.t_roles.id_role', onupdate='CASCADE'), index=True)
-    id_digitiser = DB.Column(DB.ForeignKey('utilisateurs.t_roles.id_role', onupdate='CASCADE'))
-    id_nomenclature_type_site = DB.Column(DB.ForeignKey('ref_nomenclatures.t_nomenclatures.id_nomenclature', onupdate='CASCADE'), nullable=False, index=True)
-    base_site_name = DB.Column(DB.String(255), nullable=False)
-    base_site_description = DB.Column(DB.Text)
-    base_site_code = DB.Column(DB.String(25), server_default=DB.FetchedValue())
-    first_use_date = DB.Column(DB.Date)
-    geom = DB.Column(Geometry, nullable=False, index=True)
-    uuid_base_site = DB.Column(UUID, server_default=DB.FetchedValue())
-
-    t_role = DB.relationship('TRoles', primaryjoin='TBaseSite.id_digitiser == TRoles.id_role', backref='trole_t_base_sites')
-    t_role1 = DB.relationship('TRoles', primaryjoin='TBaseSite.id_inventor == TRoles.id_role', backref='trole_t_base_sites_0')
-    t_nomenclature = DB.relationship('TNomenclature', primaryjoin='TBaseSite.id_nomenclature_type_site == TNomenclature.id_nomenclature', backref='t_base_sites')
-
-@serializable
-class TBaseVisit(DB.Model):
-    __tablename__ = 't_base_visits'
-    __table_args__ = {'schema': 'gn_monitoring', 'extend_existing': True}
-
-    id_base_visit = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    id_base_site = DB.Column(DB.ForeignKey('gn_monitoring.t_base_sites.id_base_site', ondelete='CASCADE'), index=True)
-    id_digitiser = DB.Column(DB.ForeignKey('utilisateurs.t_roles.id_role', onupdate='CASCADE'))
-    visit_date_min = DB.Column(DB.Date, nullable=False)
-    visit_date_max = DB.Column(DB.Date)
-    comments = DB.Column(DB.Text)
-    uuid_base_visit = DB.Column(UUID, server_default=DB.FetchedValue())
-
-    t_base_site = DB.relationship('TBaseSite', primaryjoin='TBaseVisit.id_base_site == TBaseSite.id_base_site', backref='t_base_visits')
-    t_role = DB.relationship('TRoles', primaryjoin='TBaseVisit.id_digitiser == TRoles.id_role', backref='t_base_visits')
-
-@serializable
-class CorVisitTaxon(TBaseVisit):
+class CorVisitTaxon(DB.Model):
     __tablename__ = 'cor_visit_taxons'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
@@ -132,6 +35,38 @@ class CorVisitTaxon(TBaseVisit):
 
 """     taxref = DB.relationship('Taxref', primaryjoin='CorVisitTaxon.cd_nom == Taxref.cd_nom', backref='cor_visit_taxons')
  """
+
+@serializable
+class TVisitSHT(TBaseVisits):
+    __tablename__ = 't_base_visits'
+    __table_args__ = {'schema': 'gn_monitoring', 'extend_existing': True}
+
+    #id_base_visit = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
+    #id_base_site = DB.Column(DB.ForeignKey('gn_monitoring.t_base_sites.id_base_site', ondelete='CASCADE'), index=True)
+    #id_digitiser = DB.Column(DB.ForeignKey('utilisateurs.t_roles.id_role', onupdate='CASCADE'))
+    #visit_date_min = DB.Column(DB.Date, nullable=False)
+    #visit_date_max = DB.Column(DB.Date)
+    #comments = DB.Column(DB.Text)
+    #uuid_base_visit = DB.Column(UUID, server_default=DB.FetchedValue())
+
+    #t_base_site = DB.relationship('TBaseSite', primaryjoin='TBaseVisit.id_base_site == TBaseSite.id_base_site', backref='t_base_visits')
+    #t_role = DB.relationship('TRoles', primaryjoin='TBaseVisit.id_digitiser == TRoles.id_role', backref='t_base_visits')
+
+
+    cor_visit_taxons = DB.relationship("CorVisitTaxon", backref='t_base_visits', lazy='dynamic') 
+
+    observers = DB.relationship(
+        'TRoles',
+        secondary=corVisitObserver,
+        primaryjoin=(
+            corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
+        ),
+        secondaryjoin=(corVisitObserver.c.id_role == TRoles.id_role),
+        foreign_keys=[
+            corVisitObserver.c.id_base_visit,
+            corVisitObserver.c.id_role
+        ]
+    )
 
 @serializable
 class Typoref(DB.Model):
@@ -198,28 +133,9 @@ class CorVisitPerturbation(DB.Model):
     id_nomenclature_perturbation = DB.Column(DB.ForeignKey('ref_nomenclatures.t_nomenclatures.id_nomenclature', onupdate='CASCADE'), primary_key=True, nullable=False)
     create_date = DB.Column(DB.DateTime, nullable=False)
 
-    t_base_visit = DB.relationship('TBaseVisit', primaryjoin='CorVisitPerturbation.id_base_visit == TBaseVisit.id_base_visit', backref='cor_visit_perturbations')
-    t_nomenclature = DB.relationship('TNomenclature', primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclature.id_nomenclature', backref='cor_visit_perturbations')
+    #t_base_visit = DB.relationship('TVisitSHT', primaryjoin='CorVisitPerturbation.id_base_visit == TVisitSHT.id_base_visit', backref='cor_visit_perturbations')
+    #t_nomenclature = DB.relationship('TNomenclature', primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclature.id_nomenclature', backref='cor_visit_perturbations')
 
-""" @serializable
-class MailleTmp(DB.Model):
-    __tablename__ = 'maille_tmp'
-    __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
-
-    gid = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    fid = DB.Column(DB.Numeric)
-    name = DB.Column(DB.String(254))
-    descriptio = DB.Column(DB.String(254))
-    timestamp = DB.Column(DB.String(24))
-    begin = DB.Column(DB.String(24))
-    end = DB.Column(DB.String(24))
-    altitudemo = DB.Column(DB.String(254))
-    tessellate = DB.Column(DB.Numeric)
-    extrude = DB.Column(DB.Numeric)
-    visibility = DB.Column(DB.Numeric)
-    draworder = DB.Column(DB.Numeric)
-    icon = DB.Column(DB.String(254))
-    geom = DB.Column(Geometry('MULTIPOLYGON', 2154), index=True) """
 
 @geoserializable
 @serializable
@@ -232,8 +148,8 @@ class TInfosSite(DB.Model):
     cd_hab = DB.Column(DB.ForeignKey('habitat.habref.cd_hab'), nullable=False)
 
     # habref = DB.relationship('Habref', primaryjoin='TInfosSite.cd_hab == Habref.cd_hab', backref='t_infos_sites')
-    #t_base_site = DB.relationship('TBaseSite', primaryjoin='TInfosSite.id_base_site == TBaseSite.id_base_site', backref='t_infos_sites')
-    t_base_site = DB.relationship('TBaseSite')
+    #t_base_site = DB.relationship('TBaseSites', primaryjoin='TInfosSite.id_base_site == TBaseSites.id_base_site', backref='t_infos_sites')
+    t_base_site = DB.relationship('TBaseSites')
     geom = association_proxy('t_base_site', 'geom')
 
     def get_geofeature(self, recursif=True):
