@@ -240,3 +240,55 @@ def post_visit(info_role=None):
     DB.session.commit()
 
     return visit.as_dict(recursif=True)
+
+
+@blueprint.route('/organismes', methods=['GET'])
+@json_resp
+def get_organisme():
+    '''
+    Retourne la liste de tous les organismes présents
+    '''
+
+    q = DB.session.query(
+        BibOrganismes.nom_organisme, TRoles.nom_role, TRoles.prenom_role).outerjoin(
+        TRoles, BibOrganismes.id_organisme == TRoles.id_organisme).distinct().join(
+        corVisitObserver, TRoles.id_role == corVisitObserver.c.id_role).outerjoin(
+        TVisitSHT, corVisitObserver.c.id_base_visit == TVisitSHT.id_base_visit)
+
+    data = q.all()
+    if data:
+        tab_orga = []
+        for d in data:
+            info_orga = dict()
+            info_orga['nom_organisme'] = str(d[0])
+            info_orga['observer'] = str(d[1]) + ' ' + str(d[2])
+            tab_orga.append(info_orga)
+        return tab_orga
+    return None
+
+
+@blueprint.route('/communes/<id_application>', methods=['GET'])
+@json_resp
+def get_commune(id_application):
+    '''
+    Retourne toutes les communes présents dans le module
+    '''
+    params = request.args
+
+    q = DB.session.query(LAreas.area_name).distinct().outerjoin(
+        corSiteArea, LAreas.id_area == corSiteArea.c.id_area).outerjoin(
+        corSiteApplication, corSiteApplication.c.id_base_site == corSiteArea.c.id_base_site).filter(corSiteApplication.c.id_application == id_application)
+
+    if 'id_area_type' in params:
+        q = q.filter(LAreas.id_type == params['id_area_type'])
+
+    data = q.all()
+    if data:
+        tab_commune = []
+
+        for d in data:
+            nom_com = dict()
+            nom_com['nom_commune'] = str(d[0])
+            tab_commune.append(nom_com)
+        return tab_commune
+    return None
