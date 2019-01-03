@@ -25,6 +25,23 @@ INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemoni
 VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone de habitat', 'Zone de habitat - suivi habitat territoire', 'Zone d''habitat',  'Zone d''habitat issu du module suivi habitat territoire', 'CBNA');
 
 
+
+---------------------------------
+-- Insérer la liste des habitats
+---------------------------------
+
+-- insérer une liste d'habitat
+INSERT INTO ref_habitat.bib_list_habitat (list_name)
+VALUES ('Suivi Habitat Territoire');
+
+-- Insérer habitat
+INSERT INTO ref_habitat.cor_list_habitat (id_list, cd_hab)
+VALUES (
+    (SELECT id_list FROM ref_habitat.bib_list_habitat WHERE list_name='Suivi Habitat Territoire'),
+    16265); -- CARICION INCURVAE
+
+
+
 ----------------------
 -- Insérer les sites
 ----------------------
@@ -61,6 +78,7 @@ WHERE nom_application = 'suivi_habitat_territoire'
 )
 SELECT ti.id_base_site, idapp.id_application
 FROM pr_monitoring_habitat_territory.t_infos_site ti, idapp;
+
 
 ----------------------
 -- Insérer les espèces

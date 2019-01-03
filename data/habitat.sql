@@ -5,9 +5,9 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
-CREATE SCHEMA habitat;
+CREATE SCHEMA ref_habitat;
 
-SET search_path = habitat, pg_catalog, public;
+SET search_path = ref_habitat, pg_catalog, public;
 
 SET default_with_oids = false;
 
@@ -31,7 +31,7 @@ CREATE TABLE typoref (
     langue character varying(255),
     presentation character varying(4000)
 );
-COMMENT ON TABLE habitat.typoref IS 'typoref, extrait de la table TYPOREF du référentiel HABREF 4.0';
+COMMENT ON TABLE ref_habitat.typoref IS 'typoref, extrait de la table TYPOREF du référentiel HABREF 4.0';
 
 -- init référentiel HABREF 4.0, table HABREF
 CREATE TABLE habref (
@@ -50,20 +50,20 @@ CREATE TABLE habref (
     france character varying(5),
     lb_description character varying(4000)
 );
-COMMENT ON TABLE habitat.habref IS 'habref, extrait de la table HABREF référentiel HABREF 4.0 INPN';
+COMMENT ON TABLE ref_habitat.habref IS 'habref, extrait de la table HABREF référentiel HABREF 4.0 INPN';
 
 CREATE TABLE bib_list_habitat (
     id_list serial NOT NULL,
     list_name character varying(255) NOT NULL
 );
-COMMENT ON TABLE habitat.bib_list_habitat IS 'Table des listes des habitats';
+COMMENT ON TABLE ref_habitat.bib_list_habitat IS 'Table des listes des habitats';
 
 CREATE TABLE cor_list_habitat (
     id_cor_list serial NOT NULL,
     id_list integer NOT NULL,
     cd_hab integer NOT NULL
 );
-COMMENT ON TABLE habitat.cor_list_habitat IS 'Habitat de chaque liste';
+COMMENT ON TABLE ref_habitat.cor_list_habitat IS 'Habitat de chaque liste';
 
 
 ALTER TABLE ONLY typoref
@@ -83,10 +83,10 @@ ALTER TABLE ONLY cor_list_habitat
 ---------------
 
 ALTER TABLE ONLY habref 
-    ADD CONSTRAINT fk_typoref FOREIGN KEY (cd_typo) REFERENCES habitat.typoref (cd_typo) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT fk_typoref FOREIGN KEY (cd_typo) REFERENCES ref_habitat.typoref (cd_typo) ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_list_habitat 
-    ADD CONSTRAINT fk_cor_list_habitat FOREIGN KEY (cd_hab) REFERENCES habitat.habref (cd_hab) ON UPDATE CASCADE ON DELETE CASCADE; 
+    ADD CONSTRAINT fk_cor_list_habitat FOREIGN KEY (cd_hab) REFERENCES ref_habitat.habref (cd_hab) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 
