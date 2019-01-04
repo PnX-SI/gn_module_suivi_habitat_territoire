@@ -30,7 +30,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   public nom_habitat;
   public id_base_site;
   private _currentSite;
-  private visit = [{ "id_visit": "", "visit_date": "", "observers": [], "cor_visit_taxons": [], "cor_visit_perturbation": [], "comments": "" }];
+  private visit = { "id_base_visit": "", "visit_date_min": "", "observers": [], "cor_visit_taxons": [], "cor_visit_perturbation": [], "comments": "" };
   public modalTitle = "Saisie d'un relevé";
   public disabledForm = false;
   public onUpVisit = false;
@@ -78,10 +78,9 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     datas.push(taxons);
 
     forkJoin(datas).subscribe(results => {
-      console.log("results", results);
       // results[0] is visit
       // results[1] is species
-      this.visit = (results[0].length > 0) ? results[0] : this.visit; // TODO: type visit ?
+      this.visit = (Object.keys(results[0]).length > 0) ? results[0] : this.visit; // TODO: type visit ?
       this.species = results[1];
       this.pachForm();
     });
@@ -93,8 +92,8 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       element['name'] = element.nom_complet;
       element['id'] = element.cd_nom;
       element['selected'] = false;
-      if (this.visit[0]['cor_visit_taxons'].length > 0) {
-        this.visit[0]['cor_visit_taxons'].forEach(specie => {
+      if (this.visit['cor_visit_taxons'].length > 0) {
+        this.visit['cor_visit_taxons'].forEach(specie => {
           if (specie.cd_nom == element.cd_nom) {
             element['selected'] = true;
           }
@@ -112,13 +111,13 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   pachForm() {
     this.formVisit.patchValue({
       "cor_visit_species": this.addSpeciesControl(),
-      "id_base_visit": this.visit[0].id_visit,
-      "visit_date": this.dateParser.parse(this.visit[0].visit_date),
-      "cor_visit_observer": this.visit[0].observers,
-      "cor_visit_perturbation": this.visit[0].cor_visit_perturbation,
+      "id_base_visit": this.visit.id_base_visit,
+      "visit_date_min": this.dateParser.parse(this.visit.visit_date_min),
+      "cor_visit_observer": this.visit.observers,
+      "cor_visit_perturbation": this.visit.cor_visit_perturbation,
       "id_base_site": this.id_base_site,
       "cor_visit_habitats": this.cd_hab,
-      "comments": this.visit[0].comments
+      "comments": this.visit.comments
     })
   }
 

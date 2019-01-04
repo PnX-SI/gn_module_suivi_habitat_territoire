@@ -52,7 +52,6 @@ def get_taxa_by_habitats(cd_hab):
     data = q.all()
 
     taxons = []
-    print(data)
 
     if data:
         for d in data:
@@ -190,8 +189,15 @@ def get_visit(id_visit):
     Retourne une visite
     '''
     data = DB.session.query(TVisitSHT).get(id_visit)
+  
+    visit = []
     if data:
-        return data.as_dict(recursif=True)
+        cvisit = data.as_dict(recursif=True)
+        tab_visit_perturbation = cvisit.pop('cor_visit_perturbation')
+        for index, per in enumerate(tab_visit_perturbation):
+            visit.append(per['t_nomenclature'])
+        cvisit['cor_visit_perturbation'] = visit
+        return cvisit
     return None
 
 

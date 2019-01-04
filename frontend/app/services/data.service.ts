@@ -24,15 +24,15 @@ export class DataService {
     return Observable.of(mock)
   }
 */
-  /*
+
  getInfoSite(id_base_site) {
      return this._http.get<any>(
-     `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/site?id_base_site=${id_base_site}`
+     `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/sites?id_base_site=${id_base_site}`
    );
  } 
- */
 
-  getInfoSite(id_base_site) {
+
+/*  getInfoSite(id_base_site) {
     let mock = [{
       "id_infos_site": 1,
       "site_nom": "Mon site",
@@ -46,10 +46,10 @@ export class DataService {
       "site_description": "description du site"
     }]
     return Observable.of(mock)
-  }
+  }*/
 
 
-  /*  getVisits(params: any) {
+  getVisits(params: any) {
      let myParams = new HttpParams();
  
      for (let key in params) {
@@ -59,9 +59,9 @@ export class DataService {
      return this._http.get<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits`, {
        params: myParams
      });
-   } */
+   }
 
-  getVisits(params: any) {
+ /* getVisits(params: any) {
     let mock = [{
       "id_visit": 1,
       "visit_date": "2018-12-01",
@@ -81,15 +81,15 @@ export class DataService {
     ]
 
     return Observable.of(mock);
+  }*/
+
+  getOneVisit(id_visit) {
+      return this._http.get<any>(
+        `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/${id_visit}`
+      );
   }
 
   /*getOneVisit(id_visit) {
-      return this._http.get<any>(
-        `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visit/${id_visit}`
-      );
-    } */
-
-  getOneVisit(id_visit) {
     let mock = [{
       "id_visit": 1,
       "visit_date": "2018-12-01",
@@ -107,7 +107,7 @@ export class DataService {
       "comments": "Ceci est le commentaire d'une fausse données"
     }]
     return Observable.of(mock);
-  }
+  }*/
 
   /*  getOrganisme() {
      return this._http.get<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/organisme`);

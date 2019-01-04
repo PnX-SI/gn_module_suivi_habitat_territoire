@@ -17,7 +17,7 @@
                 <div class="form-group">
                     <label> Date de la visite : </label>
                     <div class="">
-                        <pnx-date [parentFormControl]="formVisit.controls.visit_date">
+                        <pnx-date [parentFormControl]="formVisit.controls.visit_date_min" [disabled]="disabledForm">
                         </pnx-date>
                     </div>
                 </div>
@@ -27,7 +27,8 @@
                     <label> Observateur(s) : </label>
                     <div class="" id="newObserver">
                         <pnx-observers [parentFormControl]="formVisit.controls.cor_visit_observer" [bindAllItem]="true"
-                            [idMenu]="storeService.shtConfig.id_menu_list_user">
+                            [disabled]="disabledForm"
+                            [idMenu]="storeService.shtConfig.id_menu_list_user" >
                         </pnx-observers>
                     </div>
                 </div>
@@ -38,6 +39,7 @@
                     <div class="" id="newPerturs">
                         <pnx-nomenclature [parentFormControl]="formVisit.controls.cor_visit_perturbation" [multiSelect]="true"
                             keyValue="id_nomenclature" [bindAllItem]="true" keyLabel="label_default"
+                            [disabled]="disabledForm"
                             codeNomenclatureType="TYPE_PERTURBATION">
                         </pnx-nomenclature>
                     </div>

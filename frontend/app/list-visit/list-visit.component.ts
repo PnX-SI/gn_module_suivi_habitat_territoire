@@ -79,9 +79,11 @@ export class ListVisitComponent implements OnInit {
 
       this.rows = data;
     }, error => {
-      this.toastr.error('Une erreur est survenue lors de la modification de votre relevé', '', {
-        positionClass: 'toast-top-right'
-      });
+      if(error.status != 404) {
+        this.toastr.error('Une erreur est survenue lors de la modification de votre relevé', '', {
+          positionClass: 'toast-top-right'
+        });
+      }
     });
   }
 

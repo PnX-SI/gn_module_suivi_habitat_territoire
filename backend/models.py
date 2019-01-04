@@ -39,6 +39,8 @@ class TNomenclature(DB.Model):
     __table_args__ = {'schema': 'ref_nomenclatures', 'extend_existing': True}
 
     id_nomenclature = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
+    mnemonique = DB.Column(DB.String(255))
+    label_default = DB.Column(DB.String(255), nullable=False)
 
 @serializable
 class CorVisitPerturbation(DB.Model):
