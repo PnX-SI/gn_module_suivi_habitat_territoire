@@ -5,8 +5,7 @@ from sqlalchemy.schema import FetchedValue
 from geoalchemy2.types import Geometry
 from sqlalchemy.dialects.postgresql.base import UUID
 from sqlalchemy.orm import relationship
-#from flask_sqlalchemy import SQLAlchemy
-
+from sqlalchemy.sql.expression import func
 
 from geonature.utils.env import DB
 from geonature.utils.utilssqlalchemy import (
@@ -29,13 +28,17 @@ class CorVisitTaxon(DB.Model):
     __tablename__ = 'cor_visit_taxons'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
-    id_cor_visite_taxons = DB.Column(DB.Integer, nullable=False, server_default=DB.FetchedValue())
-    id_base_visit = DB.Column(DB.ForeignKey('gn_monitoring.t_base_visits.id_base_visit', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
+    id_cor_visite_taxons = DB.Column(DB.Integer, nullable=False, server_default=DB.FetchedValue(), primary_key=True)
+    id_base_visit = DB.Column(DB.ForeignKey('gn_monitoring.t_base_visits.id_base_visit', ondelete='CASCADE', onupdate='CASCADE'))
     cd_nom = DB.Column(DB.Integer)
 
-"""     taxref = DB.relationship('Taxref', primaryjoin='CorVisitTaxon.cd_nom == Taxref.cd_nom', backref='cor_visit_taxons')
- """
 
+@serializable
+class TNomenclature(DB.Model):
+    __tablename__ = 't_nomenclatures'
+    __table_args__ = {'schema': 'ref_nomenclatures', 'extend_existing': True}
+
+    id_nomenclature = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
 
 @serializable
 class CorVisitPerturbation(DB.Model):
@@ -44,30 +47,32 @@ class CorVisitPerturbation(DB.Model):
 
     id_base_visit = DB.Column(DB.ForeignKey('gn_monitoring.t_base_visits.id_base_visit', onupdate='CASCADE'), primary_key=True, nullable=False)
     id_nomenclature_perturbation = DB.Column(DB.ForeignKey('ref_nomenclatures.t_nomenclatures.id_nomenclature', onupdate='CASCADE'), primary_key=True, nullable=False)
-    create_date = DB.Column(DB.DateTime, nullable=False)
+    create_date = DB.Column(DB.DateTime, nullable=False, default=func.now())
 
     #t_base_visit = DB.relationship('TVisitSHT', primaryjoin='CorVisitPerturbation.id_base_visit == TVisitSHT.id_base_visit', backref='cor_visit_perturbations')
-    #t_nomenclature = DB.relationship('TNomenclature', primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclature.id_nomenclature', backref='cor_visit_perturbations')
+    t_nomenclature = DB.relationship('TNomenclature', primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclature.id_nomenclature', backref='cor_visit_perturbations')
 
+@serializable
+class Taxonomie(DB.Model):
+    __tablename__ = 'taxref'
+    __table_args__ = {
+        'schema': 'taxonomie',
+        'extend_existing': True
+    }
+
+    cd_nom = DB.Column(
+        DB.Integer,
+        primary_key=True
+    )
+    nom_complet = DB.Column(DB.Unicode)
 
 @serializable
 class TVisitSHT(TBaseVisits):
     __tablename__ = 't_base_visits'
     __table_args__ = {'schema': 'gn_monitoring', 'extend_existing': True}
 
-    #id_base_visit = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    #id_base_site = DB.Column(DB.ForeignKey('gn_monitoring.t_base_sites.id_base_site', ondelete='CASCADE'), index=True)
-    #id_digitiser = DB.Column(DB.ForeignKey('utilisateurs.t_roles.id_role', onupdate='CASCADE'))
-    #visit_date_min = DB.Column(DB.Date, nullable=False)
-    #visit_date_max = DB.Column(DB.Date)
-    #comments = DB.Column(DB.Text)
-    #uuid_base_visit = DB.Column(UUID, server_default=DB.FetchedValue())
-
-    #t_base_site = DB.relationship('TBaseSite', primaryjoin='TBaseVisit.id_base_site == TBaseSite.id_base_site', backref='t_base_visits')
-    #t_role = DB.relationship('TRoles', primaryjoin='TBaseVisit.id_digitiser == TRoles.id_role', backref='t_base_visits')
-
-    cor_visit_perturbation = DB.relationship("CorVisitPerturbation", backref='t_base_visits', lazy='dynamic')
-    cor_visit_taxons = DB.relationship("CorVisitTaxon", backref='t_base_visits', lazy='dynamic') 
+    cor_visit_perturbation = DB.relationship('CorVisitPerturbation', backref='t_base_visits')
+    cor_visit_taxons = DB.relationship("CorVisitTaxon", backref='t_base_visits')
 
     observers = DB.relationship(
         'TRoles',
@@ -161,16 +166,4 @@ class TInfosSite(DB.Model):
             recursif
         )
 
-@serializable
-class Taxonomie(DB.Model):
-    __tablename__ = 'taxref'
-    __table_args__ = {
-        'schema': 'taxonomie',
-        'extend_existing': True
-    }
 
-    cd_nom = DB.Column(
-        DB.Integer,
-        primary_key=True
-    )
-    nom_complet = DB.Column(DB.Unicode)

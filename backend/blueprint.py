@@ -8,12 +8,18 @@ from sqlalchemy.exc import SQLAlchemyError
 from geonature.utils.env import DB, ROOT_DIR
 from geonature.utils.utilssqlalchemy import json_resp, to_json_resp, to_csv_resp
 from pypnnomenclature.models import TNomenclatures
+from pypnusershub.db.tools import (
+    InsufficientRightsError,
+    get_or_fetch_user_cruved,
+)
 from pypnusershub import routes as fnauth
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteApplication, TBaseVisits
 from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import TRoles, BibOrganismes
 
-from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon
+from .repositories import check_user_cruved_visit, check_year_visit, get_or_create
+
+from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation
 
 blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
 
@@ -66,9 +72,7 @@ def get_all_sites():
     '''
     parameters = request.args
 
-    # TODO Blueprint config ne fonctionne pas ??
-    #id_type_commune = blueprint.config['id_type_commune']
-    id_type_commune = 25
+    id_type_commune = blueprint.config['id_type_commune']
 
     q = (
         DB.session.query(
@@ -132,7 +136,6 @@ def get_all_sites():
 
     features = []
 
-    print("data", data)
     if data:
         for d in data:
             feature = d[0].get_geofeature()
@@ -192,30 +195,34 @@ def get_visit(id_visit):
     return None
 
 
-@blueprint.route('/visit', methods=['POST', 'PATCH'])
+@blueprint.route('/visits', methods=['POST'])
 @json_resp
 def post_visit(info_role=None):
     '''
-    Poste une nouvelle visite 
+    Poster une nouvelle visite
     '''
     data = dict(request.get_json())
+    tab_visit_taxons = []
+    tab_observer = []
+    tab_perturbation = []
 
-    tab_visit_taxons = data.pop('cor_visit_taxons')
-    tab_observer = data.pop('cor_visit_observer')
-    tab_perturbation = data.pop('cor_visit_perturbation')
+    if 'cor_visit_taxons' in data:
+        tab_visit_taxons = data.pop('cor_visit_taxons')
+    if 'cor_visit_observer' in data:
+        tab_observer = data.pop('cor_visit_observer')
+    if 'cor_visit_perturbation' in data:
+        tab_perturbation = data.pop('cor_visit_perturbation')
 
     visit = TVisitSHT(**data)
 
-    perturs = DB.session.query(TNomenclatures).filter(
-        TNomenclatures.id_nomenclature.in_(tab_perturbation)).all()
-    for per in perturs:
-        visit.cor_visit_perturbation.append(per)
-   
+
+    for per in tab_perturbation:
+        visit_per = CorVisitPerturbation(**per)
+        visit.cor_visit_perturbation.append(visit_per)
 
     for t in tab_visit_taxons:
         visit_taxons = CorVisitTaxon(**t)
         visit.cor_visit_taxons.append(visit_taxons)
-
 
     observers = DB.session.query(TRoles).filter(
         TRoles.id_role.in_(tab_observer)
@@ -225,21 +232,74 @@ def post_visit(info_role=None):
 
     visit.as_dict(True)
 
-    if visit.id_base_visit:
-        user_cruved = get_or_fetch_user_cruved(
-            session=session,
-            id_role=info_role.id_role,
-            id_application_parent=current_app.config['ID_APPLICATION_GEONATURE']
-        )
-        update_cruved = user_cruved['U']
-        check_user_cruved_visit(info_role, visit, update_cruved)
-        DB.session.merge(visit)
-    else:
-        DB.session.add(visit)
+    DB.session.add(visit)
 
     DB.session.commit()
 
     return visit.as_dict(recursif=True)
+
+
+@blueprint.route('/visits/<int:idv>', methods=['PATCH'])
+@json_resp
+def patch_visit(idv, info_role=None):
+    '''
+    Mettre à jour une visite
+    '''
+    data = dict(request.get_json())
+
+    try:
+        existingVisit = TVisitSHT.query.filter_by(id_base_visit = idv).first()
+        if(existingVisit == None):
+            raise ValueError('This visit does not exist')
+    except ValueError:
+        resp = jsonify({"error": 'This POI does not exist'})
+        resp.status_code = 404
+        return resp
+
+    tab_visit_taxons = []
+    tab_observer = []
+    tab_perturbation = []
+
+    if 'cor_visit_taxons' in data:
+        tab_visit_taxons = data.pop('cor_visit_taxons')
+    if 'cor_visit_observer' in data:
+        tab_observer = data.pop('cor_visit_observer')
+    if 'cor_visit_perturbation' in data:
+        tab_perturbation = data.pop('cor_visit_perturbation')
+
+    visit = TVisitSHT(**data)
+
+    DB.session.query(CorVisitPerturbation).filter_by(id_base_visit = idv).delete()
+    for per in tab_perturbation:
+        visitPer = CorVisitPerturbation(**per)
+        visit.cor_visit_perturbation.append(visitPer)
+
+    DB.session.query(CorVisitTaxon).filter_by(id_base_visit = idv).delete()
+    for taxon in tab_visit_taxons:
+        visitTaxons = CorVisitTaxon(**taxon)
+        visit.cor_visit_taxons.append(visitTaxons)
+
+
+    observers = DB.session.query(TRoles).filter(
+        TRoles.id_role.in_(tab_observer)
+    ).all()
+    for o in observers:
+        visit.observers.append(o)
+
+    """ user_cruved = get_or_fetch_user_cruved(
+        session=session,
+        id_role=info_role.id_role,
+        id_application_parent=current_app.config['ID_APPLICATION_GEONATURE']
+    )
+    update_cruved = user_cruved['U']
+    check_user_cruved_visit(info_role, visit, update_cruved) """
+
+    mergeVisit = DB.session.merge(visit)
+
+    DB.session.commit()
+
+    return visit.as_dict(recursif=True)
+
 
 
 @blueprint.route('/organismes', methods=['GET'])
