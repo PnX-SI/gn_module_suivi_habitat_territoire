@@ -252,7 +252,7 @@ def patch_visit(idv, info_role=None):
         if(existingVisit == None):
             raise ValueError('This visit does not exist')
     except ValueError:
-        resp = jsonify({"error": 'This POI does not exist'})
+        resp = jsonify({"error": 'This visit does not exist'})
         resp.status_code = 404
         return resp
 
