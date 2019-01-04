@@ -92,6 +92,13 @@ ALTER TABLE ONLY cor_habitat_taxon
 ALTER TABLE ONLY cor_habitat_taxon 
     ADD CONSTRAINT fk_cor_habitat_taxon_cd_nom FOREIGN KEY (cd_nom) REFERENCES taxonomie.taxref (cd_nom) ON UPDATE CASCADE;
 
+----------
+--UNIQUE--
+----------
+
+ALTER TABLE ONLY cor_visit_taxons
+    ADD CONSTRAINT unique_cor_visit_taxons UNIQUE ( id_base_visit, cd_nom );
+
 
 --------------
 -- DATA -----
