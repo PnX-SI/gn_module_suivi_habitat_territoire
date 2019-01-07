@@ -73,19 +73,6 @@ def check_year_visit(id_base_site, new_visit_date):
         if year_old_visit == year_new_visit:
             DB.session.rollback()
             raise PostYearError(
-                ('ZP {} has already been visited in {} ')
+                ('Maille {} has already been visited in {} ')
                 .format(id_base_site, year_old_visit),
                 403)
-
-
-
-def get_or_create(model, defaults=None, **kwargs):
-    instance = DB.session.query(model).filter_by(**kwargs).first()
-    if instance:
-        return instance, False
-    else:
-        params = dict((k, v) for k, v in kwargs.items())
-        params.update(defaults or {})
-        instance = model(**params)
-        #DB.session.add(instance)
-        return instance, True
