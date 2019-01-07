@@ -285,7 +285,7 @@ def patch_visit(idv, info_role=None):
         visitTaxons = CorVisitTaxon(**taxon)
         visit.cor_visit_taxons.append(visitTaxons)
 
-    DB.session.query(corVisitObserver).filter_by(id_base_visit = idv).delete()
+    visit.observers = []
     observers = DB.session.query(TRoles).filter(
         TRoles.id_role.in_(tab_observer)
     ).all()
