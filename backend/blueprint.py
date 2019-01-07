@@ -191,10 +191,11 @@ def get_visit(id_visit):
     visit = []
     if data:
         cvisit = data.as_dict(recursif=True)
-        tab_visit_perturbation = cvisit.pop('cor_visit_perturbation')
-        for index, per in enumerate(tab_visit_perturbation):
-            visit.append(per['t_nomenclature'])
-        cvisit['cor_visit_perturbation'] = visit
+        if 'cor_visit_perturbation' in cvisit:
+            tab_visit_perturbation = cvisit.pop('cor_visit_perturbation')
+            for index, per in enumerate(tab_visit_perturbation):
+                visit.append(per['t_nomenclature'])
+            cvisit['cor_visit_perturbation'] = visit
         return cvisit
     return None
 
