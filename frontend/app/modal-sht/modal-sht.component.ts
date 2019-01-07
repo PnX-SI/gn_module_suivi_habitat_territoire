@@ -74,7 +74,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       currentVisit = Observable.of([]);
     }
     datas.push(currentVisit);
-    let taxons = this._api.getTaxons('');
+    let taxons = this._api.getTaxons(this.cd_hab);
     datas.push(taxons);
 
     forkJoin(datas).subscribe(results => {
@@ -105,18 +105,17 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   }
 
   getSpeciesControl() {
-    return this.formVisit.get('cor_visit_species');
+    return this.formVisit.get('cor_visit_taxons');
   }
 
   pachForm() {
     this.formVisit.patchValue({
-      "cor_visit_species": this.addSpeciesControl(),
+      "cor_visit_taxons": this.addSpeciesControl(),
       "id_base_visit": this.visit.id_base_visit,
       "visit_date_min": this.dateParser.parse(this.visit.visit_date_min),
       "cor_visit_observer": this.visit.observers,
       "cor_visit_perturbation": this.visit.cor_visit_perturbation,
       "id_base_site": this.id_base_site,
-      "cor_visit_habitats": this.cd_hab,
       "comments": this.visit.comments
     })
   }
@@ -130,14 +129,57 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     this.initData();
   }
 
-  onSave() {
+  onSave() {  
     this.onClose();
+    let currentForm = this.formateDataForm()
+    console.log('currentForm: ', JSON.stringify(currentForm))
+    if (this.idVisit) {
+      currentForm['id_base_visit'] = this.idVisit;
+      this.patchVisit(currentForm);
+    } else {
+      this.postVisit(currentForm);
+    }
+  }
+
+  formateDataForm(){
     const currentForm = this.formVisit.value;
-    console.log(currentForm);
-    if (this.idVisit)
-      this.patchVisit();
-    else
-      this.postVisit();
+    if(!this.idVisit)
+      delete currentForm['id_base_visit'];
+    currentForm['id_base_site'] = this.id_base_site;
+    currentForm['visit_date_min'] = this.dateParser.format(
+      this.formVisit.controls.visit_date_min.value
+    );
+    //comments
+    currentForm['comments'] = this.formVisit.controls.comments.value;
+    //cor_visit_taxons
+    currentForm['cor_visit_taxons'] = currentForm['cor_visit_taxons'].filter(
+      taxons => {
+        if (taxons.value && taxons.value.cd_nom ) {
+          return true;
+        } else {
+          return false;
+        }
+      }).map( taxons => {
+        return  { 'cd_nom': taxons.value.cd_nom }
+      }
+    );
+    //cor_visit_perturbations
+    if (
+      currentForm['cor_visit_perturbation'] !== null &&
+      currentForm['cor_visit_perturbation'] !== undefined
+    ) {
+      currentForm['cor_visit_perturbation'] = currentForm['cor_visit_perturbation'].map(
+        pertu => {
+          return {'id_nomenclature_perturbation' : pertu.id_nomenclature };
+        }
+      );
+    }
+    //observers
+    currentForm['cor_visit_observer'] = currentForm['cor_visit_observer'].map(obs => {
+      return obs.id_role;
+    });
+
+    return currentForm;
   }
 
   onClose() {
@@ -155,8 +197,8 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     this.labelUpVisit = (this.onUpVisit) ? "Annulé" : "Editer le relevé";
   }
 
-  postVisit() {
-    this._api.postVisit().subscribe(data => {
+  postVisit(currentForm) {
+    this._api.postVisit(currentForm).subscribe(data => {
       this.visitsUp.emit(data);
       this.toastr.success('Le relevé est enregistré', '', {
         positionClass: 'toast-top-right'
@@ -168,7 +210,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     })
   }
 
-  patchVisit() {
+  patchVisit(currentForm) {
     this._api.patchVisit(this.idVisit).subscribe(data => {
       this.visitsUp.emit(data);
       this.toastr.success('Le relevé a été modifié', '', {

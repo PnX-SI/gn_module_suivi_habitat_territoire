@@ -48,7 +48,7 @@
 
                 <div class="form-group">
                     <label> Espèces présentes : </label>
-                    <div class="form-check" *ngFor='let control of formVisit.get("cor_visit_species").value; let i=index'>
+                    <div class="form-check" *ngFor='let control of formVisit.get("cor_visit_taxons").value; let i=index'>
                         <input class="form-check-input" type='checkbox' [formControl]=control [id]="species[i].id"
                             [checked]="species[i].selected" />
                         <label class="form-check-label" [for]="species[i].id"> {{species[i].nom_complet}} </label>
@@ -66,7 +66,7 @@
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-default" (click)="onClose()"> Annuler </button>
-        <button *ngIf="!idVisit || onUpVisit" type="button" class="btn btn-success" (click)="onSave()"> Enregistrer </button>
+        <button *ngIf="!idVisit || onUpVisit" type="button" class="btn btn-success" (click)="onSave()" [disabled]="!formVisit.valid" > Enregistrer </button>
     </div>
 </ng-template>
 
