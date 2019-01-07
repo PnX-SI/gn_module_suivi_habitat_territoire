@@ -80,9 +80,9 @@ export class DataService {
     return this._http.post<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits`, data);
   }
 
-  patchVisit(idVisit) {
+  patchVisit(data: any, idVisit) {
     /*let mock = { "status": 200, "id": idVisit };
     return Observable.of(mock);*/
-    return this._http.patch<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits`, data);
+    return this._http.patch<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/${idVisit}`, data);
   }
 }

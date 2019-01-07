@@ -132,9 +132,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   onSave() {  
     this.onClose();
     let currentForm = this.formateDataForm()
-    console.log('currentForm: ', JSON.stringify(currentForm))
     if (this.idVisit) {
-      currentForm['id_base_visit'] = this.idVisit;
       this.patchVisit(currentForm);
     } else {
       this.postVisit(currentForm);
@@ -154,13 +152,13 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     //cor_visit_taxons
     currentForm['cor_visit_taxons'] = currentForm['cor_visit_taxons'].filter(
       taxons => {
-        if (taxons.value && taxons.value.cd_nom ) {
+        if (taxons.value && taxons.value.selected ) {
           return true;
         } else {
           return false;
         }
-      }).map( taxons => {
-        return  { 'cd_nom': taxons.value.cd_nom }
+      }).map( ftaxons => {
+        return  { 'cd_nom': ftaxons.value.cd_nom }
       }
     );
     //cor_visit_perturbations
@@ -211,7 +209,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   }
 
   patchVisit(currentForm) {
-    this._api.patchVisit(this.idVisit).subscribe(data => {
+    this._api.patchVisit(currentForm, this.idVisit).subscribe(data => {
       this.visitsUp.emit(data);
       this.toastr.success('Le relevé a été modifié', '', {
         positionClass: 'toast-top-right'
