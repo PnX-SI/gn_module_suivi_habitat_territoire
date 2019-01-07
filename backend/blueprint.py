@@ -17,7 +17,7 @@ from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, c
 from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import TRoles, BibOrganismes
 
-from .repositories import check_user_cruved_visit, check_year_visit, get_or_create
+from .repositories import check_user_cruved_visit, check_year_visit
 
 from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation
 
@@ -30,8 +30,6 @@ def get_habitats():
     '''
     TODO tous les habitats du protocole cor_lis_hab
     '''
-    data= DB.session.query(CorHabitatTaxon)
-    return [d.as_dict(True) for d in data]
 
 
 @blueprint.route('/habitats/<cd_hab>/taxons', methods=['GET'])
@@ -250,6 +248,7 @@ def post_visit(info_role=None):
 def patch_visit(idv, info_role=None):
     '''
     Mettre à jour une visite
+    Si une donnée n'est pas présente dans les objets observer, cor_visit_taxons ou cor_visit_perurbations, elle sera supprimée de la base de données
     '''
     data = dict(request.get_json())
 
@@ -285,7 +284,7 @@ def patch_visit(idv, info_role=None):
         visitTaxons = CorVisitTaxon(**taxon)
         visit.cor_visit_taxons.append(visitTaxons)
 
-
+    DB.session.query(corVisitObserver).filter_by(id_base_visit = idv).delete()
     observers = DB.session.query(TRoles).filter(
         TRoles.id_role.in_(tab_observer)
     ).all()
