@@ -23,7 +23,7 @@ default_site_columns = [
 ]
 
 default_list_visit_columns = [
-    { "name" : "Date", "prop" : "visit_date"},
+    { "name" : "Date", "prop" : "visit_date_min"},
     { "name" : "Observateur(s)", "prop" : "observers"},
     { "name" : "Espèce(s) présente(s)", "prop" : "state"}
 ]
