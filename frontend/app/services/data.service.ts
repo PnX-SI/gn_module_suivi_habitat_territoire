@@ -63,7 +63,7 @@ export class DataService {
     }
 
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/commune/${id_application}`,
+      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/communes/${id_application}`,
       { params: myParams }
     );
   }
