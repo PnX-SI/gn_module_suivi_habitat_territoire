@@ -196,6 +196,10 @@ def get_visit(id_visit):
             for index, per in enumerate(tab_visit_perturbation):
                 visit.append(per['t_nomenclature'])
             cvisit['cor_visit_perturbation'] = visit
+        else:
+            cvisit['cor_visit_perturbation'] = []
+        if 'cor_visit_taxons' not in cvisit:
+            cvisit['cor_visit_taxons'] = []
         return cvisit
     return None
 
