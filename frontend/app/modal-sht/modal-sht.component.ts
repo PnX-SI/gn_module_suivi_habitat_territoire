@@ -92,14 +92,16 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       element['name'] = element.nom_complet;
       element['id'] = element.cd_nom;
       element['selected'] = false;
+      let status = false
       if (this.visit['cor_visit_taxons'].length > 0) {
         this.visit['cor_visit_taxons'].forEach(specie => {
           if (specie.cd_nom == element.cd_nom) {
             element['selected'] = true;
+            status = true
           }
         })
       }
-      arr.push(this._fb.control(element))
+      arr.push(this._fb.control(status))
     });
     return arr;
   }
@@ -150,17 +152,13 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     //comments
     currentForm['comments'] = this.formVisit.controls.comments.value;
     //cor_visit_taxons
-    currentForm['cor_visit_taxons'] = currentForm['cor_visit_taxons'].filter(
-      taxons => {
-        if (taxons.value && taxons.value.selected ) {
-          return true;
-        } else {
-          return false;
-        }
-      }).map( ftaxons => {
-        return  { 'cd_nom': ftaxons.value.cd_nom }
-      }
-    );
+    currentForm['cor_visit_taxons'] = currentForm['cor_visit_taxons']
+    .map((v, i) => {
+       return v.value ? { 'cd_nom':this.species[i].cd_nom } : null
+    })
+    .filter(v => {
+      return v !== null
+    });
     //cor_visit_perturbations
     if (
       currentForm['cor_visit_perturbation'] !== null &&
