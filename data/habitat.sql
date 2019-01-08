@@ -76,7 +76,7 @@ ALTER TABLE ONLY bib_list_habitat
     ADD CONSTRAINT pk_bib_list_habitat PRIMARY KEY (id_list);
 
 ALTER TABLE ONLY cor_list_habitat 
-    ADD CONSTRAINT pk_cor_list_habitat PRIMARY KEY (id_cor_list, id_list);
+    ADD CONSTRAINT pk_cor_list_habitat PRIMARY KEY (id_cor_list);
 
 ---------------
 --FOREIGN KEY--
@@ -85,9 +85,16 @@ ALTER TABLE ONLY cor_list_habitat
 ALTER TABLE ONLY habref 
     ADD CONSTRAINT fk_typoref FOREIGN KEY (cd_typo) REFERENCES ref_habitat.typoref (cd_typo) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY cor_list_habitat 
-    ADD CONSTRAINT fk_cor_list_habitat FOREIGN KEY (cd_hab) REFERENCES ref_habitat.habref (cd_hab) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY cor_list_habitat
+    ADD CONSTRAINT fk_cor_list_habitat_cd_hab FOREIGN KEY (cd_hab) REFERENCES ref_habitat.habref (cd_hab) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE ONLY cor_list_habitat
+    ADD CONSTRAINT fk_cor_list_habitat_id_list FOREIGN KEY (id_list) REFERENCES ref_habitat.bib_list_habitat (id_list) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
+----------
+--UNIQUE--
+----------
 
-
+ALTER TABLE ONLY cor_list_habitat
+    ADD CONSTRAINT unique_cor_list_habitat UNIQUE ( id_list, cd_hab );
