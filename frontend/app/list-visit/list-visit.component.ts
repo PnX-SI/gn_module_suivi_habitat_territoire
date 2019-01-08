@@ -61,19 +61,27 @@ export class ListVisitComponent implements OnInit {
   getVisits() {
     this._api.getVisits({ id_base_site: this.idSite }).subscribe(data => {
       data.forEach(visit => {
-        let fullName;
-        visit.observers.forEach(obs => {
-          fullName = obs.nom_role + ' ' + obs.prenom_role;
+        let fullName= '';
+        let count = visit.observers.length
+        visit.observers.forEach((obs, index) => {
+          if(count > 1) {
+            if (index+1 == count)
+              fullName += obs.nom_role + ' ' + obs.prenom_role ;
+            else
+              fullName += obs.nom_role + ' ' + obs.prenom_role + ', ';
+          }
+          else
+            fullName = obs.nom_role + ' ' + obs.prenom_role ;
         });
         visit.observers = fullName;
         let pres = 0;
-
-        visit.cor_visit_taxons.forEach(taxon => {
-          if (taxon.cd_nom) {
-            pres += 1;
-          } 
-        });
-
+        if (visit.cor_visit_taxons) {
+          visit.cor_visit_taxons.forEach(taxon => {
+            if (taxon.cd_nom) {
+              pres += 1;
+            }
+          });
+        }
         visit.state = pres + ' / ' + visit.nb_species ;
       });
 

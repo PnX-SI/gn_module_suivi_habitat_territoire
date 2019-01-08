@@ -19,7 +19,7 @@ from geonature.core.users.models import TRoles, BibOrganismes
 
 from .repositories import check_user_cruved_visit, check_year_visit
 
-from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation
+from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation, CorListHabitat
 
 blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
 
@@ -28,8 +28,12 @@ blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
 @json_resp
 def get_habitats():
     '''
-    TODO tous les habitats du protocole cor_lis_hab
+    TODO mettre id de la liste dans la config ou id_list cor_list_habitat
+    TODO filter by id-list
     '''
+    q = DB.session.query(CorListHabitat)
+    data = q.all()
+    return [d.as_dict(True) for d in data]
 
 
 @blueprint.route('/habitats/<cd_hab>/taxons', methods=['GET'])
