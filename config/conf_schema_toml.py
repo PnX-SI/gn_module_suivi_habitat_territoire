@@ -42,4 +42,4 @@ class GnModuleSchemaConf(GnModuleProdConf):
     id_menu_list_user = fields.Integer(missing=1)
     export_srid = fields.Integer(missing=2154)
     zoom_center = fields.List(fields.Float(), missing=zoom_center)
-    zoom=fields.Integer(missing=13)
+    zoom=fields.Integer(missing=10)
