@@ -8,13 +8,8 @@ export class DataService {
   constructor(private _http: HttpClient) { }
 
   getSites(params) {
-    let myParams = new HttpParams();
-
-    for (let key in params) {
-      myParams = myParams.set(key, params[key]);
-    }
     return this._http.get<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/sites`, {
-      params: myParams
+      params: params
     });
   }
 
@@ -44,12 +39,6 @@ export class DataService {
 
 
   getOrganisme() {
-    /*let mock = [{
-      "id_base_site": 1,
-      "observer": "Nom-agent1 Prénom-agent1",
-      "nom_organisme": "Organisme1",
-    }]
-    return Observable.of(mock);*/
     return this._http.get<any>(
       `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/organismes`
     );
@@ -74,15 +63,15 @@ export class DataService {
     )
   }
 
+  getHabitatsList(idList) {
+    return this._http.get<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/habitats/${idList}`);
+  }
+
   postVisit(data: any) {
-    /* let mock = { "status": 200, "id": "" }
-    return Observable.of(mock); */
     return this._http.post<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits`, data);
   }
 
   patchVisit(data: any, idVisit) {
-    /*let mock = { "status": 200, "id": idVisit };
-    return Observable.of(mock);*/
     return this._http.patch<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/${idVisit}`, data);
   }
 }

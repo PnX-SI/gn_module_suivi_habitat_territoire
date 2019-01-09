@@ -8,12 +8,13 @@
                     <div class="row">
                         <div class="searchSite col">
                             <small> Année de visite </small>
-                            <input type="number" class="form-control">
+                            <input type="number" class="form-control" [formControl]="filterForm.controls.filterYear" class="inputSearch" (onDeleteFiltre)="onDelete()">
                         </div>
                         <div class="searchSite col">
                             <small> Habitat </small>
-                            <select class="form-control form-control-sm" name="monSelect" >
+                            <select class="form-control form-control-sm" name="selectHab" [formControl]="filterForm.controls.filterHab">
                                 <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option *ngFor="let hab of tabHab" [value]="hab.id" [innerHTML]="hab.label">  </option>
                                 <option [ngValue]=null> Tous </option>
                             </select>
                         </div>
@@ -21,15 +22,17 @@
                     <div class="row">
                         <div class="searchSite col">
                             <small> Organisme </small>
-                            <select class="form-control form-control-sm" name="monSelect" >
+                            <select class="form-control form-control-sm" name="selectOrg" [formControl]="filterForm.controls.filterOrga" >
                                 <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option *ngFor="let label of tabOrganism"> {{label}} </option>
                                 <option [ngValue]=null> Tous </option>
                             </select>
                         </div>
                         <div class="searchSite col">
                             <small> Commune </small>
-                            <select class="form-control form-control-sm" name="monSelect" >
+                            <select class="form-control form-control-sm" name="selectCom" [formControl]="filterForm.controls.filterCom" >
                                 <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option *ngFor="let label of tabCom"> {{label}} </option>
                                 <option [ngValue]=null> Tous </option>
                             </select>
                         </div>

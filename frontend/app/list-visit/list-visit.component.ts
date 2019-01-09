@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
@@ -16,7 +16,7 @@ import { ModuleConfig } from '../module.config';
   templateUrl: 'list-visit.component.html',
   styleUrls: ['./list-visit.component.scss']
 })
-export class ListVisitComponent implements OnInit {
+export class ListVisitComponent implements OnInit, OnDestroy {
   public site;
   public currentSite = {};
   public show = true;
@@ -29,6 +29,9 @@ export class ListVisitComponent implements OnInit {
   public siteDesc;
   public cdHabitat;
   public rows = [];
+  public paramApp = this.storeService.queryString.append(
+    'id_application', ModuleConfig.id_application
+  );
 
   @ViewChild('geojson')
   geojson: GeojsonComponent;
@@ -96,12 +99,8 @@ export class ListVisitComponent implements OnInit {
   }
 
   getSites() {
-    const parametre = {
-      id_base_site: this.idSite,
-      id_application: ModuleConfig.id_application
-    };
-
-    this._api.getSites(parametre).subscribe(data => {
+    this.paramApp = this.paramApp.append('id_base_site', this.idSite)
+    this._api.getSites(this.paramApp).subscribe(data => {
       this.site = data;
 
       let properties = data.features[0].properties;
@@ -128,5 +127,10 @@ export class ListVisitComponent implements OnInit {
 
   backToSites(){
     this._location.back();
+  }
+
+  ngOnDestroy() {
+    this.storeService.queryString= this.storeService.queryString.delete('id_base_site');
+    console.log("queryString list-visit: ", this.storeService.queryString.toString())
   }
 }

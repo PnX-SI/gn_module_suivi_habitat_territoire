@@ -1,6 +1,7 @@
-import { Component, OnInit, AfterViewInit } from "@angular/core";
+import { Component, OnInit, AfterViewInit, Output, EventEmitter, OnDestroy } from "@angular/core";
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { FormGroup, FormBuilder, FormControl } from '@angular/forms';
 
 import * as L from 'leaflet';
 
@@ -16,17 +17,24 @@ import { ModuleConfig } from '../module.config';
   templateUrl: "site-map-list.component.html",
   styleUrls: ["site-map-list.component.scss"]
 })
-export class SiteMapListComponent implements OnInit, AfterViewInit {
+export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   public sites;
   public filteredData = [];
-  public paramApp = {
-    id_application: ModuleConfig.id_application
-  };
+  public tabOrganism = [];
+  public paramApp = this.storeService.queryString.append(
+    'id_application', ModuleConfig.id_application
+  );
   public tabCom = [];
+  public tabHab = []
   public dataLoaded = false;
   public center;
   public zoom;
   private _map;
+  public filterForm: FormGroup;
+  public oldFilterDate;
+
+  @Output()
+  onDeleteFiltre = new EventEmitter<any>();
 
   constructor(
     public mapService: MapService,
@@ -35,12 +43,102 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
     public mapListService: MapListService,
     public router: Router,
     private toastr: ToastrService,
+    private _fb: FormBuilder
   ) { }
 
   ngOnInit() {
+
     this.onChargeList(this.paramApp);
     this.center = this.storeService.shtConfig.zoom_center;
     this.zoom = this.storeService.shtConfig.zoom;
+
+    /*
+    next Filters in progress...
+    let filterkey = this.storeService.queryString.keys();
+    console.log(filterkey)
+    console.log("this.storeService.queryString.getAll(): ", this.storeService.queryString.getAll('year'));
+    const nextfilterForm = {'year': null};
+    if (this.storeService.queryString.getAll('year')) {
+      let year = JSON.parse(this.storeService.queryString.getAll('year')) 
+      console.log('year parse: ', year)
+      nextfilterForm.year = year
+    }*/
+
+    this.filterForm = this._fb.group({
+      filterYear: null,
+      filterOrga: null,
+      filterCom: null,
+      filterHab: null
+    });
+
+    this.filterForm.controls.filterYear.valueChanges
+      .filter(input => {
+        return input != null && input.toString().length === 4
+      })
+      .subscribe(year => {
+        this.onSearchDate(year);
+      });
+
+    this.filterForm.controls.filterYear.valueChanges
+      .filter(input => {
+        return input === null
+      })
+      .subscribe(year => {
+        this.onDeleteParams('year', year);
+        this.onDeleteFiltre.emit();
+      });
+
+    this.filterForm.controls.filterOrga.valueChanges
+      .filter(select => {
+        return select !== null
+      })
+      .subscribe(org => {
+        this.onSearchOrganisme(org);
+      });
+
+    this.filterForm.controls.filterOrga.valueChanges
+      .filter(input => {
+        return input === null
+      })
+      .subscribe(org => {
+        this.onDeleteParams('organisme', org);
+        this.onDeleteFiltre.emit();
+      });
+
+    this.filterForm.controls.filterCom.valueChanges
+      .filter(select => {
+        return select !== null
+      })
+      .subscribe(com => {
+        this.onSearchCom(com);
+      });
+
+    this.filterForm.controls.filterCom.valueChanges
+      .filter(input => {
+        return input === null
+      })
+      .subscribe(com => {
+        this.onDeleteParams('commune', com);
+        this.onDeleteFiltre.emit();
+      });
+
+    this.filterForm.controls.filterHab.valueChanges
+      .filter(select => {
+        return select !== null
+      })
+      .subscribe(hab => {
+        this.onSearchHab(hab);
+      });
+
+    this.filterForm.controls.filterHab.valueChanges
+      .filter(input => {
+        return input === null
+      })
+      .subscribe(hab => {
+        this.onDeleteParams('cd_hab', hab);
+        this.onDeleteFiltre.emit();
+      });
+
   }
 
   ngAfterViewInit() {
@@ -48,19 +146,36 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
     this.addCustomControl();
 
 
-    // FIXME: 404 id_commune ?
-    /*this._api
-    .getCommune(ModuleConfig.id_application, {
-      id_area_type: this.storeService.shtConfig.id_type_commune
-    })
-    .subscribe(info => {
-      info.forEach(com => {
-        this.tabCom.push(com.nom_commune);
-        this.tabCom.sort((a, b) => {
+    this._api.getOrganisme().subscribe(elem => {
+      elem.forEach(orga => {
+        this.tabOrganism.push(orga.nom_organisme);
+        this.tabOrganism.sort((a, b) => {
           return a.localeCompare(b);
         });
       });
-    });*/
+    });
+
+    this._api.getCommune(ModuleConfig.id_application, {
+      id_area_type: this.storeService.shtConfig.id_type_commune
+    })
+      .subscribe(info => {
+        info.forEach(com => {
+          this.tabCom.push(com.nom_commune);
+          this.tabCom.sort((a, b) => {
+            return a.localeCompare(b);
+          });
+        });
+      });
+
+    this._api.getHabitatsList(ModuleConfig.id_bib_list_habitat)
+      .subscribe(habs => {
+        habs.forEach(hab => {
+          this.tabHab.push({ 'label': hab.nom_complet, 'id': hab.cd_hab });
+          this.tabHab.sort((a, b) => {
+            return a.localeCompare(b);
+          });
+        });
+      });
   }
 
   onChargeList(param) {
@@ -72,19 +187,23 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
       this.dataLoaded = true;
 
     }, error => {
+      if (error.status == 404) {
+        this.filteredData = [];
+      } else {
+        this.toastr.error('Une erreur est survenue lors de la récupération des données', '', {
+          positionClass: 'toast-top-right'
+        });
+        console.log("error getsites: ", error)
+      }
       this.dataLoaded = true;
-      this.toastr.error('Une erreur est survenue lors de la récupération des données', '', {
-        positionClass: 'toast-top-right'
-      });
-      console.log("error getsites: ", error)
     });
   }
 
+  // Map-list
   onEachFeature(feature, layer) {
     let site = feature.properties;
     this.mapListService.layerDict[feature.id] = layer;
 
-    //TODO add code/name maille ?
     const customPopup = '<div class="title">' + site.date_max + '</div>';
     const customOptions = {
       'className': 'custom-popup',
@@ -139,11 +258,11 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
       map.setView(latlng, zoom);
   }
 
-  onInfo(id_base_site) {
+  onInfo(id_base_site) { 
     this.router.navigate([`${ModuleConfig.api_url}/listVisit`, id_base_site]);
   }
 
-  addCustomControl () {
+  addCustomControl() {
     let initzoomcontrol = new L.Control();
     initzoomcontrol.setPosition('topleft');
     initzoomcontrol.onAdd = () => {
@@ -158,5 +277,55 @@ export class SiteMapListComponent implements OnInit, AfterViewInit {
       return container;
     };
     initzoomcontrol.addTo(this._map);
+  }
+
+  // Filters
+  onDelete() {
+    console.log('ondelete')
+    this.onChargeList(this.paramApp);
+  }
+
+  onSetParams(param: string, value) {
+    //  ajouter le queryString pour télécharger les données
+    this.storeService.queryString = this.storeService.queryString.set(param, value);
+    this.storeService.queryString.append('id_application', ModuleConfig.id_application);
+  }
+
+  onDeleteParams(param: string, value) {
+    // effacer le queryString
+    console.log('ondelete params', param + ' value: ' + value)
+    this.storeService.queryString = this.storeService.queryString.delete(param);
+    this.onChargeList(this.storeService.queryString.toString());
+  }
+
+  onSearchDate(event) {
+    this.onSetParams('year', event);
+    this.oldFilterDate = event;
+    this.onChargeList(this.storeService.queryString.toString());
+  }
+
+  onSearchOrganisme(event) {
+    this.onSetParams('organisme', event);
+    this.onChargeList(this.storeService.queryString.toString());
+  }
+
+  onSearchCom(event) {
+    this.onSetParams('commune', event);
+    this.onChargeList(this.storeService.queryString.toString());
+  }
+
+  onSearchHab(event) {
+    this.onSetParams('cd_hab', event);
+    this.onChargeList(this.storeService.queryString.toString());
+  }
+
+  ngOnDestroy() {
+    let filterkey = this.storeService.queryString.keys();
+    console.log(filterkey)
+    filterkey.forEach(key => {
+      this.storeService.queryString= this.storeService.queryString.delete(key);
+    }); 
+    console.log("queryString map-list: ", this.storeService.queryString.toString())
+
   }
 }
