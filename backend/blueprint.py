@@ -2,7 +2,7 @@ import json
 from flask import Blueprint, request, session, current_app, send_from_directory, abort
 from geojson import FeatureCollection, Feature
 from sqlalchemy.sql.expression import func
-from sqlalchemy import and_ , distinct
+from sqlalchemy import and_ , distinct, desc
 from sqlalchemy.exc import SQLAlchemyError
 
 from geonature.utils.env import DB, ROOT_DIR
@@ -24,16 +24,33 @@ from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, T
 blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
 
 
-@blueprint.route('/habitats', methods=['GET'])
+@blueprint.route('/habitats/<id_list>', methods=['GET'])
 @json_resp
-def get_habitats():
+def get_habitats(id_list):
     '''
-    TODO mettre id de la liste dans la config ou id_list cor_list_habitat
-    TODO filter by id-list
+    Récupère les habitats cor_list_habitat à partir de l'identifiant id_list de la table bib_lis_habitat
     '''
-    q = DB.session.query(CorListHabitat)
+    q = DB.session.query(
+        CorListHabitat.cd_hab,
+        CorListHabitat.id_list,
+        Habref.lb_hab_fr_complet
+    ).join (
+        Habref, CorListHabitat.cd_hab == Habref.cd_hab
+    ).filter(
+        CorListHabitat.id_list == id_list
+    ).group_by(CorListHabitat.cd_hab, Habref.lb_hab_fr_complet, CorListHabitat.id_list,)
+
     data = q.all()
-    return [d.as_dict(True) for d in data]
+    habitats = []
+
+    if data:
+        for d in data:
+            habitat = dict()
+            habitat['cd_hab'] = str(d[0])
+            habitat['nom_complet'] = str(d[2])
+            habitats.append(habitat)
+        return habitats
+    return None
 
 
 @blueprint.route('/habitats/<cd_hab>/taxons', methods=['GET'])
@@ -150,7 +167,7 @@ def get_all_sites():
                 for dy in data_year:
                     #  récupérer la bonne date max du site si on filtre sur année
                     if id_site == dy[0]:
-                        feature['properties']['date_max'] = str(dy[1])
+                        feature['properties']['date_max'] = str(d[1])
             else:
                 feature['properties']['date_max'] = str(d[1])
                 if d[1] == None:
@@ -179,7 +196,7 @@ def get_visits():
     parameters = request.args
     q = DB.session.query(TVisitSHT)
     if 'id_base_site' in parameters:
-        q = q.filter(TVisitSHT.id_base_site == parameters['id_base_site'])
+        q = q.filter(TVisitSHT.id_base_site == parameters['id_base_site']).order_by(desc(TVisitSHT.visit_date_min))
     data = q.all()
     return [d.as_dict(True) for d in data]
 

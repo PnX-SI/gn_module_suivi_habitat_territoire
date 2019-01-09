@@ -28,6 +28,7 @@ default_list_visit_columns = [
     { "name" : "Espèce(s) présente(s)", "prop" : "state"}
 ]
 id_menu_list_user = 1
+id_bib_list_habitat = 1
 
 class GnModuleSchemaConf(GnModuleProdConf):
     site_message=fields.Dict(missing=site_message)
@@ -37,6 +38,7 @@ class GnModuleSchemaConf(GnModuleProdConf):
     default_site_columns = fields.List(fields.Dict(), missing=default_site_columns)
     default_list_visit_columns = fields.List(fields.Dict(), missing=default_list_visit_columns)
     id_type_commune = fields.Integer(missing=25)
+    id_bib_list_habitat = fields.Integer(missing=1)
     id_menu_list_user = fields.Integer(missing=1)
     export_srid = fields.Integer(missing=2154)
     zoom_center = fields.List(fields.Float(), missing=zoom_center)
