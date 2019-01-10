@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, OnDestroy, EventEmitter } from '@angular/core';
 import { NgbModal, NgbModalRef, NgbDateParserFormatter } from '@ng-bootstrap/ng-bootstrap';
-import { FormGroup, FormBuilder, FormArray } from '@angular/forms';
+import { FormGroup, FormBuilder, FormArray, NgForm } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 
 import { forkJoin } from "rxjs/observable/forkJoin";
@@ -34,7 +34,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   public modalTitle = "Saisie d'un relevé";
   public disabledForm = false;
   public onUpVisit = false;
-  public labelUpVisit = "Editer le relevé"
+  public labelUpVisit = "Editer le relevé";
 
   constructor(
     private _modalService: NgbModal,
@@ -53,7 +53,6 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
 
     if (this.idVisit) {
       this.disabledForm = true;
-      console.log("idvisit: ", this.idVisit);
     }
   }
 
@@ -131,7 +130,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     this.initData();
   }
 
-  onSave() {  
+  onSave() {
     this.onClose();
     let currentForm = this.formateDataForm()
     if (this.idVisit) {
@@ -141,9 +140,9 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     }
   }
 
-  formateDataForm(){
+  formateDataForm() {
     const currentForm = this.formVisit.value;
-    if(!this.idVisit)
+    if (!this.idVisit)
       delete currentForm['id_base_visit'];
     currentForm['id_base_site'] = this.id_base_site;
     currentForm['visit_date_min'] = this.dateParser.format(
@@ -153,12 +152,12 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     currentForm['comments'] = this.formVisit.controls.comments.value;
     //cor_visit_taxons
     currentForm['cor_visit_taxons'] = currentForm['cor_visit_taxons']
-    .map((v, i) => {
-       return v.value ? { 'cd_nom':this.species[i].cd_nom } : null
-    })
-    .filter(v => {
-      return v !== null
-    });
+      .map((v, i) => {
+        return v.value ? { 'cd_nom': this.species[i].cd_nom } : null
+      })
+      .filter(v => {
+        return v !== null
+      });
     //cor_visit_perturbations
     if (
       currentForm['cor_visit_perturbation'] !== null &&
@@ -166,7 +165,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     ) {
       currentForm['cor_visit_perturbation'] = currentForm['cor_visit_perturbation'].map(
         pertu => {
-          return {'id_nomenclature_perturbation' : pertu.id_nomenclature };
+          return { 'id_nomenclature_perturbation': pertu.id_nomenclature };
         }
       );
     }
@@ -190,7 +189,9 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   upVisit() {
     this.onUpVisit = (!this.onUpVisit) ? true : false;
     this.disabledForm = (this.onUpVisit) ? false : true;
-    this.labelUpVisit = (this.onUpVisit) ? "Annulé" : "Editer le relevé";
+    this.labelUpVisit = (this.onUpVisit) ? "Annuler" : "Editer le relevé";
+    if (!this.onUpVisit)
+      this._modalRef.close();
   }
 
   postVisit(currentForm) {

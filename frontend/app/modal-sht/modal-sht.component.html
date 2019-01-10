@@ -65,7 +65,7 @@
         </form>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-default" (click)="onClose()"> Annuler </button>
+        <button type="button" class="btn btn-default" (click)="onClose()"> Fermer </button>
         <button *ngIf="!idVisit || onUpVisit" type="button" class="btn btn-success" (click)="onSave()" [disabled]="!formVisit.valid" > Enregistrer </button>
     </div>
 </ng-template>
