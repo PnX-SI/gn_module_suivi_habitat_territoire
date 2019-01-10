@@ -28,6 +28,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   public siteCode;
   public siteDesc;
   public cdHabitat;
+  public taxons;
   public rows = [];
   public paramApp = this.storeService.queryString.append(
     'id_application', ModuleConfig.id_application
@@ -48,7 +49,6 @@ export class ListVisitComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.idSite = this.activatedRoute.snapshot.params['idSite'];
-    this.getVisits();
   }
 
   ngAfterViewInit() {
@@ -85,7 +85,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
             }
           });
         }
-        visit.state = pres + ' / ' + visit.nb_species ;
+        visit.state = pres + ' / ' + this.taxons.length ;
       });
 
       this.rows = data;
@@ -110,6 +110,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
       this.siteName = properties.base_site_name;
       this.siteCode = properties.base_site_code;
       this.siteDesc = properties.base_site_description;
+      this.cdHabitat = properties.cd_hab;
 
       // UP cd_hab nom_habitat id site
       this.storeService.setCurrentSite(properties.cd_hab, properties.nom_habitat, this.idSite);
@@ -117,6 +118,14 @@ export class ListVisitComponent implements OnInit, OnDestroy {
       this.geojson.currentGeoJson$.subscribe(currentLayer => {
         this.mapService.map.fitBounds(currentLayer.getBounds());
       });
+
+      // TODO: refact
+      this._api.getTaxons(this.cdHabitat).subscribe(tax => {
+        this.taxons = tax;
+      });
+
+      this.getVisits();
+
     }, error => {
       this.toastr.error('Une erreur est survenue lors de la récupération des informations sur le serveur', '', {
         positionClass: 'toast-top-right'
