@@ -20,10 +20,6 @@ FROM ref_geo.l_areas
 WHERE id_type=ref_geo.get_id_area_type('M100m')
 GROUP by area_code, id_area;
 
--- créer nomenclature  HAB --  
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, label_fr, definition_fr, source )
-VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone de habitat', 'Zone de habitat - suivi habitat territoire', 'Zone d''habitat',  'Zone d''habitat issu du module suivi habitat territoire', 'CBNA');
-
 
 
 ---------------------------------
@@ -46,6 +42,11 @@ VALUES (
 -- Insérer les sites
 ----------------------
 
+-- créer nomenclature  HAB --
+INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, label_fr, definition_fr, source )
+VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone de habitat', 'Zone de habitat - suivi habitat territoire', 'Zone d''habitat',  'Zone d''habitat issu du module suivi habitat territoire', 'CBNA');
+
+
 -- insérer les données dans t_base_sites grâce à celles dans la table maille_tmp
 -- ATTENTION: il faut que le maille_tmp.shp soit en 2154, sinon ça donne des erreurs pour afficher les sites.  
 INSERT INTO gn_monitoring.t_base_sites
@@ -63,7 +64,7 @@ SELECT id_base_site, 16265
 FROM gn_monitoring.t_base_sites bs
 JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying = bs.base_site_code;
 
-/* Ajouter cd_hab au niveau de la maille ?
+/* TODO Ajouter cd_hab au niveau de la maille ?
 INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
 SELECT id_base_site, zh.cd_hab
 FROM gn_monitoring.t_base_sites bs
@@ -88,7 +89,7 @@ INSERT INTO taxonomie.bib_listes (id_liste, nom_liste, desc_liste, regne, group2
 VALUES ((SELECT MAX(id_liste)+1 FROM taxonomie.bib_listes),'Suivi Habitat Territoire', 'Taxons suivis dans le protocole Suivi Habitat Territoire', 'Plantae', 'Angiospermes');
 
 
--- Insérer les taxons suivis dans le protocole SFT dans bib_noms et les ajouter dans la liste SFT
+-- Insérer les taxons suivis dans le protocole SHT dans bib_noms et les ajouter dans la liste SHT
 /*INSERT INTO taxonomie.bib_noms (cd_nom, cd_ref, nom_francais) VALUES (104123, 104123, 'Jonc arctique - Juncus arcticus');
 INSERT INTO taxonomie.cor_nom_liste (id_nom, id_liste) VALUES 
 ((SELECT max(id_nom) FROM taxonomie.bib_noms), (select id_liste from taxonomie.bib_listes WHERE nom_liste='Suivi Habitat Territoire'));*/

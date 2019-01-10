@@ -100,10 +100,5 @@ ALTER TABLE ONLY cor_visit_taxons
     ADD CONSTRAINT unique_cor_visit_taxons UNIQUE ( id_base_visit, cd_nom );
 
 
---------------
--- DATA -----
---------------
--- TODO : Y'a t-il déjà tous les cdnom embarqués dans geonature
--- si c'est le cas insérer en fonction du cdnom dans la table cor_habitat_taxon
 
 

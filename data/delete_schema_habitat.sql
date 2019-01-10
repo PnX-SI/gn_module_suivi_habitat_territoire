@@ -1,2 +1,2 @@
 -- Supprimer un schéma -- 
-DROP SCHEMA habitat CASCADE;
+DROP SCHEMA ref_habitat CASCADE;
