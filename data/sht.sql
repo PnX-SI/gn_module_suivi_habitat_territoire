@@ -69,7 +69,7 @@ ALTER TABLE ONLY t_infos_site
     ADD CONSTRAINT fk_t_infos_site_id_base_site FOREIGN KEY (id_base_site) REFERENCES gn_monitoring.t_base_sites (id_base_site) ON UPDATE CASCADE ON DELETE CASCADE; 
 
 ALTER TABLE ONLY t_infos_site
-    ADD CONSTRAINT fk_t_infos_site_cd_hab FOREIGN KEY (cd_hab) REFERENCES habitat.habref (cd_hab) ON UPDATE CASCADE;
+    ADD CONSTRAINT fk_t_infos_site_cd_hab FOREIGN KEY (cd_hab) REFERENCES ref_habitat.habref (cd_hab) ON UPDATE CASCADE;
 
 
 ALTER TABLE ONLY cor_visit_taxons
@@ -87,7 +87,7 @@ ALTER TABLE ONLY cor_visit_perturbation
 
 
 ALTER TABLE ONLY cor_habitat_taxon 
-    ADD CONSTRAINT fk_cor_habitat_taxon_id_habitat FOREIGN KEY (id_habitat) REFERENCES habitat.habref (cd_hab) ON UPDATE CASCADE;
+    ADD CONSTRAINT fk_cor_habitat_taxon_id_habitat FOREIGN KEY (id_habitat) REFERENCES ref_habitat.habref (cd_hab) ON UPDATE CASCADE;
 
 ALTER TABLE ONLY cor_habitat_taxon 
     ADD CONSTRAINT fk_cor_habitat_taxon_cd_nom FOREIGN KEY (cd_nom) REFERENCES taxonomie.taxref (cd_nom) ON UPDATE CASCADE;
