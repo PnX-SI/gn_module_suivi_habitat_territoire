@@ -226,12 +226,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     let site;
     // override toogle style map-list toggle the style of selected layer
     if (this.mapListService.selectedLayer !== undefined) {
-      site = this.mapListService.selectedLayer.feature.properties;
-      this.mapListService.selectedLayer.setStyle(this.storeService.getLayerStyle(site));
       this.mapListService.selectedLayer.closePopup();
     }
     this.mapListService.selectedLayer = selectedLayer;
-    this.mapListService.selectedLayer.setStyle(this.storeService.selectedStyle);
     this.mapListService.selectedLayer.openPopup();
   }
 
