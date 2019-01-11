@@ -212,8 +212,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     layer.on({
       click: e => {
         this.toggleStyle(layer);
-
-        this.mapListService.mapSelected.next(feature.id);
+        this.onMapClick(feature.id);
       }
     });
 
@@ -230,6 +229,12 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.mapListService.selectedLayer = selectedLayer;
     this.mapListService.selectedLayer.openPopup();
+  }
+
+  onMapClick(id): void {
+    const integerId = parseInt(id);
+    this.mapListService.selectedRow = []
+    this.mapListService.selectedRow.push(this.mapListService.tableData[integerId]);
   }
 
 
