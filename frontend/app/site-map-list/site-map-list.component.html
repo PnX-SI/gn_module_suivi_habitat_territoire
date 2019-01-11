@@ -15,7 +15,6 @@
                             <select class="form-control form-control-sm" name="selectHab" [formControl]="filterForm.controls.filterHab">
                                 <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
                                 <option *ngFor="let hab of tabHab" [value]="hab.id" [innerHTML]="hab.label">  </option>
-                                <option [ngValue]=null> Tous </option>
                             </select>
                         </div>
                     </div>
@@ -25,7 +24,6 @@
                             <select class="form-control form-control-sm" name="selectOrg" [formControl]="filterForm.controls.filterOrga" >
                                 <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
                                 <option *ngFor="let label of tabOrganism"> {{label}} </option>
-                                <option [ngValue]=null> Tous </option>
                             </select>
                         </div>
                         <div class="searchSite col">
@@ -33,7 +31,6 @@
                             <select class="form-control form-control-sm" name="selectCom" [formControl]="filterForm.controls.filterCom" >
                                 <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
                                 <option *ngFor="let label of tabCom"> {{label}} </option>
-                                <option [ngValue]=null> Tous </option>
                             </select>
                         </div>
                     </div>
