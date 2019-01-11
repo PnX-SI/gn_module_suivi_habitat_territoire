@@ -226,12 +226,16 @@ def get_visit(id_visit):
 
 
 @blueprint.route('/visits', methods=['POST'])
+@fnauth.check_auth_cruved('C', True)
 @json_resp
-def post_visit(info_role=None):
+def post_visit(info_role):
     '''
     Poster une nouvelle visite
     '''
     data = dict(request.get_json())
+
+    check_year_visit(data['id_base_site'], data['visit_date_min'][0:4])
+
     tab_visit_taxons = []
     tab_observer = []
     tab_perturbation = []
@@ -270,13 +274,15 @@ def post_visit(info_role=None):
 
 
 @blueprint.route('/visits/<int:idv>', methods=['PATCH'])
+@fnauth.check_auth_cruved('C', True)
 @json_resp
-def patch_visit(idv, info_role=None):
+def patch_visit(idv, info_role):
     '''
     Mettre à jour une visite
     Si une donnée n'est pas présente dans les objets observer, cor_visit_taxons ou cor_visit_perurbations, elle sera supprimée de la base de données
     '''
     data = dict(request.get_json())
+    check_year_visit(data['id_base_site'], data['visit_date_min'][0:4])
 
     try:
         existingVisit = TVisitSHT.query.filter_by(id_base_visit = idv).first()

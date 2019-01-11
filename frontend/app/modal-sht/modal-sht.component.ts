@@ -54,6 +54,8 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     if (this.idVisit) {
       this.disabledForm = true;
     }
+
+
   }
 
   getDatas() {
@@ -201,9 +203,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
         positionClass: 'toast-top-right'
       });
     }, error => {
-      this.toastr.error('Une erreur est survenue lors de l\'enregistrement de votre relevé', '', {
-        positionClass: 'toast-top-right'
-      });
+      this.manageError(error)
     })
   }
 
@@ -214,10 +214,20 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
         positionClass: 'toast-top-right'
       });
     }, error => {
-      this.toastr.error('Une erreur est survenue lors de la modification de votre relevé', '', {
+      this.manageError(error)
+    })
+  }
+
+  manageError(error) {
+    if (error.status == 403 && error.error.raisedError == "PostYearError") {
+      this.toastr.error(error.error.message, '', {
         positionClass: 'toast-top-right'
       });
-    })
+    } else {
+      this.toastr.error('Une erreur est survenue lors de l\'enregistrement de votre relevé', '', {
+        positionClass: 'toast-top-right'
+      });
+    }
   }
 
   ngOnDestroy() {
