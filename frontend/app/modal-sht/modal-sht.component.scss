@@ -1,7 +1,4 @@
 fieldset:disabled {
-    // TO FIX
-    .input-group button.btn {
-        cursor: not-allowed !important;
-    }
     color: #6c757d;
+    pointer-events: none;
 }
