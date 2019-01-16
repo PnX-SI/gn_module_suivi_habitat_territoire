@@ -23,9 +23,9 @@ default_site_columns = [
 ]
 
 default_list_visit_columns = [
-    { "name" : "Date", "prop" : "visit_date_min"},
-    { "name" : "Observateur(s)", "prop" : "observers"},
-    { "name" : "Espèce(s) présente(s)", "prop" : "state"}
+    { "name" : "Date", "prop" : "visit_date_min", "width": "120"},
+    { "name" : "Observateur(s)", "prop" : "observers", "width": "350"},
+    { "name" : "Espèce(s) présente(s)", "prop" : "state", "width": "120"}
 ]
 id_menu_list_user = 1
 id_bib_list_habitat = 1
