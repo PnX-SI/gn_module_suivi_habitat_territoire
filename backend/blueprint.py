@@ -92,6 +92,7 @@ def get_all_sites():
 
     id_type_commune = blueprint.config['id_type_commune']
 
+
     q = (
         DB.session.query(
             TInfosSite,
@@ -124,6 +125,7 @@ def get_all_sites():
             )
         )
 
+
     if 'cd_hab' in parameters:
         q = q.filter(TInfosSite.cd_hab == parameters['cd_hab'])
     
@@ -150,8 +152,16 @@ def get_all_sites():
         data_year = q_year.all()
 
         q = q.filter(func.date_part('year', TBaseVisits.visit_date_min) == parameters['year'])
-    data = q.all()
-
+    
+    page = request.args.get('page', 1, type=int)
+    items_per_page = blueprint.config['items_per_page']
+    pagination = q.paginate(page, items_per_page, False)
+    data = pagination.items
+    totalItmes = pagination.total
+    pageInfo= {
+        'totalItmes' : totalItmes,
+        'items_per_page' : items_per_page,
+    }
     features = []
 
     if data:
@@ -183,7 +193,7 @@ def get_all_sites():
             feature['properties']['base_site_name'] = base_site_name
             features.append(feature)
 
-        return FeatureCollection(features)
+        return [pageInfo,FeatureCollection(features)]
     return None
 
 
@@ -371,7 +381,6 @@ def get_commune(id_application):
     Retourne toutes les communes présents dans le module
     '''
     params = request.args
-
     q = DB.session.query(LAreas.area_name).distinct().outerjoin(
         corSiteArea, LAreas.id_area == corSiteArea.c.id_area).outerjoin(
         corSiteApplication, corSiteApplication.c.id_base_site == corSiteArea.c.id_base_site).filter(corSiteApplication.c.id_application == id_application)
