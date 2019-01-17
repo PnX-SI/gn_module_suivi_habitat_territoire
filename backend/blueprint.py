@@ -1,5 +1,6 @@
 import json
-from flask import Blueprint, request, session, current_app, send_from_directory, abort
+
+from flask import Blueprint, request, session, current_app, send_from_directory, abort, jsonify
 from geojson import FeatureCollection, Feature
 from sqlalchemy.sql.expression import func
 from sqlalchemy import and_ , distinct, desc
@@ -10,7 +11,7 @@ from geonature.utils.utilssqlalchemy import json_resp, to_json_resp, to_csv_resp
 from pypnnomenclature.models import TNomenclatures
 from pypnusershub.db.tools import (
     InsufficientRightsError,
-    get_or_fetch_user_cruved,
+    get_or_fetch_user_cruved
 )
 from pypnusershub import routes as fnauth
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteApplication, TBaseVisits
@@ -323,19 +324,19 @@ def patch_visit(idv, info_role):
     for o in observers:
         visit.observers.append(o)
 
-    """ user_cruved = get_or_fetch_user_cruved(
+    user_cruved = get_or_fetch_user_cruved(
         session=session,
         id_role=info_role.id_role,
         id_application_parent=current_app.config['ID_APPLICATION_GEONATURE']
     )
     update_cruved = user_cruved['U']
-    check_user_cruved_visit(info_role, visit, update_cruved) """
+    check_user_cruved_visit(info_role, visit, update_cruved)
 
     mergeVisit = DB.session.merge(visit)
 
     DB.session.commit()
 
-    return visit.as_dict(recursif=True)
+    return mergeVisit.as_dict(recursif=True)
 
 
 
@@ -364,6 +365,7 @@ def get_organisme():
     return None
 
 
+
 @blueprint.route('/communes/<id_application>', methods=['GET'])
 @json_resp
 def get_commune(id_application):
@@ -389,3 +391,29 @@ def get_commune(id_application):
             tab_commune.append(nom_com)
         return tab_commune
     return None
+
+
+# FIXME: 403 Token BadSignature
+""" @blueprint.route('/me', methods=['GET'])
+@fnauth.check_auth(2, True, None, None)
+@json_resp
+def returnCurrentUser(id_role):
+    info = id_role.as_dict()
+    get_current_user = UsersView.query.filter_by(id_role=info[id_role]).all()
+    return [d.as_dict(True) for d in get_current_user] """
+
+# ?? check_auth_cruved est supprimé de usersHub https://github.com/PnX-SI/UsersHub-authentification-module/commit/4d0778a786749cb70afa307c8f8c364d1565ec5d#diff-8ec023ffa1c3be8aeb37bb4c57974700
+@blueprint.route('/user/cruved', methods=['GET'])
+@fnauth.check_auth_cruved('R', True)
+@json_resp
+def returnUserCruved(info_role):
+    #récupérer le CRUVED complet de l'utilisateur courant
+    user_cruved = get_or_fetch_user_cruved(
+        session=session,
+        id_role=info_role.id_role,
+        id_application_parent=current_app.config['ID_APPLICATION_GEONATURE']
+    )
+
+    print("user_cruved: ", user_cruved)
+    return user_cruved
+   

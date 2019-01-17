@@ -74,4 +74,8 @@ export class DataService {
   patchVisit(data: any, idVisit) {
     return this._http.patch<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/${idVisit}`, data);
   }
+
+  userCruved() {
+    return this._http.get<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/user/cruved`);
+  }
 }
