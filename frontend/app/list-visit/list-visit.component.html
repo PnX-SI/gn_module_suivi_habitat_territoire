@@ -42,10 +42,10 @@
                 [limit]="mapListService.page.size">
 
                 <ngx-datatable-column *ngFor="let col of storeService.shtConfig.default_list_visit_columns" [name]="col.name"
-                    [prop]="col.prop" maxWidth="220">
+                    [prop]="col.prop" maxWidth="col.maxWidth">
                 </ngx-datatable-column>
 
-                <ngx-datatable-column maxWidth="90">
+                <ngx-datatable-column maxWidth="120">
                     <ng-template let-row="row" ngx-datatable-cell-template>
                         <modal-sht classStyle="btn btn-lg btn-outline-shadow btn-ghost" title="Visualiser" iconStyle="fa fa-info-circle"
                             idVisit="{{ row.id_base_visit }}" (visitsUp)='getVisits()' >
