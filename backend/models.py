@@ -21,15 +21,17 @@ from pypnnomenclature.models import TNomenclatures
 from geonature.core.users.models import TRoles
 
 
- 
+
 
 @serializable
 class CorVisitTaxon(DB.Model):
     __tablename__ = 'cor_visit_taxons'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
-    id_cor_visite_taxons = DB.Column(DB.Integer, nullable=False, server_default=DB.FetchedValue(), primary_key=True)
-    id_base_visit = DB.Column(DB.ForeignKey('gn_monitoring.t_base_visits.id_base_visit', ondelete='CASCADE', onupdate='CASCADE'))
+    id_cor_visite_taxons = DB.Column(
+        DB.Integer, nullable=False, server_default=DB.FetchedValue(), primary_key=True)
+    id_base_visit = DB.Column(DB.ForeignKey(
+        'gn_monitoring.t_base_visits.id_base_visit', ondelete='CASCADE', onupdate='CASCADE'))
     cd_nom = DB.Column(DB.Integer)
 
 
@@ -38,21 +40,27 @@ class TNomenclature(DB.Model):
     __tablename__ = 't_nomenclatures'
     __table_args__ = {'schema': 'ref_nomenclatures', 'extend_existing': True}
 
-    id_nomenclature = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
+    id_nomenclature = DB.Column(
+        DB.Integer, primary_key=True, server_default=DB.FetchedValue())
     mnemonique = DB.Column(DB.String(255))
     label_default = DB.Column(DB.String(255), nullable=False)
+
 
 @serializable
 class CorVisitPerturbation(DB.Model):
     __tablename__ = 'cor_visit_perturbation'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
-    id_base_visit = DB.Column(DB.ForeignKey('gn_monitoring.t_base_visits.id_base_visit', onupdate='CASCADE'), primary_key=True, nullable=False)
-    id_nomenclature_perturbation = DB.Column(DB.ForeignKey('ref_nomenclatures.t_nomenclatures.id_nomenclature', onupdate='CASCADE'), primary_key=True, nullable=False)
+    id_base_visit = DB.Column(DB.ForeignKey(
+        'gn_monitoring.t_base_visits.id_base_visit', onupdate='CASCADE'), primary_key=True, nullable=False)
+    id_nomenclature_perturbation = DB.Column(DB.ForeignKey(
+        'ref_nomenclatures.t_nomenclatures.id_nomenclature', onupdate='CASCADE'), primary_key=True, nullable=False)
     create_date = DB.Column(DB.DateTime, nullable=False, default=func.now())
 
     #t_base_visit = DB.relationship('TVisitSHT', primaryjoin='CorVisitPerturbation.id_base_visit == TVisitSHT.id_base_visit', backref='cor_visit_perturbations')
-    t_nomenclature = DB.relationship('TNomenclature', primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclature.id_nomenclature', backref='cor_visit_perturbations')
+    t_nomenclature = DB.relationship(
+        'TNomenclature', primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclature.id_nomenclature', backref='cor_visit_perturbations')
+
 
 @serializable
 class Taxonomie(DB.Model):
@@ -68,13 +76,16 @@ class Taxonomie(DB.Model):
     )
     nom_complet = DB.Column(DB.Unicode)
 
+
 @serializable
 class TVisitSHT(TBaseVisits):
     __tablename__ = 't_base_visits'
     __table_args__ = {'schema': 'gn_monitoring', 'extend_existing': True}
 
-    cor_visit_perturbation = DB.relationship('CorVisitPerturbation', backref='t_base_visits')
-    cor_visit_taxons = DB.relationship("CorVisitTaxon", backref='t_base_visits')
+    cor_visit_perturbation = DB.relationship(
+        'CorVisitPerturbation', backref='t_base_visits')
+    cor_visit_taxons = DB.relationship(
+        "CorVisitTaxon", backref='t_base_visits')
 
     observers = DB.relationship(
         'TRoles',
@@ -95,7 +106,8 @@ class Typoref(DB.Model):
     __tablename__ = 'typoref'
     __table_args__ = {'schema': 'ref_habitat'}
 
-    cd_typo = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
+    cd_typo = DB.Column(DB.Integer, primary_key=True,
+                        server_default=DB.FetchedValue())
     cd_table = DB.Column(DB.String(255))
     lb_nom_typo = DB.Column(DB.String(100))
     nom_jeu_donnees = DB.Column(DB.String(255))
@@ -115,9 +127,11 @@ class Habref(DB.Model):
     __tablename__ = 'habref'
     __table_args__ = {'schema': 'ref_habitat'}
 
-    cd_hab = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
+    cd_hab = DB.Column(DB.Integer, primary_key=True,
+                       server_default=DB.FetchedValue())
     fg_validite = DB.Column(DB.String(20), nullable=False)
-    cd_typo = DB.Column(DB.ForeignKey('ref_habitat.typoref.cd_typo', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    cd_typo = DB.Column(DB.ForeignKey('ref_habitat.typoref.cd_typo',
+                                      ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     lb_code = DB.Column(DB.String(50))
     lb_hab_fr = DB.Column(DB.String(255))
     lb_hab_fr_complet = DB.Column(DB.String(255))
@@ -130,16 +144,21 @@ class Habref(DB.Model):
     france = DB.Column(DB.String(5))
     lb_description = DB.Column(DB.String(4000))
 
-    typoref = DB.relationship('Typoref', primaryjoin='Habref.cd_typo == Typoref.cd_typo', backref='habrefs')
+    typoref = DB.relationship(
+        'Typoref', primaryjoin='Habref.cd_typo == Typoref.cd_typo', backref='habrefs')
+
 
 @serializable
 class CorListHabitat(DB.Model):
     __tablename__ = 'cor_list_habitat'
     __table_args__ = {'schema': 'ref_habitat'}
 
-    id_cor_list = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    id_list = DB.Column(DB.ForeignKey('ref_habitat.habref.bib_list_habitat', onupdate='CASCADE'), nullable=False)
-    cd_hab = DB.Column(DB.ForeignKey('ref_habitat.habref.cd_hab', onupdate='CASCADE'), nullable=False)
+    id_cor_list = DB.Column(DB.Integer, primary_key=True,
+                            server_default=DB.FetchedValue())
+    id_list = DB.Column(DB.ForeignKey(
+        'ref_habitat.habref.bib_list_habitat', onupdate='CASCADE'), nullable=False)
+    cd_hab = DB.Column(DB.ForeignKey(
+        'ref_habitat.habref.cd_hab', onupdate='CASCADE'), nullable=False)
 
 
 @serializable
@@ -147,12 +166,15 @@ class CorHabitatTaxon(DB.Model):
     __tablename__ = 'cor_habitat_taxon'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
-    id_cor_habitat_taxon = DB.Column(DB.Integer, primary_key=True, server_default=DB.FetchedValue())
-    id_habitat = DB.Column(DB.ForeignKey('ref_habitat.habref.cd_hab', onupdate='CASCADE'), nullable=False)
+    id_cor_habitat_taxon = DB.Column(
+        DB.Integer, primary_key=True, server_default=DB.FetchedValue())
+    id_habitat = DB.Column(DB.ForeignKey(
+        'ref_habitat.habref.cd_hab', onupdate='CASCADE'), nullable=False)
     cd_nom = DB.Column(DB.Integer, nullable=False)
 
     #taxref = DB.relationship('Taxref', primaryjoin='CorHabitatTaxon.cd_nom == Taxref.cd_nom', backref='cor_habitat_taxons')
-    habref = DB.relationship('Habref', primaryjoin='CorHabitatTaxon.id_habitat == Habref.cd_hab', backref='cor_habitat_taxons')
+    habref = DB.relationship(
+        'Habref', primaryjoin='CorHabitatTaxon.id_habitat == Habref.cd_hab', backref='cor_habitat_taxons')
 
 
 @geoserializable
@@ -162,8 +184,10 @@ class TInfosSite(DB.Model):
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
     id_infos_site = DB.Column(DB.Integer, primary_key=True)
-    id_base_site = DB.Column(DB.ForeignKey('gn_monitoring.t_base_sites.id_base_site'), nullable=False)
-    cd_hab = DB.Column(DB.ForeignKey('ref_habitat.habref.cd_hab'), nullable=False)
+    id_base_site = DB.Column(DB.ForeignKey(
+        'gn_monitoring.t_base_sites.id_base_site'), nullable=False)
+    cd_hab = DB.Column(DB.ForeignKey(
+        'ref_habitat.habref.cd_hab'), nullable=False)
 
     # habref = DB.relationship('Habref', primaryjoin='TInfosSite.cd_hab == Habref.cd_hab', backref='t_infos_sites')
     #t_base_site = DB.relationship('TBaseSites', primaryjoin='TInfosSite.id_base_site == TBaseSites.id_base_site', backref='t_infos_sites')
@@ -178,3 +202,33 @@ class TInfosSite(DB.Model):
         )
 
 
+@serializable
+@geoserializable
+@shapeserializable
+class ExportVisits(DB.Model):
+    __tablename__ = 'export_visits'
+    __table_args__ = {
+        'schema': 'pr_monitoring_habitat_territory',
+    }
+    id_area = DB.Column(
+        DB.Integer,
+        primary_key=True
+    )
+    id_base_visit = DB.Column(
+        DB.Integer,
+        primary_key=True
+    )
+    id_base_site = DB.Column(DB.Integer)
+    uuid_base_visit = DB.Column(UUID(as_uuid=True))
+    visit_date_min = DB.Column(DB.DateTime)
+    comments = DB.Column(DB.Unicode)
+    geom = DB.Column(Geometry('GEOMETRY', 2154))
+    label_perturbation = DB.Column(DB.Unicode)
+    observateurs = DB.Column(DB.Unicode)
+    organisme = DB.Column(DB.Unicode)
+    base_site_name = DB.Column(DB.Unicode)
+    lb_hab_fr_complet = DB.Column(DB.Unicode)
+    nom_valide_taxon = DB.Column(DB.Unicode)
+    cd_hab = DB.Column(DB.Integer)
+    area_name = DB.Column(DB.Unicode)
+    id_type = DB.Column(DB.Integer)

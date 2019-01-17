@@ -1,17 +1,19 @@
 import json
+import datetime
 
 from flask import Blueprint, request, session, current_app, send_from_directory, abort, jsonify
 from geojson import FeatureCollection, Feature
 from sqlalchemy.sql.expression import func
 from sqlalchemy import and_ , distinct, desc
 from sqlalchemy.exc import SQLAlchemyError
+from geoalchemy2.shape import to_shape
 
 from geonature.utils.env import DB, ROOT_DIR
+from geonature.utils.utilsgeometry import FionaShapeService
 from geonature.utils.utilssqlalchemy import json_resp, to_json_resp, to_csv_resp
 from pypnnomenclature.models import TNomenclatures
 from pypnusershub.db.tools import (
-    InsufficientRightsError,
-    get_or_fetch_user_cruved
+    InsufficientRightsError
 )
 from pypnusershub import routes as fnauth
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteApplication, TBaseVisits
@@ -20,7 +22,7 @@ from geonature.core.users.models import TRoles, BibOrganismes
 
 from .repositories import check_user_cruved_visit, check_year_visit
 
-from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation, CorListHabitat
+from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation, CorListHabitat, ExportVisits
 
 blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
 
@@ -393,27 +395,98 @@ def get_commune(id_application):
     return None
 
 
-# FIXME: 403 Token BadSignature
-""" @blueprint.route('/me', methods=['GET'])
-@fnauth.check_auth(2, True, None, None)
-@json_resp
-def returnCurrentUser(id_role):
-    info = id_role.as_dict()
-    get_current_user = UsersView.query.filter_by(id_role=info[id_role]).all()
-    return [d.as_dict(True) for d in get_current_user] """
 
-# ?? check_auth_cruved est supprimé de usersHub https://github.com/PnX-SI/UsersHub-authentification-module/commit/4d0778a786749cb70afa307c8f8c364d1565ec5d#diff-8ec023ffa1c3be8aeb37bb4c57974700
-@blueprint.route('/user/cruved', methods=['GET'])
-@fnauth.check_auth_cruved('R', True)
-@json_resp
-def returnUserCruved(info_role):
-    #récupérer le CRUVED complet de l'utilisateur courant
-    user_cruved = get_or_fetch_user_cruved(
-        session=session,
-        id_role=info_role.id_role,
-        id_application_parent=current_app.config['ID_APPLICATION_GEONATURE']
-    )
 
-    print("user_cruved: ", user_cruved)
-    return user_cruved
-   
+@blueprint.route('/export_visit', methods=['GET'])
+def export_visit():
+    '''
+    Télécharge les données d'une visite (ou des visites )
+    '''
+
+    parameters = request.args
+    export_format = parameters['export_format'] if 'export_format' in request.args else 'shapefile'
+
+    file_name = datetime.datetime.now().strftime('%Y_%m_%d_%Hh%Mm%S')
+    q = (DB.session.query(ExportVisits))
+
+    if 'id_base_visit' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.id_base_visit == parameters['id_base_visit'])
+             )
+    elif 'id_base_site' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.id_base_site == parameters['id_base_site'])
+             )
+    elif 'organisme' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.organisme == parameters['organisme'])
+             )
+    elif 'commune' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.area_name == parameters['commune'])
+             )
+    elif 'year' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(func.date_part('year', ExportVisits.visit_date) == parameters['year'])
+             )
+    elif 'cd_hab' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.cd_hab == parameters['cd_hab'])
+             )
+
+    data = q.all()
+    features = []
+
+    if export_format == 'geojson':
+
+        for d in data:
+            feature = d.as_geofeature('geom', 'id_area', False)
+            features.append(feature)
+        result = FeatureCollection(features)
+
+        return to_json_resp(
+            result,
+            as_file=True,
+            filename=file_name,
+            indent=4
+        )
+
+    elif export_format == 'csv':
+        tab_visit = []
+
+        for d in data:
+            visit = d.as_dict()
+            geom_wkt = to_shape(d.geom)
+            visit['geom'] = geom_wkt
+
+            tab_visit.append(visit)
+
+        return to_csv_resp(
+            file_name,
+            tab_visit,
+            tab_visit[0].keys(),
+            ';'
+
+        )
+
+    else:
+
+        dir_path = str(ROOT_DIR / 'backend/static/shapefiles')
+
+        FionaShapeService.create_shapes_struct(
+            db_cols=ExportVisits.__mapper__.c,
+            srid=2154,
+            dir_path=dir_path,
+            file_name=file_name,
+        )
+
+        for row in data:
+            FionaShapeService.create_feature(row.as_dict(), row.geom)
+
+        FionaShapeService.save_and_zip_shapefiles()
+
+        return send_from_directory(
+            dir_path,
+            file_name+'.zip',
+            as_attachment=True
+        )

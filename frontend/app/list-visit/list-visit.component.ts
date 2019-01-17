@@ -49,6 +49,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.idSite = this.activatedRoute.snapshot.params['idSite'];
+    this.storeService.queryString = this.storeService.queryString.set('id_base_site', this.idSite);
   }
 
   ngAfterViewInit() {
