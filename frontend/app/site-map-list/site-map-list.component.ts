@@ -188,6 +188,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     }, error => {
       if (error.status == 404) {
+        this.page.totalElements = 0;
+        this.page.size = 0;
         this.filteredData = [];
       } else {
         this.toastr.error('Une erreur est survenue lors de la récupération des données', '', {

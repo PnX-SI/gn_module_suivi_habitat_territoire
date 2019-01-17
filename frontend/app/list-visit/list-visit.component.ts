@@ -101,9 +101,9 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   getSites() {
     this.paramApp = this.paramApp.append('id_base_site', this.idSite)
     this._api.getSites(this.paramApp).subscribe(data => {
-      this.site = data;
+      this.site = data[1];
 
-      let properties = data.features[0].properties;
+      let properties = data[1].features[0].properties;
       this.organisme = properties.organisme;
       this.nomCommune = properties.nom_commune;
       this.nomHabitat = properties.nom_habitat;
