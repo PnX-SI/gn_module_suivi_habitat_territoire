@@ -155,9 +155,16 @@ def get_all_sites():
     
     page = request.args.get('page', 1, type=int)
     items_per_page = blueprint.config['items_per_page']
-    pagination = q.paginate(page, items_per_page, False)
-    data = pagination.items
-    totalItmes = pagination.total
+    pagination_serverside = blueprint.config['pagination_serverside']
+
+    if (pagination_serverside):
+        pagination = q.paginate(page, items_per_page, False)
+        data = pagination.items
+        totalItmes = pagination.total
+    else:
+        totalItmes = 0
+        data = q.all()
+
     pageInfo= {
         'totalItmes' : totalItmes,
         'items_per_page' : items_per_page,

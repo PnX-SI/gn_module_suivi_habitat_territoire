@@ -43,7 +43,7 @@
                 <ngx-datatable #table class="material" [rows]="filteredData" maxWidth="90" [headerHeight]="50"
                     [footerHeight]="50" [rowHeight]="'auto'" [columnMode]="'force'" [selected]="mapListService.selectedRow"
                     [selectionType]="'single'" (select)="onRowSelect($event)" [rowClass]="mapListService.getRowClass"
-                    [externalPaging]="true" [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size"
+                    [externalPaging]="storeService.shtConfig.pagination_serverside" [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size"
                     (page)='setPage($event)' [messages]="storeService.shtConfig.site_message">
                     <ngx-datatable-column *ngFor="let col of storeService.shtConfig.default_site_columns" [name]="col.name"
                         [prop]="col.prop" [maxWidth]="col.width">
