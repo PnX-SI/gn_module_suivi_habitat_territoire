@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, Output, EventEmitter, OnDestroy } fro
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { FormGroup, FormBuilder, FormControl } from '@angular/forms';
-
+import { Page } from '../shared/page';
 import * as L from 'leaflet';
 
 import { MapService } from '@geonature_common/map/map.service';
@@ -21,9 +21,6 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   public sites;
   public filteredData = [];
   public tabOrganism = [];
-  public paramApp = this.storeService.queryString.append(
-    'id_application', ModuleConfig.id_application
-  );
   public tabCom = [];
   public tabHab = []
   public dataLoaded = false;
@@ -32,6 +29,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   private _map;
   public filterForm: FormGroup;
   public oldFilterDate;
+  public page = new Page();
 
   @Output()
   onDeleteFiltre = new EventEmitter<any>();
@@ -48,7 +46,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit() {
 
-    this.onChargeList(this.paramApp);
+    this.onChargeList();
     this.center = this.storeService.shtConfig.zoom_center;
     this.zoom = this.storeService.shtConfig.zoom;
 
@@ -178,16 +176,20 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  onChargeList(param) {
+  onChargeList(param?) {
     this._api.getSites(param).subscribe(data => {
-      this.sites = data;
-      this.mapListService.loadTableData(data);
+      this.sites = data[1];
+      this.page.totalElements = data[0].totalItmes;
+      this.page.size = data[0].items_per_page;
+      this.mapListService.loadTableData(data[1]);
       this.filteredData = this.mapListService.tableData;
 
       this.dataLoaded = true;
 
     }, error => {
       if (error.status == 404) {
+        this.page.totalElements = 0;
+        this.page.size = 0;
         this.filteredData = [];
       } else {
         this.toastr.error('Une erreur est survenue lors de la récupération des données', '', {
@@ -198,7 +200,11 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.dataLoaded = true;
     });
   }
-
+  setPage(pageInfo) {
+    this.page.pageNumber = pageInfo.offset;
+    this.onSetParams('page',pageInfo.offset+1)
+    this.onChargeList(this.storeService.queryString.toString())
+  }
   // Map-list
   onEachFeature(feature, layer) {
     let site = feature.properties;
@@ -260,7 +266,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       map.setView(latlng, zoom);
   }
 
-  onInfo(id_base_site) { 
+  onInfo(id_base_site) {
     this.router.navigate([`${ModuleConfig.api_url}/listVisit`, id_base_site]);
   }
 
@@ -284,13 +290,12 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   // Filters
   onDelete() {
     console.log('ondelete')
-    this.onChargeList(this.paramApp);
+    this.onChargeList();
   }
 
   onSetParams(param: string, value) {
     //  ajouter le queryString pour télécharger les données
     this.storeService.queryString = this.storeService.queryString.set(param, value);
-    this.storeService.queryString.append('id_application', ModuleConfig.id_application);
   }
 
   onDeleteParams(param: string, value) {
@@ -325,8 +330,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     let filterkey = this.storeService.queryString.keys();
     console.log(filterkey)
     filterkey.forEach(key => {
-      this.storeService.queryString= this.storeService.queryString.delete(key);
-    }); 
+      this.storeService.queryString = this.storeService.queryString.delete(key);
+    });
     console.log("queryString map-list: ", this.storeService.queryString.toString())
 
   }
