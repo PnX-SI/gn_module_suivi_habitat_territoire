@@ -202,8 +202,10 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   setPage(pageInfo) {
     this.page.pageNumber = pageInfo.offset;
-    this.onSetParams('page',pageInfo.offset+1)
-    this.onChargeList(this.storeService.queryString.toString())
+    if (this.storeService.shtConfig.pagination_serverside) {
+      this.onSetParams('page',pageInfo.offset+1)
+      this.onChargeList(this.storeService.queryString.toString())
+    }
   }
   // Map-list
   onEachFeature(feature, layer) {

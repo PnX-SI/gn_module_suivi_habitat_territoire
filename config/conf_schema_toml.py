@@ -10,6 +10,7 @@ export_available_format = ['geojson', 'csv', 'shapefile']
 id_type_commune = 25
 zoom_center = [44.863664, 6.268670]
 zoom= 10
+pagination_serverside= False
 items_per_page = 5
 
 site_message = {"emptyMessage" : "Aucun site à afficher ", "totalMessage" : "sites(s) au total"}
@@ -44,4 +45,5 @@ class GnModuleSchemaConf(GnModuleProdConf):
     export_srid = fields.Integer(missing=2154)
     zoom_center = fields.List(fields.Float(), missing=zoom_center)
     zoom=fields.Integer(missing=10)
+    pagination_serverside = fields.Boolean(missing=pagination_serverside)
     items_per_page = fields.Integer(missing=items_per_page)
