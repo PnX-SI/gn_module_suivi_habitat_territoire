@@ -3,7 +3,6 @@
 '''
 
 from marshmallow import Schema, fields
-from geonature.utils.config_schema import GnModuleProdConf
 
 export_available_format = ['geojson', 'csv', 'shapefile']
 
@@ -32,7 +31,7 @@ default_list_visit_columns = [
 id_menu_list_user = 1
 id_bib_list_habitat = 1
 
-class GnModuleSchemaConf(GnModuleProdConf):
+class GnModuleSchemaConf(Schema):
     site_message=fields.Dict(missing=site_message)
     list_visit_message = fields.Dict(missing=list_visit_message)
     detail_list_visit_message = fields.Dict(missing=detail_list_visit_message)

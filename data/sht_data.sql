@@ -71,14 +71,16 @@ FROM gn_monitoring.t_base_sites bs
 JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying = bs.base_site_code;
 */
 
--- Insérer dans cor_site_application les sites suivis de ce module
-INSERT INTO gn_monitoring.cor_site_application
-WITH idapp AS(
-SELECT id_application FROM utilisateurs.t_applications
-WHERE nom_application = 'suivi_habitat_territoire'
+-- Insérer dans cor_site_module les sites suivis de ce module
+INSERT INTO gn_monitoring.cor_site_module
+WITH id_module AS(
+SELECT id_module FROM gn_commons.t_modules
+WHERE module_code ILIKE 'SUIVI_HAB_TER'
 )
-SELECT ti.id_base_site, idapp.id_application
-FROM pr_monitoring_habitat_territory.t_infos_site ti, idapp;
+SELECT ti.id_base_site, id_module.id_module
+FROM pr_monitoring_habitat_territory.t_infos_site ti, id_module;
+
+
 
 
 ----------------------
