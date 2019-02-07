@@ -7,6 +7,8 @@ from sqlalchemy.dialects.postgresql.base import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import func
 
+from pypnusershub.db.models import User
+
 from geonature.utils.env import DB
 from geonature.utils.utilssqlalchemy import (
     serializable,
@@ -18,7 +20,6 @@ from geonature.utils.utilsgeometry import shapeserializable
 from geonature.core.gn_monitoring.models import TBaseSites, TBaseVisits, corVisitObserver
 # from geonature.core.taxonomie.models import Taxref
 from pypnnomenclature.models import TNomenclatures
-from geonature.core.users.models import TRoles
 
 
  
@@ -77,12 +78,12 @@ class TVisitSHT(TBaseVisits):
     cor_visit_taxons = DB.relationship("CorVisitTaxon", backref='t_base_visits')
 
     observers = DB.relationship(
-        'TRoles',
+        'User',
         secondary=corVisitObserver,
         primaryjoin=(
             corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
         ),
-        secondaryjoin=(corVisitObserver.c.id_role == TRoles.id_role),
+        secondaryjoin=(corVisitObserver.c.id_role == User.id_role),
         foreign_keys=[
             corVisitObserver.c.id_base_visit,
             corVisitObserver.c.id_role
