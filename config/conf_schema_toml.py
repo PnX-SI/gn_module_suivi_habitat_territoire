@@ -3,13 +3,14 @@
 '''
 
 from marshmallow import Schema, fields
-from geonature.utils.config_schema import GnModuleProdConf
 
 export_available_format = ['geojson', 'csv', 'shapefile']
 
 id_type_commune = 25
 zoom_center = [44.863664, 6.268670]
 zoom= 10
+pagination_serverside= False
+items_per_page = 5
 
 site_message = {"emptyMessage" : "Aucun site à afficher ", "totalMessage" : "sites(s) au total"}
 list_visit_message = {"emptyMessage" : "Aucune visite sur ce site ", "totalMessage" : "visites au total"}
@@ -30,7 +31,7 @@ default_list_visit_columns = [
 id_menu_list_user = 1
 id_bib_list_habitat = 1
 
-class GnModuleSchemaConf(GnModuleProdConf):
+class GnModuleSchemaConf(Schema):
     site_message=fields.Dict(missing=site_message)
     list_visit_message = fields.Dict(missing=list_visit_message)
     detail_list_visit_message = fields.Dict(missing=detail_list_visit_message)
@@ -43,3 +44,5 @@ class GnModuleSchemaConf(GnModuleProdConf):
     export_srid = fields.Integer(missing=2154)
     zoom_center = fields.List(fields.Float(), missing=zoom_center)
     zoom=fields.Integer(missing=10)
+    pagination_serverside = fields.Boolean(missing=pagination_serverside)
+    items_per_page = fields.Integer(missing=items_per_page)
