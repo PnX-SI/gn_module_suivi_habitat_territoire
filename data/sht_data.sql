@@ -44,7 +44,7 @@ VALUES (
 
 -- créer nomenclature  HAB --
 INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, label_fr, definition_fr, source )
-VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone de habitat', 'Zone de habitat - suivi habitat territoire', 'Zone d''habitat',  'Zone d''habitat issu du module suivi habitat territoire', 'CBNA');
+VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone d''habitat', 'Zone d''habitat - suivi habitat territoire', 'Zone d''habitat',  'Zone d''habitat issu du module suivi habitat territoire', 'CBNA');
 
 
 -- insérer les données dans t_base_sites grâce à celles dans la table maille_tmp
@@ -56,7 +56,7 @@ FROM pr_monitoring_habitat_territory.maille_tmp;
 
 
 --- update le nom du site pour y ajouter l'identifiant du site
-UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site); 
+UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site) WHERE id_nomenclature_type_site= (SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'));
 
 -- extension de la table t_base_sites : mettre les données dans t_infos_site
 INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
