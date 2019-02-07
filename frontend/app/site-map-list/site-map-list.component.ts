@@ -268,16 +268,14 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   zoomOnSelectedLayer(map, layer, zoom) {
-    const currentZoom = map.getZoom();
-    // latlng is different between polygons and point
     let latlng;
 
     if (layer instanceof L.Polygon || layer instanceof L.Polyline) {
-      latlng = (layer as any)._bounds._northEast;
+      latlng = (layer as any).getCenter();
+      map.setView(latlng, zoom);
     } else {
       latlng = layer._latlng;
     }
-    if (zoom > currentZoom) map.setView(latlng, zoom);
   }
 
   onInfo(id_base_site) {
