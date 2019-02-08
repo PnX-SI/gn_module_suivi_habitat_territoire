@@ -456,7 +456,7 @@ def export_visit():
     if export_format == 'geojson':
 
         for d in data:
-            feature = d.as_geofeature('geom', 'id_area', False)
+            feature = d.as_geofeature('geom', 'idarea', False)
             features.append(feature)
         result = FeatureCollection(features)
 
