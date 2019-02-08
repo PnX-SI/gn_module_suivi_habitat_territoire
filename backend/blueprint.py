@@ -427,11 +427,11 @@ def export_visit():
 
     if 'id_base_visit' in parameters:
         q = (DB.session.query(ExportVisits)
-             .filter(ExportVisits.id_base_visit == parameters['id_base_visit'])
+             .filter(ExportVisits.idbvisit == parameters['id_base_visit'])
              )
     elif 'id_base_site' in parameters:
         q = (DB.session.query(ExportVisits)
-             .filter(ExportVisits.id_base_site == parameters['id_base_site'])
+             .filter(ExportVisits.idbsite == parameters['id_base_site'])
              )
     elif 'organisme' in parameters:
         q = (DB.session.query(ExportVisits)
@@ -443,7 +443,7 @@ def export_visit():
              )
     elif 'year' in parameters:
         q = (DB.session.query(ExportVisits)
-             .filter(func.date_part('year', ExportVisits.visit_date) == parameters['year'])
+             .filter(func.date_part('year', ExportVisits.visitdate) == parameters['year'])
              )
     elif 'cd_hab' in parameters:
         q = (DB.session.query(ExportVisits)

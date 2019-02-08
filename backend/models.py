@@ -211,25 +211,25 @@ class ExportVisits(DB.Model):
     __table_args__ = {
         'schema': 'pr_monitoring_habitat_territory',
     }
-    id_area = DB.Column(
+    idarea = DB.Column(
         DB.Integer,
         primary_key=True
     )
-    id_base_visit = DB.Column(
+    idbvisit = DB.Column(
         DB.Integer,
         primary_key=True
     )
-    id_base_site = DB.Column(DB.Integer)
-    uuid_base_visit = DB.Column(UUID(as_uuid=True))
-    visit_date_min = DB.Column(DB.DateTime)
-    comments = DB.Column(DB.Unicode)
+    idbsite = DB.Column(DB.Integer)
+    uuidbvisit = DB.Column(UUID(as_uuid=True))
     geom = DB.Column(Geometry('GEOMETRY', 2154))
-    label_perturbation = DB.Column(DB.Unicode)
-    observateurs = DB.Column(DB.Unicode)
+    visitdate = DB.Column(DB.DateTime)
+    comments = DB.Column(DB.Unicode)
+    lbperturb = DB.Column(DB.Unicode)
+    observers = DB.Column(DB.Unicode)
     organisme = DB.Column(DB.Unicode)
-    base_site_name = DB.Column(DB.Unicode)
-    lb_hab_fr_complet = DB.Column(DB.Unicode)
-    nom_valide_taxon = DB.Column(DB.Unicode)
+    bsitename = DB.Column(DB.Unicode)
+    lbhab = DB.Column(DB.Unicode)
+    nomvtaxon = DB.Column(DB.Unicode)
     cd_hab = DB.Column(DB.Integer)
     area_name = DB.Column(DB.Unicode)
     id_type = DB.Column(DB.Integer)

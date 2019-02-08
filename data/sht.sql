@@ -105,16 +105,17 @@ ALTER TABLE ONLY cor_visit_taxons
 ----------
 
 --Créer la vue pour exporter les visites
+
 CREATE OR REPLACE VIEW pr_monitoring_habitat_territory.export_visits AS WITH
 observers AS(
     SELECT
         v.id_base_visit,
         string_agg(roles.nom_role::text || ' ' ||  roles.prenom_role::text, ',') AS observateurs,
-        roles.organisme AS organisme
+        roles.id_organisme AS organisme
     FROM gn_monitoring.t_base_visits v
     JOIN gn_monitoring.cor_visit_observer observer ON observer.id_base_visit = v.id_base_visit
     JOIN utilisateurs.t_roles roles ON roles.id_role = observer.id_role
-    GROUP BY v.id_base_visit, roles.organisme
+    GROUP BY v.id_base_visit, roles.id_organisme
 ),
 perturbations AS(
     SELECT
@@ -142,16 +143,23 @@ taxons AS (
     GROUP BY v.id_base_visit
 )
 -- toutes les mailles d'un site et leur visites
-SELECT sites.id_base_site, cor.id_area, visits.id_base_visit, visits.id_digitiser, visits.visit_date_min, visits.comments, visits.uuid_base_visit, ar.geom,
-    per.label_perturbation,
-    obs.observateurs,
-    obs.organisme,
-    tax.nom_valide_taxon,
-    sites.base_site_name,
-    habref.lb_hab_fr_complet,
-    habref.cd_hab,
-    area.area_name,
-    ar.id_type
+SELECT sites.id_base_site AS idbsite,
+	cor.id_area AS idarea,
+	visits.id_base_visit AS idbvisit,
+	visits.id_digitiser AS iddigit,
+	visits.visit_date_min AS visitdate,
+	visits.comments,
+	visits.uuid_base_visit AS uuidbvisit,
+	ar.geom,
+	per.label_perturbation AS lbperturb,
+	obs.observateurs AS observers,
+	obs.organisme,
+	tax.nom_valide_taxon AS nomvtaxon,
+	sites.base_site_name AS bsitename,
+	habref.lb_hab_fr_complet AS lbhab,
+	habref.cd_hab,
+	area.area_name,
+	ar.id_type
 FROM gn_monitoring.t_base_sites sites
 JOIN gn_monitoring.cor_site_area cor ON cor.id_base_site = sites.id_base_site
 JOIN gn_monitoring.t_base_visits visits ON sites.id_base_site = visits.id_base_site
