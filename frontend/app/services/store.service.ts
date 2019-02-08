@@ -43,7 +43,7 @@ export class StoreService {
 
   public currentSite$: BehaviorSubject<any> = new BehaviorSubject();
 
-  public urlLoad = `${AppConfig.API_ENDPOINT}${ModuleConfig.api_url}/export_visit`;
+  public urlLoad = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/export_visit`;
 
   getCurrentSite() {
     return this.currentSite$.asObservable();
