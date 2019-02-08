@@ -35,8 +35,6 @@ def get_habitats(id_list):
     '''
     Récupère les habitats cor_list_habitat à partir de l'identifiant id_list de la table bib_lis_habitat
     '''
-    print('ENTER THERE')
-
     q = DB.session.query(
         CorListHabitat.cd_hab,
         CorListHabitat.id_list,
@@ -412,7 +410,6 @@ def get_commune(id_module):
             tab_commune.append(nom_com)
         return tab_commune
     return None
-
 
 
 
