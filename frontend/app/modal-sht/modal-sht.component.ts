@@ -91,8 +91,6 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     datas.push(currentVisit);
     let taxons = this._api.getTaxons(this.cd_hab);
     datas.push(taxons);
-    console.log("LAAAA");
-    console.log(datas);
 
     forkJoin(datas).subscribe(results => {
       // results[0] is visit
