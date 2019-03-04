@@ -1,15 +1,19 @@
 import json
+import datetime
+
 from flask import Blueprint, request, session, current_app, send_from_directory, abort, jsonify
 from geojson import FeatureCollection, Feature
 from sqlalchemy.sql.expression import func
 from sqlalchemy import and_ , distinct, desc
 from sqlalchemy.exc import SQLAlchemyError
+from geoalchemy2.shape import to_shape
 
 from pypnusershub.db.tools import InsufficientRightsError
 from pypnnomenclature.models import TNomenclatures
 from pypnusershub.db.models import User
  
 from geonature.utils.env import DB, ROOT_DIR
+from geonature.utils.utilsgeometry import FionaShapeService
 from geonature.utils.utilssqlalchemy import json_resp, to_json_resp, to_csv_resp
 from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
@@ -20,10 +24,7 @@ from geonature.core.users.models import BibOrganismes
 
 from .repositories import check_user_cruved_visit, check_year_visit
 
-from .models import (
-    TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT,
-    TInfosSite, CorVisitTaxon, CorVisitPerturbation, CorListHabitat
-)  
+from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation, CorListHabitat, ExportVisits
 
 blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
 
@@ -34,8 +35,6 @@ def get_habitats(id_list):
     '''
     Récupère les habitats cor_list_habitat à partir de l'identifiant id_list de la table bib_lis_habitat
     '''
-    print('ENTER THERE')
-
     q = DB.session.query(
         CorListHabitat.cd_hab,
         CorListHabitat.id_list,
@@ -346,19 +345,19 @@ def patch_visit(idv, info_role):
     for o in observers:
         visit.observers.append(o)
 
-    """ user_cruved = get_or_fetch_user_cruved(
+    user_cruved = get_or_fetch_user_cruved(
         session=session,
         id_role=info_role.id_role,
         module_code='SUIVI_HAB_TER'
     )
     update_cruved = user_cruved['U']
-    check_user_cruved_visit(info_role, visit, update_cruved) """
+    check_user_cruved_visit(info_role, visit, update_cruved)
 
     mergeVisit = DB.session.merge(visit)
 
     DB.session.commit()
 
-    return visit.as_dict(recursif=True)
+    return mergeVisit.as_dict(recursif=True)
 
 
 
@@ -411,3 +410,99 @@ def get_commune(id_module):
             tab_commune.append(nom_com)
         return tab_commune
     return None
+
+
+
+@blueprint.route('/export_visit', methods=['GET'])
+def export_visit():
+    '''
+    Télécharge les données d'une visite (ou des visites )
+    '''
+
+    parameters = request.args
+    export_format = parameters['export_format'] if 'export_format' in request.args else 'shapefile'
+
+    file_name = datetime.datetime.now().strftime('%Y_%m_%d_%Hh%Mm%S')
+    q = (DB.session.query(ExportVisits))
+
+    if 'id_base_visit' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.idbvisit == parameters['id_base_visit'])
+             )
+    elif 'id_base_site' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.idbsite == parameters['id_base_site'])
+             )
+    elif 'organisme' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.organisme == parameters['organisme'])
+             )
+    elif 'commune' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.area_name == parameters['commune'])
+             )
+    elif 'year' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(func.date_part('year', ExportVisits.visitdate) == parameters['year'])
+             )
+    elif 'cd_hab' in parameters:
+        q = (DB.session.query(ExportVisits)
+             .filter(ExportVisits.cd_hab == parameters['cd_hab'])
+             )
+
+    data = q.all()
+    features = []
+
+    if export_format == 'geojson':
+
+        for d in data:
+            feature = d.as_geofeature('geom', 'idarea', False)
+            features.append(feature)
+        result = FeatureCollection(features)
+
+        return to_json_resp(
+            result,
+            as_file=True,
+            filename=file_name,
+            indent=4
+        )
+
+    elif export_format == 'csv':
+        tab_visit = []
+
+        for d in data:
+            visit = d.as_dict()
+            geom_wkt = to_shape(d.geom)
+            visit['geom'] = geom_wkt
+
+            tab_visit.append(visit)
+
+        return to_csv_resp(
+            file_name,
+            tab_visit,
+            tab_visit[0].keys(),
+            ';'
+
+        )
+
+    else:
+
+        dir_path = str(ROOT_DIR / 'backend/static/shapefiles')
+
+        FionaShapeService.create_shapes_struct(
+            db_cols=ExportVisits.__mapper__.c,
+            srid=2154,
+            dir_path=dir_path,
+            file_name=file_name,
+        )
+
+        for row in data:
+            FionaShapeService.create_feature(row.as_dict(), row.geom)
+
+        FionaShapeService.save_and_zip_shapefiles()
+
+        return send_from_directory(
+            dir_path,
+            file_name+'.zip',
+            as_attachment=True
+        )

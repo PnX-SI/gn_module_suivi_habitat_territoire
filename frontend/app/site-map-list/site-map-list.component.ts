@@ -56,16 +56,22 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.center = this.storeService.shtConfig.zoom_center;
     this.zoom = this.storeService.shtConfig.zoom;
 
+    this._api.userCruved().subscribe(ucruved =>{
+      console.log('userCruved', ucruved);
+    }, error => {
+      console.log("error userCruved: ", error)
+    })
+
     /*
-    next Filters in progress...
+    previous Filters in progress...
     let filterkey = this.storeService.queryString.keys();
     console.log(filterkey)
     console.log("this.storeService.queryString.getAll(): ", this.storeService.queryString.getAll('year'));
-    const nextfilterForm = {'year': null};
+    const prevfilterForm = {'year': null};
     if (this.storeService.queryString.getAll('year')) {
       let year = JSON.parse(this.storeService.queryString.getAll('year')) 
       console.log('year parse: ', year)
-      nextfilterForm.year = year
+      prevfilterForm.year = year
     }*/
 
     this.filterForm = this._fb.group({
@@ -350,13 +356,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     let filterkey = this.storeService.queryString.keys();
-    console.log(filterkey);
     filterkey.forEach(key => {
-      this.storeService.queryString = this.storeService.queryString.delete(key);
+      this.storeService.queryString= this.storeService.queryString.delete(key);
     });
-    console.log(
-      "queryString map-list: ",
-      this.storeService.queryString.toString()
-    );
   }
 }

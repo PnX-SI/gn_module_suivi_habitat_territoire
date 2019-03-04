@@ -100,5 +100,75 @@ ALTER TABLE ONLY cor_visit_taxons
     ADD CONSTRAINT unique_cor_visit_taxons UNIQUE ( id_base_visit, cd_nom );
 
 
+----------
+--EXPORT--
+----------
 
+--Créer la vue pour exporter les visites
 
+CREATE OR REPLACE VIEW pr_monitoring_habitat_territory.export_visits AS WITH
+observers AS(
+    SELECT
+        v.id_base_visit,
+        string_agg(roles.nom_role::text || ' ' ||  roles.prenom_role::text, ',') AS observateurs,
+        roles.id_organisme AS organisme
+    FROM gn_monitoring.t_base_visits v
+    JOIN gn_monitoring.cor_visit_observer observer ON observer.id_base_visit = v.id_base_visit
+    JOIN utilisateurs.t_roles roles ON roles.id_role = observer.id_role
+    GROUP BY v.id_base_visit, roles.id_organisme
+),
+perturbations AS(
+    SELECT
+        v.id_base_visit,
+        string_agg(n.label_default, ',') AS label_perturbation
+    FROM gn_monitoring.t_base_visits v
+    JOIN pr_monitoring_habitat_territory.cor_visit_perturbation p ON v.id_base_visit = p.id_base_visit
+    JOIN ref_nomenclatures.t_nomenclatures n ON p.id_nomenclature_perturbation = n.id_nomenclature
+    GROUP BY v.id_base_visit
+),
+area AS(
+    SELECT bs.id_base_site,
+        a.id_area,
+        a.area_name
+    FROM ref_geo.l_areas a
+    JOIN gn_monitoring.t_base_sites bs ON ST_intersects(ST_TRANSFORM(a.geom, MY_SRID_WORLD), bs.geom)
+    WHERE a.id_type=ref_geo.get_id_area_type('COM')
+),
+taxons AS (
+    SELECT v.id_base_visit,
+    string_agg(tr.nom_valide::text, ' - '::text) AS nom_valide_taxon
+    FROM gn_monitoring.t_base_visits v
+        JOIN pr_monitoring_habitat_territory.cor_visit_taxons t ON t.id_base_visit = v.id_base_visit
+        JOIN taxonomie.taxref tr ON t.cd_nom = tr.cd_nom
+    GROUP BY v.id_base_visit
+)
+-- toutes les mailles d'un site et leur visites
+SELECT sites.id_base_site AS idbsite,
+	cor.id_area AS idarea,
+	visits.id_base_visit AS idbvisit,
+	visits.id_digitiser AS iddigit,
+	visits.visit_date_min AS visitdate,
+	visits.comments,
+	visits.uuid_base_visit AS uuidbvisit,
+	ar.geom,
+	per.label_perturbation AS lbperturb,
+	obs.observateurs AS observers,
+	obs.organisme,
+	tax.nom_valide_taxon AS nomvtaxon,
+	sites.base_site_name AS bsitename,
+	habref.lb_hab_fr_complet AS lbhab,
+	habref.cd_hab,
+	area.area_name,
+	ar.id_type
+FROM gn_monitoring.t_base_sites sites
+JOIN gn_monitoring.cor_site_area cor ON cor.id_base_site = sites.id_base_site
+JOIN gn_monitoring.t_base_visits visits ON sites.id_base_site = visits.id_base_site
+JOIN taxons tax ON tax.id_base_visit = visits.id_base_visit
+JOIN observers obs ON obs.id_base_visit = visits.id_base_visit
+LEFT JOIN perturbations per ON per.id_base_visit = visits.id_base_visit
+JOIN area ON area.id_base_site = sites.id_base_site
+JOIN pr_monitoring_habitat_territory.t_infos_site info ON info.id_base_site = sites.id_base_site
+JOIN ref_habitat.habref habref ON habref.cd_hab = info.cd_hab
+JOIN ref_geo.l_areas ar ON ar.id_area = cor.id_area
+WHERE ar.id_type=ref_geo.get_id_area_type('M100m')
+ORDER BY visits.id_base_visit;

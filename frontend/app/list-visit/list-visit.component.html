@@ -57,7 +57,8 @@
         </div>
 
         <div id="end-btn">
-            <pnx-modal-download labelButton='Télécharger ces visites'>
+            <pnx-modal-download labelButton='Télécharger ces visites' [pathDownload]='storeService.urlLoad' [exportFormat]='storeService.shtConfig.export_available_format'
+            [queryString]='storeService.queryString' >
             </pnx-modal-download>
 
             <modal-sht classStyle="btn btn-sm btn-success pull-right" labelButton='Ajouter une nouvelle visite'

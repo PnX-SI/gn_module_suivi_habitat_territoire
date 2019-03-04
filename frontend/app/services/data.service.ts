@@ -51,7 +51,7 @@ export class DataService {
     );
   }
 
-  getCommune(id_application: number, params: any) {
+  getCommune(id_module: number, params: any) {
     let myParams = new HttpParams();
 
     for (let key in params) {
@@ -61,7 +61,7 @@ export class DataService {
     return this._http.get<any>(
       `${
         AppConfig.API_ENDPOINT
-      }/suivi_habitat_territoire/communes/${id_application}`,
+      }/suivi_habitat_territoire/communes/${id_module}`,
       { params: myParams }
     );
   }
@@ -92,5 +92,9 @@ export class DataService {
       `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/${idVisit}`,
       data
     );
+  }
+
+  userCruved() {
+    return this._http.get<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/user/cruved`);
   }
 }
