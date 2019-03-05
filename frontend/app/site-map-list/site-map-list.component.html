@@ -10,8 +10,10 @@
                     <div class="row">
                         <div class="searchSite col">
                             <small> Année de visite </small>
-                            <input type="number" class="form-control" [formControl]="filterForm.controls.filterYear"
-                                class="inputSearch" (onDeleteFiltre)="onDelete()">
+                            <select class="form-control form-control-sm" name="selectHab" [formControl]="filterForm.controls.filterYear">
+                                    <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                    <option *ngFor="let year of tabYears" [value]="year.id" [innerHTML]="year.label"> </option>
+                            </select>
                         </div>
                         <div class="searchSite col">
                             <small> Habitat </small>

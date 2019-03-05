@@ -224,6 +224,29 @@ def get_visits(info_role):
     data = q.all()
     return [d.as_dict(True) for d in data]
 
+@blueprint.route('/visits/years', methods=['GET'])
+@json_resp
+def get_years_visits():
+    '''
+    Retourne toutes les années de visites du module
+    '''
+    parameters = request.args
+    q = DB.session.query(
+        distinct(func.to_char(TVisitSHT.visit_date_min, 'YYYY'))
+        )
+    if 'id_base_site' in parameters:
+        q = q.filter(TVisitSHT.id_base_site == parameters['id_base_site'])
+    q.order_by(desc(TVisitSHT.visit_date_min))
+
+    data = q.all()
+    if data:
+        tab_years = []
+        for idx, d in enumerate(data):
+            info_year = dict()
+            info_year[idx] = str(d[0])
+            tab_years.append(info_year)
+        return tab_years
+    return None
 
 @blueprint.route('/visits/<id_visit>', methods=['GET'])
 @permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
@@ -420,6 +443,7 @@ def get_commune(id_module, info_role):
             tab_commune.append(nom_com)
         return tab_commune
     return None
+
 
 @blueprint.route('/user/cruved', methods=['GET'])
 @permissions.check_cruved_scope('R', True)

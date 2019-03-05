@@ -66,6 +66,12 @@ export class DataService {
     );
   }
 
+  getVisitsYears() {
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/years`
+    );
+  }
+
   getTaxons(cd_hab) {
     return this._http.get<any>(
       `${

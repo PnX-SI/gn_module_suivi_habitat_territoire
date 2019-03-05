@@ -31,6 +31,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   public tabOrganism = [];
   public tabCom = [];
   public tabHab = [];
+  public tabYears = [];
   public dataLoaded = false;
   public center;
   public zoom;
@@ -188,6 +189,15 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.tabHab.sort((a, b) => {
             return a.localeCompare(b);
           });
+        });
+      });
+
+    this._api
+      .getVisitsYears()
+      .subscribe(years => {
+        years.forEach((year, i) => {
+          this.tabYears.push({ label: year[i], id: year[i] });
+          console.log('year', year[i])
         });
       });
   }
