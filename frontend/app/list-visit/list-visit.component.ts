@@ -180,9 +180,5 @@ export class ListVisitComponent implements OnInit, OnDestroy {
     this.storeService.queryString = this.storeService.queryString.delete(
       "id_base_site"
     );
-    console.log(
-      "queryString list-visit: ",
-      this.storeService.queryString.toString()
-    );
   }
 }
