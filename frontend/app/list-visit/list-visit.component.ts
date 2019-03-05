@@ -141,6 +141,8 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         );
 
         this.geojson.currentGeoJson$.subscribe(currentLayer => {
+          let currentStyle = this.storeService.getLayerStyle(properties);
+          currentLayer.setStyle(currentStyle);
           this.mapService.map.fitBounds(currentLayer.getBounds());
         });
 
