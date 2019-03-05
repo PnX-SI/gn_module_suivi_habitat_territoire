@@ -88,8 +88,9 @@ def get_taxa_by_habitats(cd_hab):
 
 
 @blueprint.route('/sites', methods=['GET'])
+@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
 @json_resp
-def get_all_sites():
+def get_all_sites(info_role):
     '''
     Retourne tous les sites
     '''
@@ -210,8 +211,9 @@ def get_all_sites():
 
 
 @blueprint.route('/visits', methods=['GET'])
+@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
 @json_resp
-def get_visits():
+def get_visits(info_role):
     '''
     Retourne toutes les visites du module
     '''
@@ -224,8 +226,9 @@ def get_visits():
 
 
 @blueprint.route('/visits/<id_visit>', methods=['GET'])
+@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
 @json_resp
-def get_visit(id_visit):
+def get_visit(id_visit, info_role):
     '''
     Retourne une visite
     '''
@@ -255,7 +258,6 @@ def post_visit(info_role):
     Poster une nouvelle visite
     '''
     data = dict(request.get_json())
-
     check_year_visit(data['id_base_site'], data['visit_date_min'][0:4])
 
     tab_visit_taxons = []
@@ -296,7 +298,7 @@ def post_visit(info_role):
 
 
 @blueprint.route('/visits/<int:idv>', methods=['PATCH'])
-@permissions.check_cruved_scope('C', True, module_code="SUIVI_HAB_TER")
+@permissions.check_cruved_scope('U', True, module_code="SUIVI_HAB_TER")
 @json_resp
 def patch_visit(idv, info_role):
     '''
@@ -304,7 +306,6 @@ def patch_visit(idv, info_role):
     Si une donnée n'est pas présente dans les objets observer, cor_visit_taxons ou cor_visit_perurbations, elle sera supprimée de la base de données
     '''
     data = dict(request.get_json())
-    check_year_visit(data['id_base_site'], data['visit_date_min'][0:4])
 
     try:
         existingVisit = TVisitSHT.query.filter_by(id_base_visit = idv).first()
@@ -314,6 +315,13 @@ def patch_visit(idv, info_role):
         resp = jsonify({"error": 'This visit does not exist'})
         resp.status_code = 404
         return resp
+
+    existingVisit = existingVisit.as_dict(recursif=True)
+    dateIsUp = data['visit_date_min'] != existingVisit['visit_date_min']
+
+    if dateIsUp:
+        check_year_visit(data['id_base_site'], data['visit_date_min'][0:4])
+
 
     tab_visit_taxons = []
     tab_observer = []
@@ -348,7 +356,7 @@ def patch_visit(idv, info_role):
     user_cruved = get_or_fetch_user_cruved(
         session=session,
         id_role=info_role.id_role,
-        module_code='SUIVI_HAB_TER'
+        module_code=blueprint.config['MODULE_CODE']
     )
     update_cruved = user_cruved['U']
     check_user_cruved_visit(info_role, visit, update_cruved)
@@ -362,8 +370,9 @@ def patch_visit(idv, info_role):
 
 
 @blueprint.route('/organismes', methods=['GET'])
+@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
 @json_resp
-def get_organisme():
+def get_organisme(info_role):
     '''
     Retourne la liste de tous les organismes présents
     '''
@@ -387,8 +396,9 @@ def get_organisme():
 
 
 @blueprint.route('/communes/<id_module>', methods=['GET'])
+@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
 @json_resp
-def get_commune(id_module):
+def get_commune(id_module, info_role):
     '''
     Retourne toutes les communes présents dans le module
     '''
@@ -411,10 +421,22 @@ def get_commune(id_module):
         return tab_commune
     return None
 
+@blueprint.route('/user/cruved', methods=['GET'])
+@permissions.check_cruved_scope('R', True)
+@json_resp
+def returnUserCruved(info_role):
+    #récupérer le CRUVED complet de l'utilisateur courant
+    user_cruved = get_or_fetch_user_cruved(
+                session=session,
+                id_role=info_role.id_role,
+                module_code=blueprint.config['MODULE_CODE']
+    )
+    return  user_cruved
 
 
 @blueprint.route('/export_visit', methods=['GET'])
-def export_visit():
+@permissions.check_cruved_scope('E', True)
+def export_visit(info_role):
     '''
     Télécharge les données d'une visite (ou des visites )
     '''

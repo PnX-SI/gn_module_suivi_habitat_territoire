@@ -57,14 +57,16 @@
         </div>
 
         <div id="end-btn">
-            <pnx-modal-download labelButton='Télécharger ces visites' [pathDownload]='storeService.urlLoad' [exportFormat]='storeService.shtConfig.export_available_format'
-            [queryString]='storeService.queryString' >
-            </pnx-modal-download>
-
-            <modal-sht classStyle="btn btn-sm btn-success pull-right" labelButton='Ajouter une nouvelle visite'
-                iconStyle="fa fa-plus-circle" (visitsUp)='getVisits()' >
-            </modal-sht>
-
+            <div  *ngIf="exportIsAllowed">
+                <pnx-modal-download labelButton='Télécharger ces visites' [pathDownload]='storeService.urlLoad' [exportFormat]='storeService.shtConfig.export_available_format'
+                [queryString]='storeService.queryString' >
+                </pnx-modal-download>
+            </div>
+            <div  *ngIf="addIsAllowed">
+                <modal-sht classStyle="btn btn-sm btn-success pull-right" labelButton='Ajouter une nouvelle visite'
+                    iconStyle="fa fa-plus-circle" (visitsUp)='getVisits()' >
+                </modal-sht>
+            </div>
         </div>
     </div>
     <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm">

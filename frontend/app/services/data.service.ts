@@ -93,8 +93,4 @@ export class DataService {
       data
     );
   }
-
-  userCruved() {
-    return this._http.get<any>(`${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/user/cruved`);
-  }
 }

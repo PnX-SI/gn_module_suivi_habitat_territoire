@@ -20,6 +20,7 @@ import { Observable } from "rxjs/Observable";
 import { DataService } from "../services/data.service";
 import { StoreService } from "../services/store.service";
 import { FormService } from "../services/form.service";
+import { UserService } from "../services/user.service";
 
 @Component({
   selector: "modal-sht",
@@ -52,6 +53,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   public disabledForm = false;
   public onUpVisit = false;
   public labelUpVisit = "Editer le relevé";
+  public isAllowed = false;
 
   constructor(
     private _modalService: NgbModal,
@@ -60,7 +62,8 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     private _api: DataService,
     private _fb: FormBuilder,
     public dateParser: NgbDateParserFormatter,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
@@ -71,6 +74,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     if (this.idVisit) {
       this.disabledForm = true;
     }
+
   }
 
   getDatas() {
@@ -98,7 +102,15 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       this.visit = Object.keys(results[0]).length > 0 ? results[0] : this.visit; // TODO: type visit ?
       this.species = results[1];
       this.pachForm();
+      this.checkPermission();
     });
+  }
+
+  checkPermission() {
+    this.userService.check_user_cruved_visit('U', this.visit).subscribe(ucruved => {
+      console.log("ucruved U", ucruved)
+      this.isAllowed = ucruved;
+    })
   }
 
   addSpeciesControl() {

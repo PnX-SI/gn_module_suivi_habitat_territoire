@@ -18,6 +18,7 @@ import { MapListService } from "@geonature_common/map-list/map-list.service";
 import { DataService } from "../services/data.service";
 import { StoreService } from "../services/store.service";
 import { ModuleConfig } from "../module.config";
+import { UserService } from "../services/user.service";
 
 @Component({
   selector: "site-map-list",
@@ -37,6 +38,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   public filterForm: FormGroup;
   public oldFilterDate;
   public page = new Page();
+  public isAllowed = false;
 
   @Output()
   onDeleteFiltre = new EventEmitter<any>();
@@ -48,19 +50,14 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     public mapListService: MapListService,
     public router: Router,
     private toastr: ToastrService,
-    private _fb: FormBuilder
+    private _fb: FormBuilder,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
     this.onChargeList();
     this.center = this.storeService.shtConfig.zoom_center;
     this.zoom = this.storeService.shtConfig.zoom;
-
-    this._api.userCruved().subscribe(ucruved =>{
-      console.log('userCruved', ucruved);
-    }, error => {
-      console.log("error userCruved: ", error)
-    })
 
     /*
     previous Filters in progress...
@@ -150,6 +147,13 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
+  checkPermission() {
+    this.userService.check_user_cruved_visit('E').subscribe(ucruved => {
+      console.log("ucruved E", ucruved)
+      this.isAllowed = ucruved;
+    })
+  }
+
   ngAfterViewInit() {
     this._map = this.mapService.getMap();
     this.addCustomControl();
@@ -200,13 +204,16 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dataLoaded = true;
       },
       error => {
+        let msg = "Une erreur est survenue lors de la récupération des informations sur le serveur.";
         if (error.status == 404) {
           this.page.totalElements = 0;
           this.page.size = 0;
           this.filteredData = [];
+        } else if (error.status == 403) {
+          msg = "Vous n'êtes pas autorisé à afficher ces données.";
         } else {
           this.toastr.error(
-            "Une erreur est survenue lors de la récupération des données",
+            msg,
             "",
             {
               positionClass: "toast-top-right"

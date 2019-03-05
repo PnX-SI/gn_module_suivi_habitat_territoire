@@ -10,6 +10,7 @@ import { GeojsonComponent } from "@geonature_common/map/geojson/geojson.componen
 import { DataService } from "../services/data.service";
 import { StoreService } from "../services/store.service";
 import { ModuleConfig } from "../module.config";
+import { UserService } from "../services/user.service";
 
 @Component({
   selector: "pnx-list-visit",
@@ -34,6 +35,9 @@ export class ListVisitComponent implements OnInit, OnDestroy {
     "id_application",
     ModuleConfig.ID_MODULE
   );
+  public addIsAllowed = false;
+  public exportIsAllowed = false;
+
 
   @ViewChild("geojson")
   geojson: GeojsonComponent;
@@ -45,12 +49,23 @@ export class ListVisitComponent implements OnInit, OnDestroy {
     private _location: Location,
     public _api: DataService,
     public activatedRoute: ActivatedRoute,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
     this.idSite = this.activatedRoute.snapshot.params['idSite'];
     this.storeService.queryString = this.storeService.queryString.set('id_base_site', this.idSite);
+    this.checkPermission();
+  }
+
+  checkPermission() {
+    this.userService.check_user_cruved_visit('E').subscribe(ucruved => {
+      this.exportIsAllowed = ucruved;
+    })
+    this.userService.check_user_cruved_visit('C').subscribe(ucruved => {
+      this.addIsAllowed = ucruved;
+    })
   }
 
   ngAfterViewInit() {
@@ -137,8 +152,14 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         this.getVisits();
       },
       error => {
+        let msg = "";
+        if (error.status == 403) {
+          msg = "Vous n'êtes pas autorisé à afficher ces données."
+        } else {
+          msg = "Une erreur est survenue lors de la récupération des informations sur le serveur."
+        }
         this.toastr.error(
-          "Une erreur est survenue lors de la récupération des informations sur le serveur",
+          msg,
           "",
           {
             positionClass: "toast-top-right"

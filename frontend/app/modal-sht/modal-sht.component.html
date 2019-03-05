@@ -6,7 +6,7 @@
         </button>
     </div>
     <div class="modal-body">
-        <div *ngIf="idVisit" class="clearfix ">
+        <div *ngIf="idVisit && isAllowed" class="clearfix ">
             <button class="btn btn-warning float-right" data-toggle="button" aria-pressed="false" autocomplete="off" (click)="upVisit()">
                 <i class="fa fa-edit" aria-hidden="true"> </i>
                 {{ labelUpVisit }}
