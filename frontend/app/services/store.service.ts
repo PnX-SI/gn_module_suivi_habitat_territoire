@@ -12,13 +12,13 @@ export class StoreService {
   public shtConfig = ModuleConfig;
 
   public styleFreshVisit = {
-    color: '#008000',
+    color: 'rgb(0,128,0)',
     fill: true,
     fillOpacity: 0.2,
     weight: 3
   };
   public styleOldVisit = {
-    color: '#8B0000',
+    color: 'rgb(139,0,0)',
     fill: true,
     fillOpacity: 0.2,
     weight: 3
@@ -30,7 +30,7 @@ export class StoreService {
   };
 
   public originStyle = {
-    color: '#333333',
+    color: 'rgb(51,51,51)',
     fill: true,
     fillOpacity: 0.2,
     weight: 3
@@ -64,25 +64,30 @@ export class StoreService {
       }
     }
   
+    return this.getColor(year);
+  }
+
+  getColor(year) {
     switch (year) {
-      case 0:
-        return this.styleFreshVisit
-        break;
-      case 1:
-        return this.styleOldVisit;
-        break;
-      case 2:
-        this.styleOldVisit.fillOpacity = 0.4;
-        return this.styleOldVisit;
-        break;
-      case 3:
-        this.styleOldVisit.fillOpacity = 0.6;
-        return this.styleOldVisit;
-        break;
-      default:
-        return this.originStyle;
-        break;
-    }
+        case 0:
+          return this.styleFreshVisit
+          break;
+        case 1:
+          this.styleOldVisit.fillOpacity = 0.2;
+          return this.styleOldVisit;
+          break;
+        case 2:
+          this.styleOldVisit.fillOpacity = 0.4;
+          return this.styleOldVisit;
+          break;
+        case 3:
+          this.styleOldVisit.fillOpacity = 0.6;
+          return this.styleOldVisit;
+          break;
+        default:
+          return this.originStyle;
+          break;
+      }
   }
 
   isValidDate(d) {

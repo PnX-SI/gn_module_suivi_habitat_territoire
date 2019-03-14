@@ -158,6 +158,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     this._map = this.mapService.getMap();
     this.addCustomControl();
+    this.addLegend();
 
     this._api.getOrganisme().subscribe(elem => {
       elem.forEach(orga => {
@@ -197,7 +198,6 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe(years => {
         years.forEach((year, i) => {
           this.tabYears.push({ label: year[i], id: year[i] });
-          console.log('year', year[i])
         });
       });
   }
@@ -321,7 +321,6 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       container.style.padding = "1px 4px";
       container.title = "Réinitialiser l'emprise de la carte";
       container.onclick = () => {
-        console.log("buttonClicked");
         this._map.setView(this.center, this.zoom);
       };
       return container;
@@ -329,14 +328,38 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     initzoomcontrol.addTo(this._map);
   }
 
+  addLegend() {
+    var self = this;
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = {0:"Visiter cette année", 1:"+1 an", 2:"+2 ans", 3:"+ 3 ans", 4:"+4 ans ou jamais "};
+
+        var keys = Object.keys(grades);
+        for (var i = 0; i < keys.length; i++) {
+            div.innerHTML +=
+                '<i style="background-color:' +
+                self.storeService.getColor(Number(keys[i])).color +
+                ';opacity:'+ self.storeService.getColor(Number(keys[i])).fillOpacity +
+                '; border:' + self.storeService.getColor(Number(keys[i])).color +
+                '"></i> ' +
+                '<i style="position: absolute; margin-left: -26px; border: 1px solid ' + self.storeService.getColor(Number(keys[i])).color +
+                '"></i> ' +
+                grades[i] + '<br>';
+        }
+        return div;
+    };
+
+    legend.addTo(this._map);
+  }
+
   // Filters
   onDelete() {
-    console.log("ondelete");
     this.onChargeList();
   }
 
   onSetParams(param: string, value) {
-    //  ajouter le queryString pour télécharger les données
     this.storeService.queryString = this.storeService.queryString.set(
       param,
       value
@@ -344,8 +367,6 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onDeleteParams(param: string, value) {
-    // effacer le queryString
-    console.log("ondelete params", param + " value: " + value);
     this.storeService.queryString = this.storeService.queryString.delete(param);
     this.onChargeList(this.storeService.queryString.toString());
   }
