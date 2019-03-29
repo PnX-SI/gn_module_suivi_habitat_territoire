@@ -53,6 +53,8 @@ export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp
 # Copy SQL files into /tmp system folder in order to edit it with variables
 cp data/sht.sql /tmp/sht.sql
 
+  sudo sed -i "s/MY_SRID_WORLD/$srid_world/g" /tmp/sht.sql
+
 # Create SHT schema into GeoNature database
 export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht.sql &>> var/log/install_sht.log
 
