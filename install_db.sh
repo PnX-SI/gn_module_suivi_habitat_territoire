@@ -26,11 +26,12 @@ fi
 
 echo "Download and extract habref file..."
 
-  if [ ! -f 'tmp/habref/HABREF_40.zip' ]
-    wget https://geonature.fr/data/inpn/habitats/HABREF_40.zip -P tmp/habref
+  if [ ! -f '/tmp/habref/HABREF_40.zip' ]
+    wget https://geonature.fr/data/inpn/habitats/HABREF_40.zip -P /tmp/habref
   then
     echo HABREF_40.zip exists
-  unzip tmp/habref/HABREF_40.zip
+  fi
+  unzip /tmp/habref/HABREF_40.zip
 
 cp data/habitat.sql /tmp/taxref/habref.sql
 cp data/habitat.sql /tmp/taxref/habref_data.sql
