@@ -334,7 +334,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     legend.onAdd = function (map) {
         var div = L.DomUtil.create('div', 'info legend'),
-            grades = {0:"Visiter cette année", 1:"+1 an", 2:"+2 ans", 3:"+ 3 ans", 4:"+4 ans ou jamais "};
+            grades = {0:"Visite cette année", 1:"+1 an", 2:"+2 ans", 3:"+ 3 ans", 4:"+4 ans ou jamais "};
 
         var keys = Object.keys(grades);
         for (var i = 0; i < keys.length; i++) {
