@@ -55,6 +55,11 @@ cp data/sht.sql /tmp/sht.sql
 # Create SHT schema into GeoNature database
 export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht.sql &>> var/log/install_sht.log
 
+if $insert_nomenclature_pert
+then
+    cp data/sht_perturbations.sql /tmp/sht_perturbations.sql
+    export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht_perturbations.sql &>> var/log/install_sht_perturbations.log
+fi
 
 # Include sample data into database
 if $insert_sample_data
