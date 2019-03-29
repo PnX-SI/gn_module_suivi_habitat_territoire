@@ -31,11 +31,11 @@ echo "Download and extract habref file..."
   then
     echo HABREF_40.zip exists
   fi
-  unzip /tmp/habref/HABREF_40.zip
+  unzip /tmp/habref/HABREF_40.zip -d /tmp/habref
 
-cp data/habitat.sql /tmp/taxref/habref.sql
-cp data/habitat.sql /tmp/taxref/habref_data.sql
-cp data/habitat.sql /tmp/taxref/habref_bib_list.sql
+cp data/habref.sql /tmp/taxref/habref.sql
+cp data/habref_data.sql /tmp/taxref/habref_data.sql
+cp data/habref_bib_list.sql /tmp/taxref/habref_bib_list.sql
 
 echo "Creating 'habitat' schema..."
 export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/taxref/habref.sql &>> var/log/install_habref.log
