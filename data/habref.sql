@@ -5,7 +5,7 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
-CREATE SCHEMA ref_habitat;
+CREATE SCHEMA IF NOT EXISTS ref_habitat;
 
 SET search_path = ref_habitat, pg_catalog, public;
 
