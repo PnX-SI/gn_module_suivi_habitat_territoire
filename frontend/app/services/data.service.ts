@@ -2,6 +2,8 @@ import { Injectable, Inject } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { AppConfig } from "@geonature_config/app.config";
 import { Observable } from "rxjs/Observable";
+import { ModuleConfig } from '../module.config';
+
 
 @Injectable()
 export class DataService {
@@ -9,7 +11,7 @@ export class DataService {
 
   getSites(params) {
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/sites`,
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/sites`,
       {
         params: params
       }
@@ -20,7 +22,7 @@ export class DataService {
     return this._http.get<any>(
       `${
         AppConfig.API_ENDPOINT
-      }/suivi_habitat_territoire/sites?id_base_site=${id_base_site}`
+      }/${ModuleConfig.MODULE_URL}/sites?id_base_site=${id_base_site}`
     );
   }
 
@@ -32,7 +34,7 @@ export class DataService {
     }
 
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits`,
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits`,
       {
         params: myParams
       }
@@ -41,13 +43,13 @@ export class DataService {
 
   getOneVisit(id_visit) {
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/${id_visit}`
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits/${id_visit}`
     );
   }
 
   getOrganisme() {
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/organismes`
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organismes`
     );
   }
 
@@ -61,14 +63,14 @@ export class DataService {
     return this._http.get<any>(
       `${
         AppConfig.API_ENDPOINT
-      }/suivi_habitat_territoire/communes/${id_module}`,
+      }/${ModuleConfig.MODULE_URL}/communes/${id_module}`,
       { params: myParams }
     );
   }
 
   getVisitsYears() {
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/years`
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits/years`
     );
   }
 
@@ -76,26 +78,26 @@ export class DataService {
     return this._http.get<any>(
       `${
         AppConfig.API_ENDPOINT
-      }/suivi_habitat_territoire/habitats/${cd_hab}/taxons`
+      }/${ModuleConfig.MODULE_URL}/habitats/${cd_hab}/taxons`
     );
   }
 
   getHabitatsList(idList) {
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/habitats/${idList}`
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/habitats/${idList}`
     );
   }
 
   postVisit(data: any) {
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits`,
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits`,
       data
     );
   }
 
   patchVisit(data: any, idVisit) {
     return this._http.patch<any>(
-      `${AppConfig.API_ENDPOINT}/suivi_habitat_territoire/visits/${idVisit}`,
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits/${idVisit}`,
       data
     );
   }
