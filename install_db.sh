@@ -52,15 +52,6 @@ export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp
 # Copy SQL files into /tmp system folder in order to edit it with variables
 cp data/sht.sql /tmp/sht.sql
 
-cp data/sht_perturbations.sql /tmp/sht_perturbations.sql
-cp data/sht_data.sql /tmp/sht_data.sql
-
-
-sudo sed -i "s/MY_SRID_LOCAL/$srid_local/g" /tmp/sht_data.sql
-
-sudo sed -i "s/MY_SRID_WORLD/$srid_world/g" /tmp/sht_data.sql
-
-
 # Create SHT schema into GeoNature database
 export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht.sql &>> var/log/install_sht.log
 
@@ -68,6 +59,12 @@ export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp
 # Include sample data into database
 if $insert_sample_data
 then
+    cp data/sht_perturbations.sql /tmp/sht_perturbations.sql
+    cp data/sht_data.sql /tmp/sht_data.sql
+
+    sudo sed -i "s/MY_SRID_LOCAL/$srid_local/g" /tmp/sht_data.sql
+    sudo sed -i "s/MY_SRID_WORLD/$srid_world/g" /tmp/sht_data.sql
+
     sudo -n -u postgres -s shp2pgsql -W "UTF-8" -s 2154 -D -I /tmp/maille100z93.shp pr_monitoring_habitat_territory.maille_tmp | psql -h $db_host -U $user_pg -d $db_name &>> var/log/install_maille.log
     export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht_perturbations.sql &>> var/log/install_sht_perturbations.log
     export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht_data.sql &>>  var/log/install_sht_data.log
