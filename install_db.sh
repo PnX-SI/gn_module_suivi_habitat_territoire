@@ -19,9 +19,9 @@ fi
 ###################
 # TODO: Version in config ?
 
-if [ ! -d 'tmp/taxref/' ]
+if [ ! -d '/tmp/taxref/' ]
 then
-  mkdir tmp/taxref
+  mkdir /tmp/taxref
 fi
 
 echo "Download and extract habref file..."
