@@ -42,7 +42,6 @@ export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp
 export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/taxref/habref_bib_list.sql &>> var/log/install_habref_bib_list.log
 
 echo "Inserting INPN habitat data... "
-#export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -f /tmp/taxref/habref_data.sql &>> var/log/install_habref_data.log
 export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -c "\copy ref_habitat.typoref FROM '/tmp/habref/TYPOREF_40.csv' with (format csv,header true, delimiter ';');" &>> var/log/install_typoref_data.log
 export PGPASSWORD=$user_pg_pass;psql -h $db_host -U $user_pg -d $db_name -c "\copy ref_habitat.habref FROM '/tmp/habref/HABREF_40.csv' with (format csv,header true, delimiter ';');" &>> var/log/install_habref_data.log
 
