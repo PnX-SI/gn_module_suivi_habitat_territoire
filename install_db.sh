@@ -72,7 +72,6 @@ if $insert_sample_data
 then
     echo "Inserting SHT data... "
 
-    cp data/sht_perturbations.sql /tmp/sht_perturbations.sql
     cp data/sht_data.sql /tmp/sht_data.sql
 
     sudo sed -i "s/MY_SRID_LOCAL/$srid_local/g" /tmp/sht_data.sql
