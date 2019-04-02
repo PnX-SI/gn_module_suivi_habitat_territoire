@@ -48,7 +48,7 @@
                 <ngx-datatable-column maxWidth="120">
                     <ng-template let-row="row" ngx-datatable-cell-template>
                         <modal-sht classStyle="btn btn-lg btn-outline-shadow btn-ghost" title="Visualiser" iconStyle="fa fa-info-circle"
-                            idVisit="{{ row.id_base_visit }}" (visitsUp)='getVisits()' >
+                            idVisit="{{ row.id_base_visit }}" (visitsUp)='getSites()' >
                         </modal-sht>
                     </ng-template>
                 </ngx-datatable-column>
@@ -64,7 +64,7 @@
             </div>
             <div  *ngIf="addIsAllowed">
                 <modal-sht classStyle="btn btn-sm btn-success pull-right" labelButton='Ajouter une nouvelle visite'
-                    iconStyle="fa fa-plus-circle" (visitsUp)='getVisits()' >
+                    iconStyle="fa fa-plus-circle" (visitsUp)='getSites()' >
                 </modal-sht>
             </div>
         </div>
