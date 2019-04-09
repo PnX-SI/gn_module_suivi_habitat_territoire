@@ -1,6 +1,5 @@
 import { Component, OnInit, ViewChild, OnDestroy } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
-import { Location } from "@angular/common";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 
 import { MapListService } from "@geonature_common/map-list/map-list.service";
@@ -46,7 +45,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
     public mapService: MapService,
     public mapListService: MapListService,
     public storeService: StoreService,
-    private _location: Location,
+    private router: Router,
     public _api: DataService,
     public activatedRoute: ActivatedRoute,
     private toastr: ToastrService,
@@ -173,7 +172,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   }
 
   backToSites() {
-    this._location.back();
+    this.router.navigate([`${ModuleConfig.MODULE_URL}/`]);
   }
 
   ngOnDestroy() {
