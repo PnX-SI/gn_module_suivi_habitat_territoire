@@ -16,9 +16,7 @@ from geonature.utils.utilssqlalchemy import (
     GenericQuery,
 )
 from geonature.utils.utilsgeometry import shapeserializable
-#from geonature.core.gn_synthese.models import synthese_export_serialization
 from geonature.core.gn_monitoring.models import TBaseSites, TBaseVisits, corVisitObserver
-# from geonature.core.taxonomie.models import Taxref
 from pypnnomenclature.models import TNomenclatures
 
 
