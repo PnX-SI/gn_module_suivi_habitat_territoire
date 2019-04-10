@@ -106,7 +106,7 @@ def get_all_sites(info_role):
             Habref.lb_hab_fr_complet,
             func.count(distinct(TBaseVisits.id_base_visit)),
             func.string_agg(distinct(BibOrganismes.nom_organisme), ', '),
-            func.string_agg(LAreas.area_name, ', ')
+            func.string_agg(distinct(LAreas.area_name), ', ')
             ).outerjoin(
             TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
             # get habitat cd_hab
