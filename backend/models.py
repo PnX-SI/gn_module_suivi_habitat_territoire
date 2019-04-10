@@ -103,7 +103,7 @@ class TVisitSHT(TBaseVisits):
 @serializable
 class Typoref(DB.Model):
     __tablename__ = 'typoref'
-    __table_args__ = {'schema': 'ref_habitat'}
+    __table_args__ = {'schema': 'ref_habitat', 'extend_existing': True}
 
     cd_typo = DB.Column(DB.Integer, primary_key=True,
                         server_default=DB.FetchedValue())
@@ -124,7 +124,7 @@ class Typoref(DB.Model):
 @serializable
 class Habref(DB.Model):
     __tablename__ = 'habref'
-    __table_args__ = {'schema': 'ref_habitat'}
+    __table_args__ = {'schema': 'ref_habitat', 'extend_existing': True}
 
     cd_hab = DB.Column(DB.Integer, primary_key=True,
                        server_default=DB.FetchedValue())
