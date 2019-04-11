@@ -1,0 +1,10 @@
+config/settings.ini
+config/conf_gn_module.toml
+__pycache__/*
+*.pyc
+conf_gn_module.toml
+var/
+log/*
+.vscode
+*/venv
+module.config.ts

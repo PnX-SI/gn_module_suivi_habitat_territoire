@@ -1,0 +1,81 @@
+<div id="cover-spin" *ngIf="!dataLoaded"></div>
+<div class="row row-0">
+    <div class="card col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm tab-container list-sht">
+        <div class="card-body">
+            <form class="wrapper wrapper-filter">
+                <fieldset>
+                    <legend>
+                        <h3>Consultation des Sites</h3>
+                    </legend>
+                    <div class="row">
+                        <div class="searchSite col">
+                            <small> Année de visite </small>
+                            <select class="form-control form-control-sm" name="selectHab" [formControl]="filterForm.controls.filterYear">
+                                    <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                    <option *ngFor="let year of tabYears" [value]="year.id" [innerHTML]="year.label"> </option>
+                            </select>
+                        </div>
+                        <div class="searchSite col">
+                            <small> Habitat </small>
+                            <select class="form-control form-control-sm" name="selectHab" [formControl]="filterForm.controls.filterHab">
+                                <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option *ngFor="let hab of tabHab" [value]="hab.id" [innerHTML]="hab.label"> </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="searchSite col">
+                            <small> Organisme </small>
+                            <select class="form-control form-control-sm" name="selectOrg" [formControl]="filterForm.controls.filterOrga">
+                                <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option *ngFor="let label of tabOrganism"> {{label}} </option>
+                            </select>
+                        </div>
+                        <div class="searchSite col">
+                            <small> Commune </small>
+                            <select class="form-control form-control-sm" name="selectCom" [formControl]="filterForm.controls.filterCom">
+                                <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
+                                <option *ngFor="let label of tabCom"> {{label}} </option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+            <div class="wrapper wrapper-datatable">
+                <ngx-datatable #table class="material" [rows]="filteredData" maxWidth="90" [headerHeight]="50"
+                    [footerHeight]="50" [rowHeight]="'auto'" [columnMode]="'force'" [selected]="mapListService.selectedRow"
+                    [selectionType]="'single'" (select)="onRowSelect($event)" [rowClass]="mapListService.getRowClass"
+                    [externalPaging]="storeService.shtConfig.pagination_serverside" [count]="page.totalElements" [offset]="page.pageNumber" [limit]="page.size"
+                    (page)='setPage($event)' [messages]="storeService.shtConfig.site_message">
+                    <ngx-datatable-column *ngFor="let col of storeService.shtConfig.default_site_columns" [name]="col.name"
+                        [prop]="col.prop" [maxWidth]="col.width">
+                    </ngx-datatable-column>
+
+                    <ngx-datatable-column maxWidth="90">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <button type="button" class="btn btn-lg btn-outline-shadow btn-ghost" (click)="onInfo(row.id_base_site)"
+                                title="Visualiser/Editer">
+                                <i class="fa fa-info-circle"></i>
+                            </button>
+                        </ng-template>
+                    </ngx-datatable-column>
+
+                </ngx-datatable>
+            </div>
+            <div *ngIf="isAllowed" id="end-btn" >
+                <pnx-modal-download labelButton='Télécharger les visites' [pathDownload]='storeService.urlLoad' [exportFormat]='storeService.shtConfig.export_available_format'
+                [queryString]='storeService.queryString' >
+                </pnx-modal-download>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm">
+        <pnx-map height="94vh" [center]="center" [zoom]="zoom">
+            <pnx-geojson [onEachFeature]="onEachFeature.bind(this)" [geojson]="sites">
+            </pnx-geojson>
+        </pnx-map>
+    </div>
+</div>
