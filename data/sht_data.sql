@@ -87,9 +87,9 @@ FROM pr_monitoring_habitat_territory.t_infos_site ti, id_module;
 -- Insérer les espèces
 ----------------------
 -- Créer la liste des taxons suivis dans le protocoles SHT "Angiosperme ?"
-INSERT INTO taxonomie.bib_listes (id_liste, nom_liste, desc_liste, regne, group2_inpn)
+/*INSERT INTO taxonomie.bib_listes (id_liste, nom_liste, desc_liste, regne, group2_inpn)
 VALUES ((SELECT MAX(id_liste)+1 FROM taxonomie.bib_listes),'Suivi Habitat Territoire', 'Taxons suivis dans le protocole Suivi Habitat Territoire', 'Plantae', 'Angiospermes');
-
+*/
 
 -- Insérer les taxons suivis dans le protocole SHT dans bib_noms et les ajouter dans la liste SHT
 /*INSERT INTO taxonomie.bib_noms (cd_nom, cd_ref, nom_francais) VALUES (104123, 104123, 'Jonc arctique - Juncus arcticus');
@@ -99,7 +99,7 @@ INSERT INTO taxonomie.cor_nom_liste (id_nom, id_liste) VALUES
 
 
 -- insérer les données cor_habitat_taxon : liaison un taxon et son habitat
-/*INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
+INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
 VALUES 
 (16265, 104123),
 (16265, 88386),
@@ -111,4 +111,3 @@ VALUES
 (16265, 126806)
 ;
 
-*/
