@@ -126,13 +126,12 @@ perturbations AS(
     JOIN ref_nomenclatures.t_nomenclatures n ON p.id_nomenclature_perturbation = n.id_nomenclature
     GROUP BY v.id_base_visit
 ),
-area AS(
+ area AS(
     SELECT bs.id_base_site,
         a.id_area,
         a.area_name
     FROM ref_geo.l_areas a
-    JOIN gn_monitoring.t_base_sites bs ON ST_intersects(ST_TRANSFORM(a.geom, MY_SRID_WORLD), bs.geom)
-    WHERE a.id_type=ref_geo.get_id_area_type('COM')
+    JOIN gn_monitoring.t_base_sites bs ON a.area_name = bs.base_site_code
 ),
 taxons AS (
     SELECT v.id_base_visit,
