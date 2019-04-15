@@ -34,7 +34,6 @@ echo "Download and extract habref file..."
   unzip /tmp/habref/HABREF_40.zip -d /tmp/habref
 
 cp data/habref.sql /tmp/taxref/habref.sql
-cp data/habref_data.sql /tmp/taxref/habref_data.sql
 cp data/habref_bib_list.sql /tmp/taxref/habref_bib_list.sql
 
 echo "Creating 'habitat' schema..."
