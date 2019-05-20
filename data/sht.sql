@@ -135,7 +135,7 @@ perturbations AS(
 ),
 taxons AS (
     SELECT v.id_base_visit,
-    string_agg(tr.nom_valide::text, ' - '::text) AS nom_valide_taxon
+    json_object_agg( tr.lb_nom, CASE tr.lb_nom WHEN tr.lb_nom THEN True END ORDER BY tr.lb_nom) nom_valide_taxon
     FROM gn_monitoring.t_base_visits v
         JOIN pr_monitoring_habitat_territory.cor_visit_taxons t ON t.id_base_visit = v.id_base_visit
         JOIN taxonomie.taxref tr ON t.cd_nom = tr.cd_nom

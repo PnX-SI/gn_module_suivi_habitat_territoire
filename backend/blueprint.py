@@ -426,7 +426,7 @@ def get_commune(id_module, info_role):
     Retourne toutes les communes présents dans le module
     '''
     params = request.args
-    q = DB.session.query(LAreas.area_name).distinct().outerjoin(
+    q = DB.session.query(LAreas.area_name).outerjoin(
         corSiteArea, LAreas.id_area == corSiteArea.c.id_area).outerjoin(
         corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site).filter(corSiteModule.c.id_module == id_module)
 
@@ -514,19 +514,31 @@ def export_visit(info_role):
         )
 
     elif export_format == 'csv':
+        taxons = []
+        tab_header = []
+        export_columns = ExportVisits.__table__.columns._data.keys()
+        export_columns.remove('nomvtaxon')
         tab_visit = []
 
         for d in data:
             visit = d.as_dict()
+            if visit['nomvtaxon']:
+                for taxon, cover in visit['nomvtaxon'].items():
+                    if taxon not in taxons:
+                        taxons.append(taxon)
+                    visit[taxon] = cover
+            visit.pop('nomvtaxon')
             geom_wkt = to_shape(d.geom)
             visit['geom'] = geom_wkt
 
             tab_visit.append(visit)
 
+        tab_header = export_columns + taxons
+
         return to_csv_resp(
             file_name,
             tab_visit,
-            tab_visit[0].keys(),
+            tab_header,
             ';'
 
         )
