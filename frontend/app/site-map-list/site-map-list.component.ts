@@ -59,7 +59,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.onChargeList();
     this.center = this.storeService.shtConfig.zoom_center;
     this.zoom = this.storeService.shtConfig.zoom;
-
+    this.checkPermission();
     /*
     previous Filters in progress...
     let filterkey = this.storeService.queryString.keys();
@@ -162,7 +162,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this._api.getOrganisme().subscribe(elem => {
       elem.forEach(orga => {
-        this.tabOrganism.push(orga.nom_organisme);
+        if (this.tabOrganism.indexOf(orga.nom_organisme))
+          this.tabOrganism.push(orga.nom_organisme);
         this.tabOrganism.sort((a, b) => {
           return a.localeCompare(b);
         });
