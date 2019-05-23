@@ -42,3 +42,9 @@ DELETE FROM ref_habitat.cor_list_habitat WHERE id_list IN (SELECT id_list FROM r
 -- insérer une liste d'habitat
 DELETE FROM ref_habitat.bib_list_habitat WHERE list_name='Suivi Habitat Territoire';
 
+
+-- supression des perturbations CBNA
+-- vider la table de correspondance
+TRUNCATE TABLE pr_monitoring_habitat_territory.cor_visit_perturbation;
+-- supprimer la nomenclature
+delete from ref_nomenclatures.t_nomenclatures Where id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_PERTURBATION');
