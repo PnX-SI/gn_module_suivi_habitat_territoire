@@ -233,6 +233,8 @@ def get_years_visits():
     parameters = request.args
     q = DB.session.query(
         distinct(func.to_char(TVisitSHT.visit_date_min, 'YYYY'))
+        ).join(
+        TInfosSite, TInfosSite.id_base_site == TVisitSHT.id_base_site
         )
     if 'id_base_site' in parameters:
         q = q.filter(TVisitSHT.id_base_site == parameters['id_base_site'])
