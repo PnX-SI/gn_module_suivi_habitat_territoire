@@ -51,12 +51,13 @@ VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone d'
 -- ATTENTION: il faut que le maille_tmp.shp soit en 2154, sinon ça donne des erreurs pour afficher les sites.  
 INSERT INTO gn_monitoring.t_base_sites
 (id_nomenclature_type_site, base_site_name, base_site_description,  base_site_code, first_use_date, geom )
-SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'), 'HAB-', '', name, now(), ST_TRANSFORM(ST_SetSRID(geom, MY_SRID_LOCAL), MY_SRID_WORLD)
+SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'), 'HABSHT-', '', name, now(), ST_TRANSFORM(ST_SetSRID(geom, MY_SRID_LOCAL), MY_SRID_WORLD)
 FROM pr_monitoring_habitat_territory.maille_tmp;
 
 
---- update le nom du site pour y ajouter l'identifiant du site
-UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site) WHERE id_nomenclature_type_site= (SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'));
+--- mise à jour ldu nom du site pour y ajouter l'identifiant du site
+UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site)
+  WHERE base_site_code IN (SELECT name FROM pr_monitoring_habitat_territory.maille_tmp);
 
 -- extension de la table t_base_sites : mettre les données dans t_infos_site
 INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
