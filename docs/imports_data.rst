@@ -98,7 +98,7 @@ Intégrer les sites
             FROM pr_monitoring_habitat_territory.maille_tmp;
 
     --- mise à jour du nom du site pour y ajouter l'identifiant du site
-    UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, base_site_code)
+    UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site)
         WHERE base_site_code IN (SELECT name FROM pr_monitoring_habitat_territory.maille_tmp);
 
     -- Ajouter les données dans pr_monitoring_habitat_territory.t_infos_site 
