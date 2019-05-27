@@ -428,7 +428,7 @@ def get_commune(id_module, info_role):
     Retourne toutes les communes présents dans le module
     '''
     params = request.args
-    q = DB.session.query(LAreas.area_name).outerjoin(
+    q = DB.session.query(LAreas.area_name).distinct().outerjoin(
         corSiteArea, LAreas.id_area == corSiteArea.c.id_area).outerjoin(
         corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site).filter(corSiteModule.c.id_module == id_module)
 
