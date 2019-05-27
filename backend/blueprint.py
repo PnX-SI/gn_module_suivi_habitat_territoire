@@ -22,7 +22,7 @@ from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import BibOrganismes
 
 
-from .repositories import check_user_cruved_visit, check_year_visit
+from .repositories import check_user_cruved_visit, check_year_visit, get_taxonlist_by_cdhab
 
 from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation, CorListHabitat, ExportVisits
 
@@ -516,7 +516,8 @@ def export_visit(info_role):
         )
 
     elif export_format == 'csv':
-        taxons = []
+        cor_hab_taxon = []
+        flag_cdhab = 0
         tab_header = []
         export_columns = ExportVisits.__table__.columns._data.keys()
         export_columns.remove('nomvtaxon')
@@ -524,10 +525,15 @@ def export_visit(info_role):
 
         for d in data:
             visit = d.as_dict()
+            # Get list hab/taxon
+            cd_hab = visit['cd_hab']
+            if flag_cdhab !=  cd_hab:
+                cor_hab_taxon = get_taxonlist_by_cdhab(cd_hab)
+                flag_cdhab = cd_hab
             if visit['nomvtaxon']:
                 for taxon, cover in visit['nomvtaxon'].items():
-                    if taxon not in taxons:
-                        taxons.append(taxon)
+                    if taxon not in cor_hab_taxon:
+                        visit[taxon] = null
                     visit[taxon] = cover
             visit.pop('nomvtaxon')
             geom_wkt = to_shape(d.geom)
@@ -535,7 +541,7 @@ def export_visit(info_role):
 
             tab_visit.append(visit)
 
-        tab_header = export_columns + taxons
+        tab_header = export_columns + cor_hab_taxon
 
         return to_csv_resp(
             file_name,

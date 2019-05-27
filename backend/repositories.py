@@ -6,6 +6,7 @@ from pypnusershub.db.tools import InsufficientRightsError
 from geonature.utils.errors import GeonatureApiError
 from geonature.core.gn_monitoring.models import TBaseVisits
 from geonature.utils.env import DB, ROOT_DIR
+from .models import Taxonomie, CorHabitatTaxon
 
 
 class PostYearError (GeonatureApiError):
@@ -77,3 +78,22 @@ def check_year_visit(id_base_site, new_visit_date):
                 ('Maille {} has already been visited in {} ')
                 .format(id_base_site, year_old_visit),
                 403)
+
+
+def get_taxonlist_by_cdhab(cdhab):
+    q = DB.session.query(
+    CorHabitatTaxon.id_cor_habitat_taxon,
+    Taxonomie.lb_nom
+    ).join(
+        Taxonomie, CorHabitatTaxon.cd_nom == Taxonomie.cd_nom
+    ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxonomie.lb_nom)
+
+    q = q.filter(CorHabitatTaxon.id_habitat == cdhab)
+    data = q.all()
+
+    taxons = []
+    if data:
+        for d in data:
+            taxons.append( str(d[1]) )
+        return taxons
+    return None
