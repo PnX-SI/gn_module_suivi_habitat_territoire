@@ -150,7 +150,7 @@ class Habref(DB.Model):
 @serializable
 class CorListHabitat(DB.Model):
     __tablename__ = 'cor_list_habitat'
-    __table_args__ = {'schema': 'ref_habitat'}
+    __table_args__ = {'schema': 'ref_habitat', 'extend_existing': True}
 
     id_cor_list = DB.Column(DB.Integer, primary_key=True,
                             server_default=DB.FetchedValue())
