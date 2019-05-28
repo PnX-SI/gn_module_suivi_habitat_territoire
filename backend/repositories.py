@@ -97,3 +97,12 @@ def get_taxonlist_by_cdhab(cdhab):
             taxons.append( str(d[1]) )
         return taxons
     return None
+
+
+def clean_string(my_string):
+    my_string = my_string.strip()
+    chars_to_remove =  ";,"
+    for c in chars_to_remove:
+        my_string = my_string.replace(c, "-")
+
+    return my_string
