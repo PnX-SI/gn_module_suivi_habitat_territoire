@@ -1,0 +1,6 @@
+{
+  "lockfileVersion": 1,
+  "dependencies": {
+    "Leaflet.Deflate": "^1.1.0"
+  }
+}
