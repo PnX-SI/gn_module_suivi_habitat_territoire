@@ -11,6 +11,7 @@ import { ToastrService } from "ngx-toastr";
 import { FormGroup, FormBuilder, FormControl } from "@angular/forms";
 import { Page } from "../shared/page";
 import * as L from "leaflet";
+import "Leaflet.Deflate";
 
 import { MapService } from "@geonature_common/map/map.service";
 import { MapListService } from "@geonature_common/map-list/map-list.service";
@@ -40,6 +41,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   public oldFilterDate;
   public page = new Page();
   public isAllowed = false;
+  private _deflate_features;
 
   @Output()
   onDeleteFiltre = new EventEmitter<any>();
@@ -52,7 +54,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     public router: Router,
     private toastr: ToastrService,
     private _fb: FormBuilder,
-    private userService: UserService
+    private userService: UserService,
   ) {}
 
   ngOnInit() {
@@ -157,6 +159,14 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     this._map = this.mapService.getMap();
+
+    // Init leaflet.deflate
+    var myIcon = L.icon({
+      iconUrl: './external_assets/suivi_hab_ter/marker.png'
+    });
+    this._deflate_features = L.deflate({minSize: 10, markerOptions: {icon: myIcon}});
+    this._deflate_features.addTo(this._map);
+
     this.addCustomControl();
     this.addLegend();
 
@@ -263,6 +273,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     //manage color with date
     let currentStyle = this.storeService.getLayerStyle(feature.properties);
     layer.setStyle(currentStyle);
+
+    // Add deflate to layer
+    layer.addTo(this._deflate_features);
   }
 
   toggleStyle(selectedLayer) {
