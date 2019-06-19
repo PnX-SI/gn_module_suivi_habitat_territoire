@@ -139,7 +139,7 @@ def get_all_sites(info_role):
         q = q.filter(TInfosSite.id_base_site == parameters['id_base_site'])
 
     if 'organisme' in parameters:
-        q = q.filter(BibOrganismes.nom_organisme == parameters['organisme'])
+        q = q.filter(BibOrganismes.id_organisme == parameters['organisme'])
 
     if 'commune' in parameters:
         q = q.filter(LAreas.area_name == parameters['commune'])
@@ -403,10 +403,13 @@ def get_organisme(info_role):
     '''
 
     q = DB.session.query(
-        BibOrganismes.nom_organisme, User.nom_role, User.prenom_role).outerjoin(
-        User, BibOrganismes.id_organisme == User.id_organisme).distinct().join(
-        corVisitObserver, User.id_role == corVisitObserver.c.id_role).outerjoin(
-        TVisitSHT, corVisitObserver.c.id_base_visit == TVisitSHT.id_base_visit)
+        BibOrganismes.nom_organisme, User.nom_role, User.prenom_role, User.id_organisme
+        ).outerjoin(
+            User, BibOrganismes.id_organisme == User.id_organisme
+        ).distinct().join(
+            corVisitObserver, User.id_role == corVisitObserver.c.id_role
+        ).outerjoin(
+            TVisitSHT, corVisitObserver.c.id_base_visit == TVisitSHT.id_base_visit)
 
     data = q.all()
     if data:
@@ -415,6 +418,7 @@ def get_organisme(info_role):
             info_orga = dict()
             info_orga['nom_organisme'] = str(d[0])
             info_orga['observer'] = str(d[1]) + ' ' + str(d[2])
+            info_orga['id_organisme'] = str(d[3])
             tab_orga.append(info_orga)
         return tab_orga
     return None

@@ -173,7 +173,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     this._api.getOrganisme().subscribe(elem => {
       elem.forEach(orga => {
         if (this.tabOrganism.indexOf(orga.nom_organisme))
-          this.tabOrganism.push(orga.nom_organisme);
+          this.tabOrganism.push({ label: orga.nom_organisme, id: orga.id_organisme });
         this.tabOrganism.sort((a, b) => {
           return a.localeCompare(b);
         });
