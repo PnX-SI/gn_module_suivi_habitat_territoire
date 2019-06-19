@@ -56,7 +56,7 @@
             </ngx-datatable>
         </div>
 
-        <div id="end-btn">
+        <div class="end-btn px-1">
             <div  *ngIf="exportIsAllowed">
                 <pnx-modal-download labelButton='Télécharger ces visites' [pathDownload]='storeService.urlLoad' [exportFormat]='storeService.shtConfig.export_available_format'
                 [queryString]='storeService.queryString' >
