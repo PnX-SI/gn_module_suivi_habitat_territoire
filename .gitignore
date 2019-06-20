@@ -8,3 +8,4 @@ log/*
 .vscode
 */venv
 module.config.ts
+node_modules

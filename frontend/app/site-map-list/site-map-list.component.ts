@@ -1,16 +1,10 @@
-import {
-  Component,
-  OnInit,
-  AfterViewInit,
-  Output,
-  EventEmitter,
-  OnDestroy
-} from "@angular/core";
+import {Component, OnInit, AfterViewInit, Output, EventEmitter, OnDestroy } from "@angular/core";
 import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 import { FormGroup, FormBuilder, FormControl } from "@angular/forms";
 import { Page } from "../shared/page";
 import * as L from "leaflet";
+import "Leaflet.Deflate";
 
 import { MapService } from "@geonature_common/map/map.service";
 import { MapListService } from "@geonature_common/map-list/map-list.service";
@@ -40,6 +34,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   public oldFilterDate;
   public page = new Page();
   public isAllowed = false;
+  private _deflate_features;
 
   @Output()
   onDeleteFiltre = new EventEmitter<any>();
@@ -149,21 +144,34 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   checkPermission() {
-    this.userService.check_user_cruved_visit('E').subscribe(ucruved => {
-      console.log("ucruved E", ucruved)
+    this.userService.check_user_cruved_visit("E").subscribe(ucruved => {
       this.isAllowed = ucruved;
-    })
+    });
   }
 
   ngAfterViewInit() {
     this._map = this.mapService.getMap();
+
+    // Init leaflet.deflate
+    var iconMarker = L.icon({
+      iconSize: [25, 41],
+      iconAnchor: [13, 41],
+      iconUrl: "./external_assets/suivi_hab_ter/marker-icon.png",
+      shadowUrl: "./external_assets/suivi_hab_ter/marker-shadow.png"
+    });
+    this._deflate_features = L.deflate({
+      minSize: 10,
+      markerOptions: { icon: iconMarker }
+    });
+    this._deflate_features.addTo(this._map);
+
     this.addCustomControl();
     this.addLegend();
 
     this._api.getOrganisme().subscribe(elem => {
       elem.forEach(orga => {
         if (this.tabOrganism.indexOf(orga.nom_organisme))
-          this.tabOrganism.push(orga.nom_organisme);
+          this.tabOrganism.push({ label: orga.nom_organisme, id: orga.id_organisme });
         this.tabOrganism.sort((a, b) => {
           return a.localeCompare(b);
         });
@@ -194,13 +202,11 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       });
 
-    this._api
-      .getVisitsYears()
-      .subscribe(years => {
-        years.forEach((year, i) => {
-          this.tabYears.push({ label: year[i], id: year[i] });
-        });
+    this._api.getVisitsYears().subscribe(years => {
+      years.forEach((year, i) => {
+        this.tabYears.push({ label: year[i], id: year[i] });
       });
+    });
   }
 
   onChargeList(param?) {
@@ -215,7 +221,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dataLoaded = true;
       },
       error => {
-        let msg = "Une erreur est survenue lors de la récupération des informations sur le serveur.";
+        let msg =
+          "Une erreur est survenue lors de la récupération des informations sur le serveur.";
         if (error.status == 404) {
           this.page.totalElements = 0;
           this.page.size = 0;
@@ -223,13 +230,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         } else if (error.status == 403) {
           msg = "Vous n'êtes pas autorisé à afficher ces données.";
         } else {
-          this.toastr.error(
-            msg,
-            "",
-            {
-              positionClass: "toast-top-right"
-            }
-          );
+          this.toastr.error(msg, "", {
+            positionClass: "toast-top-right"
+          });
           console.log("error getsites: ", error);
         }
         this.dataLoaded = true;
@@ -263,6 +266,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     //manage color with date
     let currentStyle = this.storeService.getLayerStyle(feature.properties);
     layer.setStyle(currentStyle);
+
+    // Add deflate to layer
+    layer.addTo(this._deflate_features);
   }
 
   toggleStyle(selectedLayer) {
@@ -318,8 +324,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         " btn btn-sm btn-outline-shadow leaflet-bar leaflet-control leaflet-control-custom"
       );
       container.innerHTML =
-        '<i class="material-icons" style="line-height:normal;">crop_free</i>';
-      container.style.padding = "1px 4px";
+        '<i class="material-icons" style="vertical-align: text-bottom">crop_free</i>';
+      container.style.padding = "4px 4px 1px";
       container.title = "Réinitialiser l'emprise de la carte";
       container.onclick = () => {
         this._map.setView(this.center, this.zoom);
@@ -331,25 +337,32 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   addLegend() {
     var self = this;
-    var legend = L.control({position: 'bottomright'});
+    var legend = L.control({ position: "bottomright" });
 
-    legend.onAdd = function (map) {
-        var div = L.DomUtil.create('div', 'info legend'),
-            grades = {0:"Visite cette année", 1:"+1 an", 2:"+2 ans", 3:"+3 ans", 4:"+4 ans ou jamais "};
+    legend.onAdd = function(map) {
+      var div = L.DomUtil.create("div", "info legend"),
+        grades = {
+          0: "Visite cette année",
+          1: "+1 an",
+          2: "+2 ans",
+          3: "+3 ans",
+          4: "+4 ans ou jamais "
+        };
 
-        var keys = Object.keys(grades);
-        for (var i = 0; i < keys.length; i++) {
-            div.innerHTML +=
-                '<i style="background-color:' +
-                self.storeService.getColor(Number(keys[i])).color +
-                ';opacity:'+ self.storeService.getColor(Number(keys[i])).fillOpacity +
-                '; border:' + self.storeService.getColor(Number(keys[i])).color +
-                '"></i> ' +
-                '<i style="position: absolute; margin-left: -26px; border: 1px solid ' + self.storeService.getColor(Number(keys[i])).color +
-                '"></i> ' +
-                grades[i] + '<br>';
-        }
-        return div;
+      var keys = Object.keys(grades);
+      for (var i = 0; i < keys.length; i++) {
+        div.innerHTML +=
+          '<div style= "width: 20px;height: 20px ;display: inline-block; border: 1px solid ' +
+          self.storeService.getColor(Number(keys[i])).color +
+          '"><i style="background-color:' +
+          self.storeService.getColor(Number(keys[i])).color +
+          ";opacity:" +
+          self.storeService.getColor(Number(keys[i])).fillOpacity +
+          '"></i></div> ' +
+          grades[i] +
+          "<br>";
+      }
+      return div;
     };
 
     legend.addTo(this._map);
@@ -396,7 +409,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy() {
     let filterkey = this.storeService.queryString.keys();
     filterkey.forEach(key => {
-      this.storeService.queryString= this.storeService.queryString.delete(key);
+      this.storeService.queryString = this.storeService.queryString.delete(key);
     });
   }
 }

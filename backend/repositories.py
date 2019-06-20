@@ -2,6 +2,7 @@ from flask import Blueprint, request, session, current_app
 
 from sqlalchemy.sql.expression import func
 from pypnusershub.db.tools import InsufficientRightsError
+import re
 
 from geonature.utils.errors import GeonatureApiError
 from geonature.core.gn_monitoring.models import TBaseVisits
@@ -106,3 +107,74 @@ def clean_string(my_string):
         my_string = my_string.replace(c, "-")
 
     return my_string
+
+def clean_string(my_string):
+    my_string = my_string.strip()
+    chars_to_remove =  ";,"
+    for c in chars_to_remove:
+        my_string = my_string.replace(c, "-")
+
+    return my_string
+
+
+def striphtml(data):
+    p = re.compile(r'<.*?>')
+    return p.sub('', data)
+
+
+def get_base_column_name():
+    """
+    mapping column name / label column
+
+    "idbsite": "Identifiant site",
+    "visitdate": "Date visite",
+    "bsitename": "Nom du site",
+    "area_name" : "Communes",
+    "observers": "Observateurs",
+    "organisme" : "Organisme",
+    "lbhab": "Habitat",
+    "lbperturb": "Perturbations",
+    "comments": "Commentaires",
+    "geom": "Géométrie"
+    """
+    return [
+            "Identifiant site",
+            "Date visite",
+            "Nom du site",
+            "Communes",
+            "Observateurs",
+            "Organisme",
+            "Habitat",
+            "Perturbations",
+            "Commentaires",
+            "Géométrie"
+        ]
+
+def get_pro_column_name():
+    """
+    mapping column name / label column
+    "cd_hab": "cdhab",
+    "covtaxons": "covtaxons"
+    """
+    return [
+        "cdhab",
+        "covtaxons",
+        ]
+
+def get_mapping_columns():
+    return {
+        "idbsite": "Identifiant site",
+        "visitdate": "Date visite",
+        "bsitename": "Nom du site",
+        "area_name" : "Communes",
+        "observers": "Observateurs",
+        "organisme" : "Organisme",
+        "lbhab": "Habitat",
+        "lbperturb": "Perturbations",
+        "comments": "Commentaires",
+        "geom": "Géométrie",
+        "geom_wkt": "geom_wkt",
+        "cd_hab": "cdhab",
+        "covtaxons": "covtaxons",
+        "nomvtaxon": "nomvtaxon"
+    }

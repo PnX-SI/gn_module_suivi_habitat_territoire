@@ -135,7 +135,8 @@ perturbations AS(
 ),
 taxons AS (
     SELECT v.id_base_visit,
-    json_object_agg( tr.lb_nom, CASE tr.lb_nom WHEN tr.lb_nom THEN True END ORDER BY tr.lb_nom) nom_valide_taxon
+    json_object_agg( tr.lb_nom, CASE tr.lb_nom WHEN tr.lb_nom THEN True END ORDER BY tr.lb_nom) nom_valide_taxon,
+    json_object_agg( tr.cd_nom, CASE tr.cd_nom WHEN tr.cd_nom THEN True END ORDER BY tr.cd_nom) cover_cdnom
     FROM gn_monitoring.t_base_visits v
         JOIN pr_monitoring_habitat_territory.cor_visit_taxons t ON t.id_base_visit = v.id_base_visit
         JOIN taxonomie.taxref tr ON t.cd_nom = tr.cd_nom
@@ -145,17 +146,16 @@ taxons AS (
 SELECT sites.id_base_site AS idbsite,
 	cor.id_area AS idarea,
 	visits.id_base_visit AS idbvisit,
-	visits.id_digitiser AS iddigit,
 	visits.visit_date_min AS visitdate,
 	visits.comments,
-	visits.uuid_base_visit AS uuidbvisit,
 	ar.geom,
 	per.label_perturbation AS lbperturb,
 	obs.observateurs AS observers,
 	obs.organisme,
 	tax.nom_valide_taxon AS nomvtaxon,
+    tax.cover_cdnom AS covtaxons,
 	sites.base_site_name AS bsitename,
-	habref.lb_hab_fr_complet AS lbhab,
+	habref.lb_hab_fr AS lbhab,
 	habref.cd_hab,
 	area.area_name,
 	ar.id_type
