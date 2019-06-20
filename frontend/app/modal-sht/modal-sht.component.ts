@@ -108,7 +108,6 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
 
   checkPermission() {
     this.userService.check_user_cruved_visit('U', this.visit).subscribe(ucruved => {
-      console.log("ucruved U", ucruved)
       this.isAllowed = ucruved;
     })
   }

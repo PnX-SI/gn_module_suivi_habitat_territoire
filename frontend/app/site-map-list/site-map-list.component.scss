@@ -66,8 +66,9 @@ legend {
 :host /deep/ #map .legend.leaflet-control i {
     width: 18px;
     height: 18px;
-    float: left;
-    margin-right: 8px;
+    display: inline-block;
+    vertical-align: sub;
+    margin-right: 2px;
 }
   
 @-webkit-keyframes spin {
