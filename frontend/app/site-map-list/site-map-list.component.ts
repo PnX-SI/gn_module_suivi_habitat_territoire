@@ -203,10 +203,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
     this._api.getVisitsYears().subscribe(years => {
-      console.log('years',years);
       years.forEach((year, i) => {
-       
-        
         this.tabYears.push({ label: year[i], id: year[i] });
       });
     });
