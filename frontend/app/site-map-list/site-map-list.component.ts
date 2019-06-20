@@ -171,7 +171,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     this._api.getOrganisme().subscribe(elem => {
       elem.forEach(orga => {
         if (this.tabOrganism.indexOf(orga.nom_organisme))
-          this.tabOrganism.push(orga.nom_organisme);
+          this.tabOrganism.push({ label: orga.nom_organisme, id: orga.id_organisme });
         this.tabOrganism.sort((a, b) => {
           return a.localeCompare(b);
         });
@@ -203,10 +203,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
     this._api.getVisitsYears().subscribe(years => {
-      console.log('years',years);
       years.forEach((year, i) => {
-       
-        
         this.tabYears.push({ label: year[i], id: year[i] });
       });
     });

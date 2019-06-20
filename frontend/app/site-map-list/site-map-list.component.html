@@ -28,7 +28,7 @@
                             <small> Organisme </small>
                             <select class="form-control form-control-sm" name="selectOrg" [formControl]="filterForm.controls.filterOrga">
                                 <option [ngValue]=null> -- Sélectionnez un filtre -- </option>
-                                <option *ngFor="let label of tabOrganism"> {{label}} </option>
+                                <option *ngFor="let orga of tabOrganism" [value]="orga.id"> {{orga.label}} </option>
                             </select>
                         </div>
                         <div class="searchSite col">

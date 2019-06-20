@@ -7,6 +7,8 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy import and_ , distinct, desc
 from sqlalchemy.exc import SQLAlchemyError
 from geoalchemy2.shape import to_shape
+from numpy import array
+from shapely.geometry import *
 
 from pypnusershub.db.tools import InsufficientRightsError
 from pypnnomenclature.models import TNomenclatures
@@ -22,7 +24,7 @@ from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import BibOrganismes
 
 
-from .repositories import check_user_cruved_visit, check_year_visit, get_taxonlist_by_cdhab, clean_string
+from .repositories import check_user_cruved_visit, check_year_visit, get_taxonlist_by_cdhab, clean_string, striphtml, get_base_column_name, get_pro_column_name, get_mapping_columns
 
 from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation, CorListHabitat, ExportVisits
 
@@ -139,7 +141,7 @@ def get_all_sites(info_role):
         q = q.filter(TInfosSite.id_base_site == parameters['id_base_site'])
 
     if 'organisme' in parameters:
-        q = q.filter(BibOrganismes.nom_organisme == parameters['organisme'])
+        q = q.filter(BibOrganismes.id_organisme == parameters['organisme'])
 
     if 'commune' in parameters:
         q = q.filter(LAreas.area_name == parameters['commune'])
@@ -232,16 +234,19 @@ def get_years_visits():
     '''
     
     q = DB.session.query(
-        distinct(TVisitSHT.visit_date_min)
-        ).order_by(desc(TVisitSHT.visit_date_min)).join(
-        TInfosSite, TInfosSite.id_base_site == TVisitSHT.id_base_site
-        )
+        func.to_char(TVisitSHT.visit_date_min, 'YYYY')
+        ).join(
+            TInfosSite, TInfosSite.id_base_site == TVisitSHT.id_base_site
+        ).order_by( desc(func.to_char(TVisitSHT.visit_date_min, 'YYYY'))
+        ).group_by( func.to_char(TVisitSHT.visit_date_min, 'YYYY') )
+
     data = q.all()
+
     if data:
         tab_years = []
         for idx, d in enumerate(data):
             info_year = dict()
-            info_year[idx] = d[0].year
+            info_year[idx] = d[0]
             tab_years.append(info_year)
         return tab_years
     return None
@@ -399,10 +404,13 @@ def get_organisme(info_role):
     '''
 
     q = DB.session.query(
-        BibOrganismes.nom_organisme, User.nom_role, User.prenom_role).outerjoin(
-        User, BibOrganismes.id_organisme == User.id_organisme).distinct().join(
-        corVisitObserver, User.id_role == corVisitObserver.c.id_role).outerjoin(
-        TVisitSHT, corVisitObserver.c.id_base_visit == TVisitSHT.id_base_visit)
+        BibOrganismes.nom_organisme, User.nom_role, User.prenom_role, User.id_organisme
+        ).outerjoin(
+            User, BibOrganismes.id_organisme == User.id_organisme
+        ).distinct().join(
+            corVisitObserver, User.id_role == corVisitObserver.c.id_role
+        ).outerjoin(
+            TVisitSHT, corVisitObserver.c.id_base_visit == TVisitSHT.id_base_visit)
 
     data = q.all()
     if data:
@@ -411,6 +419,7 @@ def get_organisme(info_role):
             info_orga = dict()
             info_orga['nom_organisme'] = str(d[0])
             info_orga['observer'] = str(d[1]) + ' ' + str(d[2])
+            info_orga['id_organisme'] = str(d[3])
             tab_orga.append(info_orga)
         return tab_orga
     return None
@@ -497,11 +506,55 @@ def export_visit(info_role):
     data = q.all()
     features = []
 
+    # formate data
+    cor_hab_taxon = []
+    flag_cdhab = 0
+
+    tab_header = []
+    column_name = get_base_column_name()
+    column_name_pro = get_pro_column_name()
+    mapping_columns = get_mapping_columns()
+
+    tab_visit = []
+
+    for d in data:
+        visit = d.as_dict()
+
+        # Get list hab/taxon
+        cd_hab = visit['cd_hab']
+        if flag_cdhab !=  cd_hab:
+            cor_hab_taxon = get_taxonlist_by_cdhab(cd_hab)
+            flag_cdhab = cd_hab
+
+        # remove html tag
+        visit['lbhab'] = striphtml( visit['lbhab'])
+
+        # geom
+        geom_wkt = to_shape(d.geom)
+        if export_format == 'geojson':
+            visit['geom_wkt'] = geom_wkt
+        else:
+            visit['geom'] = geom_wkt
+
+        # Translate label column
+        visit = dict((mapping_columns[key], value) for (key, value) in visit.items() if key in mapping_columns)
+
+        # pivot taxon
+        if visit['nomvtaxon']:
+            for taxon, cover in visit['nomvtaxon'].items():
+                visit[taxon] = cover
+        visit.pop('nomvtaxon', None)
+
+        tab_visit.append(visit)
+
     if export_format == 'geojson':
 
-        for d in data:
-            feature = d.as_geofeature('geom', 'idarea', False)
+        for d in tab_visit:
+            feature = mapping(d['geom_wkt'])
+            d.pop('geom_wkt', None)
+            properties = d
             features.append(feature)
+            features.append(properties)
         result = FeatureCollection(features)
 
         return to_json_resp(
@@ -512,39 +565,14 @@ def export_visit(info_role):
         )
 
     elif export_format == 'csv':
-        cor_hab_taxon = []
-        flag_cdhab = 0
-        tab_header = []
-        export_columns = ExportVisits.__table__.columns._data.keys()
-        export_columns.remove('nomvtaxon')
-        tab_visit = []
-
-        for d in data:
-            visit = d.as_dict()
-            # Get list hab/taxon
-            cd_hab = visit['cd_hab']
-            if flag_cdhab !=  cd_hab:
-                cor_hab_taxon = get_taxonlist_by_cdhab(cd_hab)
-                flag_cdhab = cd_hab
-            if visit['nomvtaxon']:
-                for taxon, cover in visit['nomvtaxon'].items():
-                    if taxon not in cor_hab_taxon:
-                        visit[taxon] = null
-                    visit[taxon] = cover
-            visit.pop('nomvtaxon')
-            geom_wkt = to_shape(d.geom)
-            visit['geom'] = geom_wkt
-
-            tab_visit.append(visit)
-
-        tab_header = export_columns + [clean_string(x) for x in cor_hab_taxon]
+        
+        tab_header = column_name + [clean_string(x) for x in cor_hab_taxon] + column_name_pro
 
         return to_csv_resp(
             file_name,
             tab_visit,
             tab_header,
             ';'
-
         )
 
     else:
