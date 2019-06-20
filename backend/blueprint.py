@@ -234,16 +234,19 @@ def get_years_visits():
     '''
     
     q = DB.session.query(
-        distinct(TVisitSHT.visit_date_min)
-        ).order_by(desc(TVisitSHT.visit_date_min)).join(
-        TInfosSite, TInfosSite.id_base_site == TVisitSHT.id_base_site
-        )
+        func.to_char(TVisitSHT.visit_date_min, 'YYYY')
+        ).join(
+            TInfosSite, TInfosSite.id_base_site == TVisitSHT.id_base_site
+        ).order_by( desc(func.to_char(TVisitSHT.visit_date_min, 'YYYY'))
+        ).group_by( func.to_char(TVisitSHT.visit_date_min, 'YYYY') )
+
     data = q.all()
+
     if data:
         tab_years = []
         for idx, d in enumerate(data):
             info_year = dict()
-            info_year[idx] = d[0].year
+            info_year[idx] = d[0]
             tab_years.append(info_year)
         return tab_years
     return None
