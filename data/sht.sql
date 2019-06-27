@@ -111,11 +111,11 @@ observers AS(
     SELECT
         v.id_base_visit,
         string_agg(roles.nom_role::text || ' ' ||  roles.prenom_role::text, ',') AS observateurs,
-        roles.id_organisme AS organisme
+        string_agg(roles.id_organisme::text, ',' ) AS organisme
     FROM gn_monitoring.t_base_visits v
     JOIN gn_monitoring.cor_visit_observer observer ON observer.id_base_visit = v.id_base_visit
     JOIN utilisateurs.t_roles roles ON roles.id_role = observer.id_role
-    GROUP BY v.id_base_visit, roles.id_organisme
+    GROUP BY v.id_base_visit
 ),
 perturbations AS(
     SELECT
