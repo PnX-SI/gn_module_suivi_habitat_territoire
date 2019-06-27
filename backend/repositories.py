@@ -108,14 +108,6 @@ def clean_string(my_string):
 
     return my_string
 
-def clean_string(my_string):
-    my_string = my_string.strip()
-    chars_to_remove =  ";,"
-    for c in chars_to_remove:
-        my_string = my_string.replace(c, "-")
-
-    return my_string
-
 
 def striphtml(data):
     p = re.compile(r'<.*?>')
