@@ -73,7 +73,7 @@ Intégrer les espèces
 .. code:: sql
 
     INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
-    VALUES 
+    VALUES
     (16265, 104123),
     (16265, 88386),
     (16265, 88662),
@@ -87,7 +87,7 @@ Intégrer les espèces
 Intégrer les sites
 -------------------
 
-* Remplissez les tables de la BDD à partir de cette table temporaire : 
+* Remplissez les tables de la BDD à partir de cette table temporaire :
 
 .. code:: sql
 
@@ -101,16 +101,16 @@ Intégrer les sites
     UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site)
         WHERE base_site_code IN (SELECT name FROM pr_monitoring_habitat_territory.maille_tmp);
 
-    -- Ajouter les données dans pr_monitoring_habitat_territory.t_infos_site 
+    -- Ajouter les données dans pr_monitoring_habitat_territory.t_infos_site
     INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
-        SELECT id_base_site, 16265    
+        SELECT id_base_site, 16265
             FROM gn_monitoring.t_base_sites bs
             JOIN pr_monitoring_habitat_territory.maille_tmp mt ON mt.name::character varying = bs.base_site_code;
 
 
 La table ``gn_monitoring.cor_site_area`` est remplie automatiquement par trigger pour indiquer les communes et mailles 25m de chaque ZP.
 
-* Insérer les sites suivis de ce module dans ``cor_site_application`` : 
+* Insérer les sites suivis de ce module dans ``cor_site_application`` :
 
 .. code:: sql
 
@@ -138,60 +138,61 @@ Intégrer les perturbations
 Intégrer les visites
 --------------------
 
-A TESTER et ADAPTER
-Champs pour le csv : label_perturbation, cd_nom, name = correspond à base_site_code
+Le template du CSV pour l'insertion des visites est celui généré par l'export des visites.
 
 * Importer le CSV dans une table temporaire de la BDD avec QGIS (``pr_monitoring_habitat_territory.obs_maille_tmp`` dans cet exemple)
-* Identifier les organismes présents dans les observations et intégrez ceux manquants dans UsersHub : ``SELECT DISTINCT unnest(string_to_array(organismes, '|')) AS organismes FROM pr_monitoring_habitat_territory.obs_maille_tmp ORDER BY organismes``
-* Identifier les observateurs présents dans les observations et intégrez ceux manquants dans UsersHub : ``SELECT DISTINCT unnest(string_to_array(observateu, '|')) AS observateurs FROM pr_monitoring_habitat_territory.obs_maille_tmp ORDER BY observateurs``
-* Corriger le nom mal formaté : ``UPDATE pr_monitoring_habitat_territory.obs_maille_tmp SET observateu = replace(observateu, 'PARCHOUX|Franck', 'PARCHOUX Franck');``
-* Remplissez la table des visites : 
+* Identifier les organismes présents dans les observations et intégrez ceux manquants dans UsersHub : ``SELECT DISTINCT unnest(string_to_array(organisme, ',')) AS organisme FROM pr_monitoring_habitat_territory.obs_maille_tmp ORDER BY organisme``
+* Identifier les observateurs présents dans les observations et intégrez ceux manquants dans UsersHub : ``SELECT DISTINCT unnest(string_to_array(observateu, ',')) AS observateurs FROM pr_monitoring_habitat_territory.obs_maille_tmp ORDER BY observateurs``
+* Remplissez la table des visites :
 
 .. code:: sql
 
-  INSERT INTO gn_monitoring.t_base_visits (id_base_site, visit_date_min, visit_date_max)
-  SELECT DISTINCT s.id_base_site, replace(date_deb,'/','-')::date AS date_debut, replace(date_fin,'/','-')::date AS date_fin
-    FROM pr_monitoring_habitat_territory.obs_maille_tmp o
-    JOIN gn_monitoring.t_base_sites s ON s.base_site_code = o.name
-  
-* Remplissez la table des observateurs : 
+    INSERT INTO gn_monitoring.t_base_visits (id_base_site, visit_date_min)
+    SELECT DISTINCT s.id_base_site, "date visit"::date AS date_debut
+        FROM pr_monitoring_habitat_territory.obs_maille_tmp o
+        JOIN gn_monitoring.t_base_sites s ON s.base_site_name = o."nom du sit";
+
+* Remplissez la table des observateurs :
 
 .. code:: sql
 
-  INSERT INTO gn_monitoring.cor_visit_observer
+    INSERT INTO gn_monitoring.cor_visit_observer
       (id_base_visit, id_role)
-  WITH myuser AS(SELECT lower(unnest(string_to_array(observateu, '|'))) AS obs,idzp FROM pr_monitoring_habitat_territory.obs_maille_tmp),
-  	roles AS(SELECT lower(nom_role ||' '|| prenom_role) AS nom, id_role FROM utilisateurs.t_roles)
-  SELECT DISTINCT v.id_base_visit,r.id_role
-  FROM myuser m
-  JOIN gn_monitoring.t_base_sites s ON s.base_site_code = m.name
-  JOIN gn_monitoring.t_base_visits v ON v.id_base_site = s.id_base_site
-  JOIN roles r ON m.obs=r.nom;
-  
-* Remplissez la table des observations : 
+    WITH myuser AS(SELECT lower(unnest(string_to_array(observateu, ','))) AS obs, identifian, "nom du sit" AS name  FROM pr_monitoring_habitat_territory.obs_maille_tmp),
+        roles AS(SELECT lower(nom_role ||' '|| prenom_role) AS nom, id_role FROM utilisateurs.t_roles)
+    SELECT DISTINCT v.id_base_visit,r.id_role
+    FROM myuser m
+    JOIN gn_monitoring.t_base_sites s ON s.base_site_name = m.name
+    JOIN gn_monitoring.t_base_visits v ON v.id_base_site = s.id_base_site
+    JOIN roles r ON m.obs=r.nom
+    ON CONFLICT DO NOTHING;
+
+* Remplissez la table des observations :
 
 .. code:: sql
 
     -- taxons : pr_monitoring_habitat_territory.cor_visit_taxons
     INSERT INTO pr_monitoring_habitat_territory.cor_visit_taxons (id_base_visit, cd_nom)
-    SELECT 
-  	    id_base_visit,
-  	    cd_nom
-    FROM pr_monitoring_habitat_territory.obs_maille_tmp o
-    JOIN gn_monitoring.t_base_sites s ON s.base_site_code = o.name
-    JOIN gn_monitoring.t_base_visits v ON v.id_base_site = s.id_base_site;
+    WITH mytaxon AS(SELECT unnest(string_to_array(covtaxons, ',')) AS cdnom,
+        identifian, "nom du sit" AS name  FROM pr_monitoring_habitat_territory.obs_maille_tmp)
+    SELECT DISTINCT v.id_base_visit, m.cdnom::int
+    FROM mytaxon m
+    JOIN gn_monitoring.t_base_sites s ON s.base_site_name = m.name
+    JOIN gn_monitoring.t_base_visits v ON v.id_base_site = s.id_base_site
+    ON CONFLICT DO NOTHING;
 
     -- perturbation : pr_monitoring_habitat_territory.cor_visit_perturbation
-    INSERT INTO pr_monitoring_habitat_territory.cor_visit_perturbation (id_base_visit, id_nomenclature_perturbation)
-    SELECT 
-  	    id_base_visit,
-  	    id_nomenclature_perturbation
-    FROM pr_monitoring_habitat_territory.obs_maille_tmp o
-    JOIN gn_monitoring.t_base_sites s ON s.base_site_code = o.name
+    INSERT INTO pr_monitoring_habitat_territory.cor_visit_perturbation (id_base_visit, id_nomenclature_perturbation, create_date)
+    WITH mypertub AS(SELECT unnest(string_to_array(perturbati, ',')) AS label_perturbation,
+        identifian, "nom du sit" AS name, "date visit"::date AS date_visit  FROM pr_monitoring_habitat_territory.obs_maille_tmp)
+    SELECT DISTINCT
+        v.id_base_visit,
+        nm.id_nomenclature,
+        m.date_visit
+    FROM mypertub m
+    JOIN gn_monitoring.t_base_sites s ON s.base_site_name = m.name
     JOIN gn_monitoring.t_base_visits v ON v.id_base_site = s.id_base_site
-    JOIN ref_nomenclatures.t_nomenclatures nm 
+    JOIN ref_nomenclatures.t_nomenclatures nm
         ON nm.id_nomenclature = (SELECT n.id_nomenclature
                                     FROM ref_nomenclatures.t_nomenclatures n
-                                    WHERE n.id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_PERTURBATION') AND o.label_perturbation = n.mnemonique;
-
-
+                                    WHERE n.id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_PERTURBATION') AND 'Arrachage' = n.mnemonique LIMIT 1);
