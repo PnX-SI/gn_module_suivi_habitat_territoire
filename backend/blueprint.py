@@ -409,7 +409,7 @@ def get_organisme(info_role):
             User, BibOrganismes.id_organisme == User.id_organisme
         ).distinct().join(
             corVisitObserver, User.id_role == corVisitObserver.c.id_role
-        ).outerjoin(
+        ).join(
             TVisitSHT, corVisitObserver.c.id_base_visit == TVisitSHT.id_base_visit)
 
     data = q.all()
@@ -576,7 +576,6 @@ def export_visit(info_role):
         )
 
     else:
-
         dir_path = str(ROOT_DIR / 'backend/static/shapefiles')
 
         FionaShapeService.create_shapes_struct(
