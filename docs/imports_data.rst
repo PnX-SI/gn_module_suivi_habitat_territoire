@@ -87,7 +87,7 @@ Intégrer les espèces
 Intégrer les sites
 -------------------
 
-* Remplissez les tables de la BDD à partir de cette table temporaire :
+* Remplissez les tables de la BDD à partir d'une table temporaire :
 
 .. code:: sql
 
@@ -132,7 +132,7 @@ Intégrer les perturbations
 
     -- placez-vous dans le dossier du module suivi_habitat_territoire
     cp data/sht_perturbations.sql /tmp/sht_perturbations.sql
-    psql -h $db_host -U $user_pg -d $db_name -f /tmp/sht_perturbations.sql &>> var/log/install_sht_perturbations.log
+    psql -h < my_host > -U < my_user_pg >  -d < my_db_name > -f /tmp/sht_perturbations.sql &>> var/log/install_sht_perturbations.log
 
 
 Intégrer les visites
