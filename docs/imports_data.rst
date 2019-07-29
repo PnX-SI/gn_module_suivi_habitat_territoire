@@ -126,7 +126,7 @@ La table ``gn_monitoring.cor_site_area`` est remplie automatiquement par trigger
 
 Intégrer les perturbations
 --------------------------
-* ATTENTION AUX DOUBLONS : Vérifier que les perturbations de type ``TYPE_PERTURBATION`` ne sont pas déjà intégrer
+* ATTENTION AUX DOUBLONS : Vérifier que les perturbations de type ``TYPE_PERTURBATION`` ne sont pas déjà intégrées
 
 .. code:: bash
 
@@ -195,4 +195,4 @@ Le template du CSV pour l'insertion des visites est celui généré par l'export
     JOIN ref_nomenclatures.t_nomenclatures nm
         ON nm.id_nomenclature = (SELECT n.id_nomenclature
                                     FROM ref_nomenclatures.t_nomenclatures n
-                                    WHERE n.id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_PERTURBATION') AND 'Arrachage' = n.mnemonique LIMIT 1);
+                                    WHERE n.id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_PERTURBATION') AND m.label_perturbation = n.mnemonique LIMIT 1);
