@@ -111,11 +111,11 @@ observers AS(
     SELECT
         v.id_base_visit,
         string_agg(roles.nom_role::text || ' ' ||  roles.prenom_role::text, ',') AS observateurs,
-        roles.id_organisme AS organisme
+        string_agg(roles.id_organisme::text, ',' ) AS organisme
     FROM gn_monitoring.t_base_visits v
     JOIN gn_monitoring.cor_visit_observer observer ON observer.id_base_visit = v.id_base_visit
     JOIN utilisateurs.t_roles roles ON roles.id_role = observer.id_role
-    GROUP BY v.id_base_visit, roles.id_organisme
+    GROUP BY v.id_base_visit
 ),
 perturbations AS(
     SELECT
@@ -135,8 +135,8 @@ perturbations AS(
 ),
 taxons AS (
     SELECT v.id_base_visit,
-    json_object_agg( tr.lb_nom, CASE tr.lb_nom WHEN tr.lb_nom THEN True END ORDER BY tr.lb_nom) nom_valide_taxon,
-    json_object_agg( tr.cd_nom, CASE tr.cd_nom WHEN tr.cd_nom THEN True END ORDER BY tr.cd_nom) cover_cdnom
+        json_object_agg( tr.lb_nom, CASE tr.lb_nom WHEN tr.lb_nom THEN True END ORDER BY tr.lb_nom) nom_valide_taxon,
+        string_agg(tr.cd_nom::text, ',') AS cover_cdnom
     FROM gn_monitoring.t_base_visits v
         JOIN pr_monitoring_habitat_territory.cor_visit_taxons t ON t.id_base_visit = v.id_base_visit
         JOIN taxonomie.taxref tr ON t.cd_nom = tr.cd_nom
