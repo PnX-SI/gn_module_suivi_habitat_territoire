@@ -1,0 +1,65 @@
+type_nomenclature_code,cd_nomenclature,mnemonique,label_default,definition_default,label_fr,definition_fr,cd_nomenclature_broader,hierarchy
+TYPE_PERTURBATION,GeF,Gestion par le feu,Gestion par le feu,Type de perturbation: Gestion par le feu,Gestion par le feu,Type de perturbation: Gestion par le feu,0,.001
+TYPE_PERTURBATION,Bru,Brûlage contrôlé,Brûlage contrôlé,Gestion par le feu: Brûlage contrôlé,Brûlage contrôlé,Gestion par le feu: Brûlage contrôlé,GeF,.001.001
+TYPE_PERTURBATION,Inc,Incendie,Incendie (naturel ou incontrôlé),Gestion par le feu: Incendie (naturel ou incontrôlé),Incendie (naturel ou incontrôlé),Gestion par le feu: Incendie (naturel ou incontrôlé),GeF,.001.002
+TYPE_PERTURBATION,AcL,Activité de loisirs,Activité de loisirs,Type de perturbation: Activité de loisirs,Activité de loisirs,Type de perturbation: Activité de loisirs,0,.002
+TYPE_PERTURBATION,Rec,Récolte des fleurs,Récolte des fleurs,Activité de loisirs: Récolte des fleurs,Récolte des fleurs,Activité de loisirs: Récolte des fleurs,AcL,.002.001
+TYPE_PERTURBATION,Arr,Arrachage des pieds,Arrachage des pieds,Activité de loisirs: Arrachage des pieds,Arrachage des pieds,Activité de loisirs: Arrachage des pieds,AcL,.002.002
+TYPE_PERTURBATION,Pie,Piétinement pédestre,Piétinement pédestre,Activité de loisirs: Piétinement pédestre,Piétinement pédestre,Activité de loisirs: Piétinement pédestre,AcL,.002.003
+TYPE_PERTURBATION,Veh,Véhicules à moteur,Véhicules à moteur,Activité de loisirs: Véhicules à moteur,Véhicules à moteur,Activité de loisirs: Véhicules à moteur,AcL,.002.004
+TYPE_PERTURBATION,Plo,Plongée dans un lac,Plongée dans un lac,Activité de loisirs: Plongée dans un lac,Plongée dans un lac,Activité de loisirs: Plongée dans un lac,AcL,.002.005
+TYPE_PERTURBATION,GeE,Gestion de l'eau,Gestion de l'eau,Type de perturbation: Gestion de l'eau,Gestion de l'eau,Type de perturbation: Gestion de l'eau,0,.003
+TYPE_PERTURBATION,Pom,Pompage,Pompage,Gestion de l'eau: Pompage,Pompage,Gestion de l'eau: Pompage,GeE,.003.001
+TYPE_PERTURBATION,Drn,Drainage,Drainage,Gestion de l'eau: Drainage,Drainage,Gestion de l'eau: Drainage,GeE,.003.002
+TYPE_PERTURBATION,Irg,Irrigation par gravité,Irrigation par gravité,Gestion de l'eau: Irrigation par gravité,Irrigation par gravité,Gestion de l'eau: Irrigation par gravité,GeE,.003.003
+TYPE_PERTURBATION,Ira,Irrigation par aspersion,Irrigation par aspersion,Gestion de l'eau: Irrigation par aspersion,Irrigation par aspersion,Gestion de l'eau: Irrigation par aspersion,GeE,.003.004
+TYPE_PERTURBATION,Cur,Curage,Curage,"Gestion de l'eau: Curage (fossé, mare, serve)",Curage,"Gestion de l'eau: Curage (fossé, mare, serve)",GeE,.003.005
+TYPE_PERTURBATION,Ext,Extraction de granulats,Extraction de granulats,Gestion de l'eau: Extraction de granulats,Extraction de granulats,Gestion de l'eau: Extraction de granulats,GeE,.003.006
+TYPE_PERTURBATION,AcA,Activités agricoles,Activités agricoles,Type de perturbation: Activités agricoles,Activités agricoles,Type de perturbation: Activités agricoles,0,.004
+TYPE_PERTURBATION,Lab,Labour,Labour,Activités agricoles: Labour,Labour,Activités agricoles: Labour,AcA,.004.001
+TYPE_PERTURBATION,Fer,Fertilisation,Fertilisation,Activités agricoles: Fertilisation,Fertilisation,Activités agricoles: Fertilisation,AcA,.004.002
+TYPE_PERTURBATION,Prp,Produits phyosanitaires,Produits phyosanitaires,Activités agricoles: Produits phyosanitaires (épandage),Produits phyosanitaires,Activités agricoles: Produits phyosanitaires (épandage),AcA,.004.003
+TYPE_PERTURBATION,Fauc,Fauchaison,Fauchaison,Activités agricoles: Fauchaison,Fauchaison,Activités agricoles: Fauchaison,AcA,.004.004
+TYPE_PERTURBATION,Apb,Apport de blocs,Apport de blocs,Activités agricoles: Apport de blocs (déterrés par le labour),Apport de blocs,Activités agricoles: Apport de blocs (déterrés par le labour),AcA,.004.005
+TYPE_PERTURBATION,Gyr,Gyrobroyage,Gyrobroyage,Activités agricoles: Gyrobroyage,Gyrobroyage,Activités agricoles: Gyrobroyage,AcA,.004.006
+TYPE_PERTURBATION,Reg,Revégétalisation,Revégétalisation,Activités agricoles: Revégétalisation (sur semis),Revégétalisation,Activités agricoles: Revégétalisation (sur semis),AcA,.004.007
+TYPE_PERTURBATION,AcF,Activités forestières,Activités forestières,Type de perturbation: Activités forestières,Activités forestières,Type de perturbation: Activités forestières,0,.005
+TYPE_PERTURBATION,Jpf,Jeune plantation de feuillus,Jeune plantation de feuillus,Activités forestières: Jeune plantation de feuillus,Jeune plantation de feuillus,Activités forestières: Jeune plantation de feuillus,AcF,.005.001
+TYPE_PERTURBATION,Jpm,Jeune plantation mixte,Jeune plantation mixte,Activités forestières: Jeune plantation mixte,Jeune plantation mixte,Activités forestières: Jeune plantation mixte,AcF,.005.002
+TYPE_PERTURBATION,Jpr,Jeune plantation de résineux,Jeune plantation de résineux,Activités forestières: Jeune plantation de résineux,Jeune plantation de résineux,Activités forestières: Jeune plantation de résineux,AcF,.005.003
+TYPE_PERTURBATION,Ela,Elagage,Elagage,Activités forestières: Elagage (haie et bord de route),Elagage,Activités forestières: Elagage (haie et bord de route),AcF,.005.004
+TYPE_PERTURBATION,Cec,Coupe d'éclaircie,Coupe d'éclaircie,Activités forestières: Coupe d'éclaircie,Coupe d'éclaircie,Activités forestières: Coupe d'éclaircie,AcF,.005.005
+TYPE_PERTURBATION,Cbl,Coupe à blanc,Coupe à blanc,Activités forestières: Coupe à blanc,Coupe à blanc,Activités forestières: Coupe à blanc,AcF,.005.006
+TYPE_PERTURBATION,Bcl,Bois coupé et laissé,Bois coupé et laissé,Activités forestières: Bois coupé et laissé sur place,Bois coupé et laissé,Activités forestières: Bois coupé et laissé sur place,AcF,.005.007
+TYPE_PERTURBATION,Opf,Ouverture de piste forestière,Ouverture de piste forestière,Activités forestières: Ouverture de piste forestière,Ouverture de piste forestière,Activités forestières: Ouverture de piste forestière,AcF,.005.008
+TYPE_PERTURBATION,CpA,Comportement des animaux,Comportement des animaux,Type de perturbation: Comportement des animaux,Comportement des animaux,Type de perturbation: Comportement des animaux,0,.006
+TYPE_PERTURBATION,Jas,Jas,Jas,Comportement des animaux: Jas (couchades nocturnes des animaux domestiques),Jas,Comportement des animaux: Jas (couchades nocturnes des animaux domestiques),CpA,.006.001
+TYPE_PERTURBATION,Cha,Chaume,Chaume,Comportement des animaux: Chaume (couchades aux heures chaudes des animaux domestiques),Chaume,Comportement des animaux: Chaume (couchades aux heures chaudes des animaux domestiques),CpA,.006.002
+TYPE_PERTURBATION,Faus,Faune sauvage,Faune sauvage,Comportement des animaux: Faune sauvage (reposoir),Faune sauvage,Comportement des animaux: Faune sauvage (reposoir),CpA,.006.003
+TYPE_PERTURBATION,Psa,Piétinement sans déjection,Piétinement sans déjection,"Comportement des animaux: Piétinement, sans apports de déjection",Piétinement sans déjection,"Comportement des animaux: Piétinement, sans apports de déjection",CpA,.006.004
+TYPE_PERTURBATION,Pat,Pâturage,Pâturage,Comportement des animaux: Pâturage (sur herbacées exclusivement),Pâturage,Comportement des animaux: Pâturage (sur herbacées exclusivement),CpA,.006.005
+TYPE_PERTURBATION,Acl,Abroutissement et écorçage ,Abroutissement et écorçage ,Comportement des animaux: Abroutissement et écorçage (sur ligneux),Abroutissement et écorçage ,Comportement des animaux: Abroutissement et écorçage (sur ligneux),CpA,.006.006
+TYPE_PERTURBATION,San,Sangliers labours grattis,Sangliers labours grattis,Comportement des animaux: Sangliers-labours et grattis,Sangliers labours grattis,Comportement des animaux: Sangliers-labours et grattis,CpA,.006.007
+TYPE_PERTURBATION,Mar,Marmottes terriers,Marmottes terriers,Comportement des animaux: Marmottes-terriers,Marmottes terriers,Comportement des animaux: Marmottes-terriers,CpA,.006.008
+TYPE_PERTURBATION,Che,Chenilles défoliation,Chenilles défoliation,Comportement des animaux: Chenilles-défoliation,Chenilles défoliation,Comportement des animaux: Chenilles-défoliation,CpA,.006.009
+TYPE_PERTURBATION,PnE,Processus naturels d'érosion,Processus naturels d'érosion,Type de perturbation: Processus naturels d'érosion,Processus naturels d'érosion,Type de perturbation: Processus naturels d'érosion,0,.007
+TYPE_PERTURBATION,Sub,Submersion temporaire,Submersion temporaire,Processus naturels d'érosion: Submersion temporaire,Submersion temporaire,Processus naturels d'érosion: Submersion temporaire,PnE,.007.001
+TYPE_PERTURBATION,Env,Envasement,Envasement,Processus naturels d'érosion: Envasement,Envasement,Processus naturels d'érosion: Envasement,PnE,.007.002
+TYPE_PERTURBATION,Eng,Engravement,Engravement,Processus naturels d'érosion: Engravement (laves torrentielles et divagation d'une rivière),Engravement,Processus naturels d'érosion: Engravement (laves torrentielles et divagation d'une rivière),PnE,.007.003
+TYPE_PERTURBATION,Aam,Avalanche apport matériaux,Avalanche apport matériaux,Processus naturels d'érosion: Avalanche (apport de matériaux non triés),Avalanche,Processus naturels d'érosion: Avalanche (apport de matériaux non triés),PnE,.007.004
+TYPE_PERTURBATION,Evs,Erosion vastes surfaces,Erosion vastes surfaces,Processus naturels d'érosion:Erosion s'exerçant sur de vastes surfaces,Erosion vastes surfaces,Processus naturels d'érosion:Erosion s'exerçant sur de vastes surfaces,PnE,.007.005
+TYPE_PERTURBATION,Sbe,Sapement berge,Sapement berge,Processus naturels d'érosion: Sapement de la berge d'un cours d'eau,Sapement berge,Processus naturels d'érosion: Sapement de la berge d'un cours d'eau,PnE,.007.006
+TYPE_PERTURBATION,Art,Avalanche ramonage terrain,Avalanche ramonage terrain,Processus naturels d'érosion: Avalanche-ramonage du terrain,Avalanche ramonage terrain,Processus naturels d'érosion: Avalanche-ramonage du terrain,PnE,.007.007
+TYPE_PERTURBATION,Ebr,Eboulement récent,Eboulement récent,Processus naturels d'érosion: Eboulement récent,Eboulement récent,Processus naturels d'érosion: Eboulement récent,PnE,.007.008
+TYPE_PERTURBATION,AmL,Aménagements lourds,Aménagements lourds,Type de perturbation: Aménagements lourds,Aménagements lourds,Type de perturbation: Aménagements lourds,0,.008
+TYPE_PERTURBATION,Car,Carrière en roche dure,Carrière en roche dure,Aménagements lourds: Carrière en roche dure,Carrière en roche dure,Aménagements lourds: Carrière en roche dure,AmL,.008.001
+TYPE_PERTURBATION,Fos,Fossé pare-blocs,Fossé pare-blocs,Aménagements lourds: Fossé pare-blocs,Fossé pare-blocs,Aménagements lourds: Fossé pare-blocs,AmL,.008.002
+TYPE_PERTURBATION,End,Endiguement,Endiguement,Aménagements lourds: Endiguement,Endiguement,Aménagements lourds: Endiguement,AmL,.008.003
+TYPE_PERTURBATION,Ter,Terrassement aménagements lourds,Terrassement aménagements lourds,Aménagements lourds: Terrassement pour aménagements lourds,Terrassement aménagements lourds,Aménagements lourds: Terrassement pour aménagements lourds,AmL,.008.004
+TYPE_PERTURBATION,Deb,Déboisement avec désouchage,Déboisement avec désouchage,Aménagements lourds: Déboisement avec désouchage,Déboisement avec désouchage,Aménagements lourds: Déboisement avec désouchage,AmL,.008.005
+TYPE_PERTURBATION,Beg,Béton-goudron:revêtement,Béton-goudron:revêtement,"Aménagements lourds: Béton, goudron-revêtement abiotique",Béton-goudron:revêtement,"Aménagements lourds: Béton, goudron-revêtement abiotique",AmL,.008.006
+TYPE_PERTURBATION,GeI,Gestion des invasives,Gestion des invasives,Type de perturbation: Gestion des invasives,Gestion des invasives,Type de perturbation: Gestion des invasives,0,.009
+TYPE_PERTURBATION,Arg,Arrachage,Arrachage,Gestion des invasives: Arrachage,Arrachage,Gestion des invasives: Arrachage,GeI,.009.001
+TYPE_PERTURBATION,Fag,Fauchage,Fauchage,Gestion des invasives: Fauchage,Fauchage,Gestion des invasives: Fauchage,GeI,.009.002
+TYPE_PERTURBATION,Dbs,Débroussaillage,Débroussaillage,Gestion des invasives: Débroussaillage,Débroussaillage,Gestion des invasives: Débroussaillage,GeI,.009.003
+TYPE_PERTURBATION,Reb,Recouvrement avec bâches,Recouvrement avec bâches,Gestion des invasives: Recouvrement avec bâches,Recouvrement avec bâches,Gestion des invasives:Recouvrement avec bâches,GeI,.009.004

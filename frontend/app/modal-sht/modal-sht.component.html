@@ -7,66 +7,100 @@
     </div>
     <div class="modal-body">
         <div *ngIf="idVisit && isAllowed" class="clearfix ">
-            <button class="btn btn-warning float-right" data-toggle="button" aria-pressed="false" autocomplete="off" (click)="upVisit()">
+            <button
+                class="btn btn-warning float-right"
+                data-toggle="button"
+                aria-pressed="false"
+                autocomplete="off"
+                (click)="upVisit()">
                 <i class="fa fa-edit" aria-hidden="true"> </i>
                 {{ labelUpVisit }}
             </button>
         </div>
-        <form>
+        <form [formGroup]="formVisit" *ngIf="dataReady">
             <fieldset [disabled]="disabledForm">
                 <div class="form-group">
                     <label> Date de la visite : </label>
                     <div class="">
-                        <pnx-date [parentFormControl]="formVisit.controls.visit_date_min" [disabled]="disabledForm">
+                        <pnx-date
+                            [parentFormControl]="formVisit.controls.visit_date_min"
+                            [disabled]="disabledForm">
                         </pnx-date>
                     </div>
                 </div>
 
-
                 <div class="form-group">
                     <label> Observateur(s) : </label>
                     <div class="" id="newObserver">
-                        <pnx-observers [parentFormControl]="formVisit.controls.cor_visit_observer" [bindAllItem]="true"
+                        <pnx-observers
+                            [parentFormControl]="formVisit.controls.cor_visit_observer"
+                            [bindAllItem]="true"
                             [disabled]="disabledForm"
                             [idMenu]="storeService.shtConfig.id_menu_list_user" >
                         </pnx-observers>
                     </div>
                 </div>
 
-
                 <div class="form-group">
                     <label> Perturbation(s) : </label>
                     <div class="" id="newPerturs">
-                        <pnx-nomenclature [parentFormControl]="formVisit.controls.cor_visit_perturbation" [multiSelect]="true"
-                            keyValue="id_nomenclature" [bindAllItem]="true" keyLabel="label_default"
+                        <pnx-nomenclature
+                            [parentFormControl]="formVisit.controls.cor_visit_perturbation"
+                            [multiSelect]="true"
+                            keyValue="id_nomenclature"
+                            [bindAllItem]="true"
+                            keyLabel="label_default"
                             [disabled]="disabledForm"
                             codeNomenclatureType="TYPE_PERTURBATION">
                         </pnx-nomenclature>
                     </div>
                 </div>
 
-
-                <div class="form-group">
+                <div class="form-group" formArrayName="taxonsVisit">
                     <label> Espèces présentes : </label>
-                    <div class="form-check" *ngFor='let control of formVisit.get("cor_visit_taxons").value; let i=index'>
-                        <input class="form-check-input" type='checkbox' [formControl]=control [id]="species[i].id"
-                            [checked]="species[i].selected" />
-                        <label class="form-check-label" [for]="species[i].id"> {{species[i].nom_complet}} </label>
+                    <div
+                        class="form-check"
+                        *ngFor='let taxon of taxonsVisit.controls; let i=index'>
+                        <input
+                            [formControlName]="i"
+                            class="form-check-input"
+                            type="checkbox"
+                            id="id-{{i}}"
+                            [checked]="taxon.value" />
+                        <label class="form-check-label" for="id-{{i}}">
+                            {{species[i].name}}
+                        </label>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label> Commentaires : </label>
                     <div class="">
-                        <textarea class="form-control" rows="2" id="commentaire" [formControl]="formVisit.controls.comments"></textarea>
+                        <textarea
+                            class="form-control"
+                            rows="2"
+                            id="commentaire"
+                            [formControl]="formVisit.controls.comments"></textarea>
                     </div>
                 </div>
             </fieldset>
         </form>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-default" (click)="onClose()"> Fermer </button>
-        <button *ngIf="!idVisit || onUpVisit" type="button" class="btn btn-success" (click)="onSave()" [disabled]="!formVisit.valid" > Enregistrer </button>
+        <button
+            type="button"
+            class="btn btn-default"
+            (click)="onClose()">
+            Fermer
+        </button>
+        <button
+            *ngIf="!idVisit || onUpVisit"
+            type="button"
+            class="btn btn-success"
+            (click)="onSave()"
+            [disabled]="!formVisit.valid" >
+            Enregistrer
+        </button>
     </div>
 </ng-template>
 

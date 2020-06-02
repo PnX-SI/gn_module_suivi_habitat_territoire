@@ -1,31 +1,20 @@
-import {
-  Component,
-  OnInit,
-  Input,
-  Output,
-  OnDestroy,
-  EventEmitter
-} from "@angular/core";
-import {
-  NgbModal,
-  NgbModalRef,
-  NgbDateParserFormatter
-} from "@ng-bootstrap/ng-bootstrap";
-import { FormGroup, FormBuilder, FormArray, NgForm } from "@angular/forms";
-import { ToastrService } from "ngx-toastr";
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { NgbModal, NgbModalRef, NgbDateParserFormatter } from '@ng-bootstrap/ng-bootstrap';
+import { FormGroup, FormBuilder, FormArray } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
-import { forkJoin } from "rxjs/observable/forkJoin";
-import { Observable } from "rxjs/Observable";
+import { forkJoin } from 'rxjs/observable/forkJoin';
+import { of } from 'rxjs/observable/of';
 
-import { DataService } from "../services/data.service";
-import { StoreService } from "../services/store.service";
-import { FormService } from "../services/form.service";
-import { UserService } from "../services/user.service";
+import { DataService } from '../services/data.service';
+import { StoreService } from '../services/store.service';
+import { FormService } from '../services/form.service';
+import { UserService } from '../services/user.service';
 
 @Component({
-  selector: "modal-sht",
-  templateUrl: "modal-sht.component.html",
-  styleUrls: ["./modal-sht.component.scss"]
+  selector: 'modal-sht',
+  templateUrl: 'modal-sht.component.html',
+  styleUrls: ['./modal-sht.component.scss']
 })
 export class ModalSHTComponent implements OnInit, OnDestroy {
   @Input() labelButton: string;
@@ -34,25 +23,26 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   @Input() idVisit: string;
   @Output() visitsUp = new EventEmitter();
 
+  public dataReady = false;
+  private formDataSubscription;
   public formVisit: FormGroup;
   private _modalRef: NgbModalRef;
-  public species = [];
+  public species: any = [];
   public cd_hab;
   public nom_habitat;
   public id_base_site;
-  private _currentSite;
-  private visit = {
-    id_base_visit: "",
-    visit_date_min: "",
+  private visit: any = {
+    id_base_visit: '',
+    visit_date_min: '',
     observers: [],
     cor_visit_taxons: [],
     cor_visit_perturbation: [],
-    comments: ""
+    comments: ''
   };
-  public modalTitle = "Saisie d'un relevé";
+  public modalTitle = 'Saisie d\'un relevé';
   public disabledForm = false;
   public onUpVisit = false;
-  public labelUpVisit = "Editer le relevé";
+  public labelUpVisit = 'Éditer le relevé';
   public isAllowed = false;
 
   constructor(
@@ -66,79 +56,90 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     private userService: UserService
   ) {}
 
-  ngOnInit() {
-    this.labelButton = this.labelButton || "";
-
-    this.formVisit = this.formService.initFormSHT();
-
-    if (this.idVisit) {
-      this.disabledForm = true;
-    }
-
+  get taxonsVisit() {
+    return this.formVisit.get('taxonsVisit') as FormArray;
   }
 
-  getDatas() {
-    this._currentSite = this.storeService.getCurrentSite().subscribe(cdhab => {
-      this.cd_hab = cdhab.cd_hab;
-      this.nom_habitat = cdhab.nom_habitat;
-      this.id_base_site = cdhab.id_base_site;
-    });
+  ngOnInit() {
+    this.labelButton = this.labelButton || '';
 
-    let datas = [];
+    this.formVisit = this.formService.initializeFormVisit();
+
+    if (this.idVisit) {
+      this.modalTitle = 'Relevé ' + this.idVisit;
+      this.disabledForm = true;
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.formDataSubscription) {
+      this.formDataSubscription.unsubscribe();
+    }
+  }
+
+  open(content) {
+    this._modalRef = this._modalService.open(content, { size: 'lg' });
+    this.dataReady = false;
+    this.initializeData();
+  }
+
+  initializeData() {
+    this.formDataSubscription = this.storeService.getCurrentSite()
+      .flatMap(currentSite => {
+        this.cd_hab = currentSite.cd_hab;
+        this.nom_habitat = currentSite.nom_habitat;
+        this.id_base_site = currentSite.id_base_site;
+
+        return forkJoin({
+          currentVisit: this.getCurrentVisit(),
+          taxons: this._api.getTaxons(this.cd_hab)
+        })
+      }).flatMap(results => {
+        this.visit = Object.keys(results.currentVisit).length > 0
+          ? results.currentVisit
+          : this.visit;
+        this.species = this.formatTaxons(results.taxons);
+        return of({visit: this.visit, species: this.species});
+      }).subscribe(data => {
+        this.patchForm();
+        this.clearTaxonsControls();
+        this.addTaxonsControls();
+        this.checkPermission();
+        this.dataReady = true;
+      });
+  }
+
+  getCurrentVisit() {
     let currentVisit;
     if (this.idVisit) {
       currentVisit = this._api.getOneVisit(this.idVisit);
-      this.modalTitle = "Relevé " + this.idVisit;
     } else {
-      currentVisit = Observable.of([]);
+      currentVisit = of([]);
     }
-    datas.push(currentVisit);
-    let taxons = this._api.getTaxons(this.cd_hab);
-    datas.push(taxons);
-
-    forkJoin(datas).subscribe(results => {
-      // results[0] is visit
-      // results[1] is species
-      this.visit = Object.keys(results[0]).length > 0 ? results[0] : this.visit; // TODO: type visit ?
-      this.species = results[1];
-      this.pachForm();
-      this.checkPermission();
-    });
+    return currentVisit;
   }
 
-  checkPermission() {
-    this.userService.check_user_cruved_visit('U', this.visit).subscribe(ucruved => {
-      this.isAllowed = ucruved;
-    })
-  }
-
-  addSpeciesControl() {
-    const arr: FormArray = [];
-    this.species.forEach(element => {
-      element["name"] = element.nom_complet;
-      element["id"] = element.cd_nom;
-      element["selected"] = false;
-      let status = false;
-      if (this.visit["cor_visit_taxons"].length > 0) {
-        this.visit["cor_visit_taxons"].forEach(specie => {
-          if (specie.cd_nom == element.cd_nom) {
-            element["selected"] = true;
-            status = true;
+  formatTaxons(taxons) {
+    let species = [];
+    taxons.forEach((item, idx) => {
+      let element = {};
+      element['name'] = item.nom_complet;
+      element['id'] = item.cd_nom;
+      element['selected'] = false;
+      if (this.visit['cor_visit_taxons'].length > 0) {
+        this.visit['cor_visit_taxons'].forEach(visitTaxon => {
+          if (visitTaxon.cd_nom == item.cd_nom) {
+            element['selected'] = true;
           }
         });
       }
-      arr.push(this._fb.control(status));
+      species[idx] = element;
     });
-    return arr;
+    return species;
   }
 
-  getSpeciesControl() {
-    return this.formVisit.get("cor_visit_taxons");
-  }
-
-  pachForm() {
+  patchForm() {
     this.formVisit.patchValue({
-      cor_visit_taxons: this.addSpeciesControl(),
       id_base_visit: this.visit.id_base_visit,
       visit_date_min: this.dateParser.parse(this.visit.visit_date_min),
       cor_visit_observer: this.visit.observers,
@@ -148,61 +149,80 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     });
   }
 
-  initData() {
-    this.getDatas();
+  addTaxonsControls() {
+    this.species.forEach(element => {
+      this.taxonsVisit.push(this._fb.control(element.selected));
+    });
   }
 
-  open(content) {
-    this._modalRef = this._modalService.open(content, { size: "lg" });
-    this.initData();
+  clearTaxonsControls() {
+    // WARNING: use removeAt() with a loop to not destroy subscriptions
+    while (this.taxonsVisit.length !== 0) {
+      this.taxonsVisit.removeAt(0)
+    }
+  }
+
+  checkPermission() {
+    this.userService.check_user_cruved_visit('U', this.visit).subscribe(ucruved => {
+      this.isAllowed = ucruved;
+    })
   }
 
   onSave() {
     this.onClose();
-    let currentForm = this.formateDataForm();
+    let data = this.formatDataForm();
     if (this.idVisit) {
-      this.patchVisit(currentForm);
+      this.patchVisit(data);
     } else {
-      this.postVisit(currentForm);
+      this.postVisit(data);
     }
   }
 
-  formateDataForm() {
+  formatDataForm() {
     const currentForm = this.formVisit.value;
-    if (!this.idVisit) delete currentForm["id_base_visit"];
-    currentForm["id_base_site"] = this.id_base_site;
-    currentForm["visit_date_min"] = this.dateParser.format(
+    let formatedData = {};
+
+    // id_base_visit
+    if (this.idVisit) {
+      formatedData['id_base_visit'] = currentForm['id_base_visit'];
+    }
+
+    formatedData['id_base_site'] = this.id_base_site;
+
+    formatedData['visit_date_min'] = this.dateParser.format(
       this.formVisit.controls.visit_date_min.value
     );
-    //comments
-    currentForm["comments"] = this.formVisit.controls.comments.value;
-    //cor_visit_taxons
-    currentForm["cor_visit_taxons"] = currentForm["cor_visit_taxons"]
+
+    // comments
+    formatedData['comments'] = this.formVisit.controls.comments.value;
+
+    // taxonsVisits
+    formatedData['cor_visit_taxons'] = currentForm['taxonsVisit']
       .map((v, i) => {
-        return v.value ? { cd_nom: this.species[i].cd_nom } : null;
+        return v ? { cd_nom: this.species[i].id } : null;
       })
       .filter(v => {
         return v !== null;
       });
-    //cor_visit_perturbations
-    if (
-      currentForm["cor_visit_perturbation"] !== null &&
-      currentForm["cor_visit_perturbation"] !== undefined
-    ) {
-      currentForm["cor_visit_perturbation"] = currentForm[
-        "cor_visit_perturbation"
-      ].map(pertu => {
-        return { id_nomenclature_perturbation: pertu.id_nomenclature };
-      });
-    }
-    //observers
-    currentForm["cor_visit_observer"] = currentForm["cor_visit_observer"].map(
-      obs => {
-        return obs.id_role;
-      }
-    );
 
-    return currentForm;
+    // cor_visit_perturbations
+    if (
+      currentForm['cor_visit_perturbation'] !== null &&
+      currentForm['cor_visit_perturbation'] !== undefined
+    ) {
+      formatedData['cor_visit_perturbation'] = currentForm['cor_visit_perturbation']
+        .map(pertu => {
+          return { id_nomenclature_perturbation: pertu.id_nomenclature };
+        });
+    }
+
+    // observers
+    formatedData['cor_visit_observer'] = currentForm['cor_visit_observer']
+      .map(obs => {
+        return obs.id_role;
+      });
+
+    return formatedData;
   }
 
   onClose() {
@@ -210,23 +230,25 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     this.onUpVisit = false;
     if (this.idVisit) {
       this.disabledForm = true;
-      this.labelUpVisit = "Editer le relevé";
+      this.labelUpVisit = 'Éditer le relevé';
     }
   }
 
   upVisit() {
     this.onUpVisit = !this.onUpVisit ? true : false;
     this.disabledForm = this.onUpVisit ? false : true;
-    this.labelUpVisit = this.onUpVisit ? "Annuler" : "Editer le relevé";
-    if (!this.onUpVisit) this._modalRef.close();
+    this.labelUpVisit = this.onUpVisit ? 'Annuler' : 'Éditer le relevé';
+    if (!this.onUpVisit) {
+      this._modalRef.close();
+    }
   }
 
   postVisit(currentForm) {
     this._api.postVisit(currentForm).subscribe(
       data => {
         this.visitsUp.emit(data);
-        this.toastr.success("Le relevé est enregistré", "", {
-          positionClass: "toast-top-right"
+        this.toastr.success('Le relevé est enregistré', '', {
+          positionClass: 'toast-top-right'
         });
       },
       error => {
@@ -239,8 +261,8 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     this._api.patchVisit(currentForm, this.idVisit).subscribe(
       data => {
         this.visitsUp.emit(data);
-        this.toastr.success("Le relevé a été modifié", "", {
-          positionClass: "toast-top-right"
+        this.toastr.success('Le relevé a été modifié', '', {
+          positionClass: 'toast-top-right'
         });
       },
       error => {
@@ -250,22 +272,19 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   }
 
   manageError(error) {
-    if (error.status == 403 && error.error.raisedError == "PostYearError") {
-      this.toastr.error(error.error.message, "", {
-        positionClass: "toast-top-right"
+    if (error.status == 403 && error.error.raisedError == 'PostYearError') {
+      this.toastr.error(error.error.message, '', {
+        positionClass: 'toast-top-right'
       });
     } else {
       this.toastr.error(
-        "Une erreur est survenue lors de l'enregistrement de votre relevé",
-        "",
+        'Une erreur est survenue lors de l\'enregistrement de votre relevé',
+        '',
         {
-          positionClass: "toast-top-right"
+          positionClass: 'toast-top-right'
         }
       );
     }
   }
 
-  ngOnDestroy() {
-    if (this._currentSite) this._currentSite.unsubscribe();
-  }
 }

@@ -1,12 +1,13 @@
-from flask import Blueprint, request, session, current_app
+import re
 
+from flask import Blueprint, request, session, current_app
 from sqlalchemy.sql.expression import func
 from pypnusershub.db.tools import InsufficientRightsError
-import re
 
 from geonature.utils.errors import GeonatureApiError
 from geonature.core.gn_monitoring.models import TBaseVisits
 from geonature.utils.env import DB, ROOT_DIR
+
 from .models import Taxonomie, CorHabitatTaxon
 
 
@@ -15,11 +16,11 @@ class PostYearError (GeonatureApiError):
 
 
 def check_user_cruved_visit(user, visit, cruved_level):
-    """
+    '''
     Check if user have right on a visit object, related to his cruved
     if not, raise 403 error
     if allowed return void
-    """
+    '''
 
     is_allowed = False
     if cruved_level == '1':
@@ -60,13 +61,15 @@ def check_user_cruved_visit(user, visit, cruved_level):
 
 
 def check_year_visit(id_base_site, new_visit_date):
-    """
+    '''
     Check if there is already a visit of the same year.
     If yes, observer is not allowed to post the new visit
-    """
+    '''
     q_year = DB.session.query(
-        func.date_part('year', TBaseVisits.visit_date_min)).filter(
-        TBaseVisits.id_base_site == id_base_site)
+            func.date_part('year', TBaseVisits.visit_date_min)
+        ).filter(
+            TBaseVisits.id_base_site == id_base_site
+        )
     tab_old_year = q_year.all()
     print(tab_old_year)
     year_new_visit = new_visit_date[0:4]
@@ -83,11 +86,12 @@ def check_year_visit(id_base_site, new_visit_date):
 
 def get_taxonlist_by_cdhab(cdhab):
     q = DB.session.query(
-    CorHabitatTaxon.id_cor_habitat_taxon,
-    Taxonomie.lb_nom
-    ).join(
-        Taxonomie, CorHabitatTaxon.cd_nom == Taxonomie.cd_nom
-    ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxonomie.lb_nom)
+            CorHabitatTaxon.id_cor_habitat_taxon,
+            Taxonomie.lb_nom
+        ).join(
+            Taxonomie,
+            CorHabitatTaxon.cd_nom == Taxonomie.cd_nom
+        ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxonomie.lb_nom)
 
     q = q.filter(CorHabitatTaxon.id_habitat == cdhab)
     data = q.all()
@@ -102,9 +106,9 @@ def get_taxonlist_by_cdhab(cdhab):
 
 def clean_string(my_string):
     my_string = my_string.strip()
-    chars_to_remove =  ";,"
+    chars_to_remove =  ';,'
     for c in chars_to_remove:
-        my_string = my_string.replace(c, "-")
+        my_string = my_string.replace(c, '-')
 
     return my_string
 
@@ -115,58 +119,50 @@ def striphtml(data):
 
 
 def get_base_column_name():
-    """
-    mapping column name / label column
-
-    "idbsite": "Identifiant site",
-    "visitdate": "Date visite",
-    "bsitename": "Nom du site",
-    "area_name" : "Communes",
-    "observers": "Observateurs",
-    "organisme" : "Organisme",
-    "lbhab": "Habitat",
-    "lbperturb": "Perturbations",
-    "comments": "Commentaires",
-    "geom": "Géométrie"
-    """
+    '''
+    Return column name.
+    See columns mapping label / name in : get_mapping_columns()
+    '''
     return [
-            "Identifiant site",
-            "Date visite",
-            "Nom du site",
-            "Communes",
-            "Observateurs",
-            "Organisme",
-            "Habitat",
-            "Perturbations",
-            "Commentaires",
-            "Géométrie"
-        ]
+        'Identifiant site',
+        'Date visite',
+        'Nom du site',
+        'Communes',
+        'Observateurs',
+        'Organisme',
+        'Habitat',
+        'Perturbations',
+        'Commentaires',
+        'Géométrie'
+    ]
 
 def get_pro_column_name():
-    """
-    mapping column name / label column
-    "cd_hab": "cdhab",
-    "covtaxons": "covtaxons"
-    """
+    '''
+    Return column name.
+    See columns mapping label / name in : get_mapping_columns()
+    '''
     return [
-        "cdhab",
-        "covtaxons",
-        ]
+        'cdhab',
+        'covtaxons',
+    ]
 
 def get_mapping_columns():
+    '''
+    Return columns mapping label / name.
+    '''
     return {
-        "idbsite": "Identifiant site",
-        "visitdate": "Date visite",
-        "bsitename": "Nom du site",
-        "area_name" : "Communes",
-        "observers": "Observateurs",
-        "organisme" : "Organisme",
-        "lbhab": "Habitat",
-        "lbperturb": "Perturbations",
-        "comments": "Commentaires",
-        "geom": "Géométrie",
-        "geom_wkt": "geom_wkt",
-        "cd_hab": "cdhab",
-        "covtaxons": "covtaxons",
-        "nomvtaxon": "nomvtaxon"
+        'idbsite': 'Identifiant site',
+        'visitdate': 'Date visite',
+        'bsitename': 'Nom du site',
+        'area_name' : 'Communes',
+        'observers': 'Observateurs',
+        'organisme' : 'Organisme',
+        'lbhab': 'Habitat',
+        'lbperturb': 'Perturbations',
+        'comments': 'Commentaires',
+        'geom': 'Géométrie',
+        'geom_wkt': 'geom_wkt',
+        'cd_hab': 'cdhab',
+        'covtaxons': 'covtaxons',
+        'nomvtaxon': 'nomvtaxon'
     }

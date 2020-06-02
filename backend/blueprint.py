@@ -2,18 +2,17 @@ import json
 import datetime
 
 from flask import Blueprint, request, session, current_app, send_from_directory, abort, jsonify
-from geojson import FeatureCollection, Feature
 from sqlalchemy.sql.expression import func
 from sqlalchemy import and_ , distinct, desc
 from sqlalchemy.exc import SQLAlchemyError
 from geoalchemy2.shape import to_shape
+from geojson import FeatureCollection, Feature
 from numpy import array
 from shapely.geometry import *
 
 from pypnusershub.db.tools import InsufficientRightsError
 from pypnnomenclature.models import TNomenclatures
 from pypnusershub.db.models import User
- 
 from geonature.utils.env import DB, ROOT_DIR
 from geonature.utils.utilsgeometry import FionaShapeService
 from geonature.utils.utilssqlalchemy import json_resp, to_json_resp, to_csv_resp
@@ -22,11 +21,29 @@ from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteModule, TBaseVisits
 from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import BibOrganismes
+from pypn_habref_api.models import Habref, TypoRef, CorListHabitat
 
+from .repositories import (
+    check_user_cruved_visit,
+    check_year_visit,
+    get_taxonlist_by_cdhab,
+    clean_string,
+    striphtml,
+    get_base_column_name,
+    get_pro_column_name,
+    get_mapping_columns
+)
+from .models import (
+    TInfosSite,
+    CorHabitatTaxon,
+    Taxonomie,
+    TVisitSHT,
+    TInfosSite,
+    CorVisitTaxon,
+    CorVisitPerturbation,
+    ExportVisits
+)
 
-from .repositories import check_user_cruved_visit, check_year_visit, get_taxonlist_by_cdhab, clean_string, striphtml, get_base_column_name, get_pro_column_name, get_mapping_columns
-
-from .models import TInfosSite, Habref, CorHabitatTaxon, Taxonomie, TVisitSHT, TInfosSite, CorVisitTaxon, CorVisitPerturbation, CorListHabitat, ExportVisits
 
 blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
 
@@ -37,6 +54,7 @@ def get_habitats(id_list):
     '''
     Récupère les habitats cor_list_habitat à partir de l'identifiant id_list de la table bib_lis_habitat
     '''
+    print(blueprint.config)
     q = DB.session.query(
         CorListHabitat.cd_hab,
         CorListHabitat.id_list,
@@ -73,7 +91,7 @@ def get_taxa_by_habitats(cd_hab):
         ).join(
             Taxonomie, CorHabitatTaxon.cd_nom == Taxonomie.cd_nom
         ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxonomie.nom_complet)
-        
+
     q = q.filter(CorHabitatTaxon.id_habitat == cd_hab)
     data = q.all()
 
@@ -90,27 +108,28 @@ def get_taxa_by_habitats(cd_hab):
 
 
 @blueprint.route('/sites', methods=['GET'])
-@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
+@permissions.check_cruved_scope('R', True, module_code='SHT')
 @json_resp
 def get_all_sites(info_role):
     '''
     Retourne tous les sites
     '''
     parameters = request.args
-
+    for key in parameters:
+        print(key, ' : ', parameters[key])
+    print('Commune:' + parameters.get('commune', 'Not found'))
     id_type_commune = blueprint.config['id_type_commune']
-
 
     q = (
         DB.session.query(
-            TInfosSite,
-            func.max(TBaseVisits.visit_date_min),
-            Habref.lb_hab_fr_complet,
-            func.count(distinct(TBaseVisits.id_base_visit)),
-            func.string_agg(distinct(BibOrganismes.nom_organisme), ', '),
-            func.string_agg(distinct(LAreas.area_name), ', ')
+                TInfosSite,
+                func.max(TBaseVisits.visit_date_min),
+                Habref.lb_hab_fr_complet,
+                func.count(distinct(TBaseVisits.id_base_visit)),
+                func.string_agg(distinct(BibOrganismes.nom_organisme), ', '),
+                func.string_agg(distinct(LAreas.area_name), ', ')
             ).outerjoin(
-            TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
+                TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
             # get habitat cd_hab
             ).outerjoin(
                 Habref, TInfosSite.cd_hab == Habref.cd_hab
@@ -132,11 +151,11 @@ def get_all_sites(info_role):
                 TInfosSite, Habref.lb_hab_fr_complet
             )
         )
-
+    print(q)
 
     if 'cd_hab' in parameters:
         q = q.filter(TInfosSite.cd_hab == parameters['cd_hab'])
-    
+
     if 'id_base_site' in parameters:
         q = q.filter(TInfosSite.id_base_site == parameters['id_base_site'])
 
@@ -160,7 +179,7 @@ def get_all_sites(info_role):
         data_year = q_year.all()
 
         q = q.filter(func.date_part('year', TBaseVisits.visit_date_min) == parameters['year'])
-    
+
     page = request.args.get('page', 1, type=int)
     items_per_page = blueprint.config['items_per_page']
     pagination_serverside = blueprint.config['pagination_serverside']
@@ -168,17 +187,17 @@ def get_all_sites(info_role):
     if (pagination_serverside):
         pagination = q.paginate(page, items_per_page, False)
         data = pagination.items
-        totalItmes = pagination.total
+        totalItems = pagination.total
     else:
-        totalItmes = 0
+        totalItems = 0
         data = q.all()
 
     pageInfo= {
-        'totalItmes' : totalItmes,
+        'totalItems' : totalItems,
         'items_per_page' : items_per_page,
     }
     features = []
-
+    print(data)
     if data:
         for d in data:
             feature = d[0].get_geofeature()
@@ -213,7 +232,7 @@ def get_all_sites(info_role):
 
 
 @blueprint.route('/visits', methods=['GET'])
-@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
+@permissions.check_cruved_scope('R', True, module_code="SHT")
 @json_resp
 def get_visits(info_role):
     '''
@@ -232,7 +251,7 @@ def get_years_visits():
     '''
     Retourne toutes les années de visites du module
     '''
-    
+
     q = DB.session.query(
         func.to_char(TVisitSHT.visit_date_min, 'YYYY')
         ).join(
@@ -252,14 +271,14 @@ def get_years_visits():
     return None
 
 @blueprint.route('/visits/<id_visit>', methods=['GET'])
-@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
+@permissions.check_cruved_scope('R', True, module_code="SHT")
 @json_resp
 def get_visit(id_visit, info_role):
     '''
     Retourne une visite
     '''
     data = DB.session.query(TVisitSHT).get(id_visit)
-  
+
     visit = []
     if data:
         cvisit = data.as_dict(recursif=True)
@@ -277,7 +296,7 @@ def get_visit(id_visit, info_role):
 
 
 @blueprint.route('/visits', methods=['POST'])
-@permissions.check_cruved_scope('C', True, module_code="SUIVI_HAB_TER")
+@permissions.check_cruved_scope('C', True, module_code="SHT")
 @json_resp
 def post_visit(info_role):
     '''
@@ -285,6 +304,10 @@ def post_visit(info_role):
     '''
     data = dict(request.get_json())
     check_year_visit(data['id_base_site'], data['visit_date_min'][0:4])
+
+    # Set generic infos got from config
+    data['id_dataset'] = blueprint.config['id_dataset']
+    data['id_module'] = blueprint.config['ID_MODULE']
 
     tab_visit_taxons = []
     tab_observer = []
@@ -324,7 +347,7 @@ def post_visit(info_role):
 
 
 @blueprint.route('/visits/<int:idv>', methods=['PATCH'])
-@permissions.check_cruved_scope('U', True, module_code="SUIVI_HAB_TER")
+@permissions.check_cruved_scope('U', True, module_code="SHT")
 @json_resp
 def patch_visit(idv, info_role):
     '''
@@ -332,10 +355,10 @@ def patch_visit(idv, info_role):
     Si une donnée n'est pas présente dans les objets observer, cor_visit_taxons ou cor_visit_perurbations, elle sera supprimée de la base de données
     '''
     data = dict(request.get_json())
-
+    print(data)
     try:
         existingVisit = TVisitSHT.query.filter_by(id_base_visit = idv).first()
-        if(existingVisit == None):
+        if (existingVisit == None):
             raise ValueError('This visit does not exist')
     except ValueError:
         resp = jsonify({"error": 'This visit does not exist'})
@@ -396,7 +419,7 @@ def patch_visit(idv, info_role):
 
 
 @blueprint.route('/organismes', methods=['GET'])
-@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
+@permissions.check_cruved_scope('R', True, module_code="SHT")
 @json_resp
 def get_organisme(info_role):
     '''
@@ -426,7 +449,7 @@ def get_organisme(info_role):
 
 
 @blueprint.route('/communes/<id_module>', methods=['GET'])
-@permissions.check_cruved_scope('R', True, module_code="SUIVI_HAB_TER")
+@permissions.check_cruved_scope('R', True, module_code="SHT")
 @json_resp
 def get_commune(id_module, info_role):
     '''
@@ -565,7 +588,7 @@ def export_visit(info_role):
         )
 
     elif export_format == 'csv':
-        
+
         tab_header = column_name + [clean_string(x) for x in cor_hab_taxon] + column_name_pro
 
         return to_csv_resp(
