@@ -1,304 +1,121 @@
 # Importation de données pour le module Suivi Habitat Territoire
 
-## Intégrer les mailles
-
--   Vérifier que vous n'intégrez pas des mailles déjà présentes. Les mailles ne doivent pas contenir la dimension Z, la projection doit être en Lambert93.
--   Copier les mailles dans le dossier /tmp du serveur :
+Plusieurs scripts sont disponibles pour importer les données manipulées dans le module SHT. Les données sources à importer doivent être fourni au format CSV (encodage UTF-8) ou Shape en fonction du type de données suivantes :
+ - nomenclatures (`import_nomenclatures.sh`) : CSV
+ - taxons (`import_taxons.sh`) : CSV
+ - habitats (`import_habitats.sh`) : CSV
+ - sites (`import_sites.sh`) : Shape
+ - visites et observations (`import_visits.sh`) : CSV
 
-``` {.sourceCode .bash}
-# placez-vous dans le dossier du module suivi_habitat_territoire
-cp data/sht_data.sql /tmp/sht_data.sql
-```
-
--   Créer une table temporaire à partir des fichiers mailles :
-
-``` {.sourceCode .bash}
-sudo -n -u postgres -s shp2pgsql -W "UTF-8" -s 2154 -D -I /tmp/maille100z93.shp pr_monitoring_habitat_territory.maille_tmp | psql -h $db_host -U $user_pg -d $db_name &>> var/log/install_maille.log
-```
-
--   Parametrer `ref_geo.bib_areas_types` :
-
-``` {.sourceCode .sql}
--- créer le type de mailles 100*100
-INSERT INTO ref_geo.bib_areas_types (type_name, type_code, type_desc)
-    VALUES ('Mailles100*100m', 'M100m', 'Maille INPN redécoupé en 100m');
-```
-
--   Insérer les mailles dans `ref_geo.l_areas` grâce au fichier maille\_tmp :
-
-``` {.sourceCode .sql}
-INSERT INTO ref_geo.l_areas (id_type, area_name, area_code, geom, centroid, source)
-SELECT ref_geo.get_id_area_type('M100m'), name, name, geom, ST_CENTROID(geom), 'INPN'
-FROM pr_monitoring_habitat_territory.maille_tmp;
-```
-
--   Insérer les mailles dans `ref_geo.li_grids` :
-
-``` {.sourceCode .sql}
-INSERT INTO ref_geo.li_grids
-SELECT area_code, id_area, ST_XMin(ST_Extent(geom)), ST_XMax(ST_Extent(geom)), ST_YMin(ST_Extent(geom)),ST_YMax(ST_Extent(geom))
-FROM ref_geo.l_areas
-WHERE id_type=ref_geo.get_id_area_type('M100m')
-GROUP by area_code, id_area;
-```
-
-## Intégrer les habitats
-
--   Créer une liste d'habitat :
-
-``` {.sourceCode .sql}
-INSERT INTO ref_habitat.bib_list_habitat (list_name)
-    VALUES ('Suivi Habitat Territoire');
-```
-
--   Ajouter les habitats dans la liste :
-
-``` {.sourceCode .sql}
-INSERT INTO ref_habitat.cor_list_habitat (id_list, cd_hab)
-    VALUES (
-    (SELECT id_list FROM ref_habitat.bib_list_habitat WHERE list_name='Suivi Habitat Territoire'), 16265); -- CARICION INCURVAE
-```
-
-## Intégrer les espèces
-
--   Insérer les données `pr_monitoring_habitat_territory.cor_habitat_taxon` : liaison un taxon et son habitat :
-
-``` {.sourceCode .sql}
-INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
-VALUES
-(16265, 104123),
-(16265, 88386),
-(16265, 88662),
-(16265, 88675),
-(16265, 88380),
-(16265, 88360),
-(16265, 127195),
-(16265, 126806);
-```
-
-## Intégrer les sites
-
--   Remplissez les tables de la BDD à partir d'une table temporaire :
-
-``` {.sourceCode .sql}
--- insérer les données dans ``gn_monitoring.t_base_sites`` grâce à celles dans la table ``pr_monitoring_habitat_territory.maille_tmp``
-INSERT INTO gn_monitoring.t_base_sites
-(id_nomenclature_type_site, base_site_name, base_site_description,  base_site_code, first_use_date, geom )
-    SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'), 'HABSHT-', '', name, now(), ST_TRANSFORM(ST_SetSRID(geom, MY_SRID_LOCAL), MY_SRID_WORLD)
-        FROM pr_monitoring_habitat_territory.maille_tmp;
-
---- mise à jour du nom du site pour y ajouter l'identifiant du site
-UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site)
-    WHERE base_site_code IN (SELECT name FROM pr_monitoring_habitat_territory.maille_tmp);
-
--- Ajouter les données dans pr_monitoring_habitat_territory.t_infos_site
-INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
-    SELECT id_base_site, 16265
-        FROM gn_monitoring.t_base_sites bs
-        JOIN pr_monitoring_habitat_territory.maille_tmp mt ON mt.name::character varying = bs.base_site_code;
-```
-
-La table `gn_monitoring.cor_site_area` est remplie automatiquement par trigger pour indiquer les communes et mailles 25m de chaque ZP.
-
--   Insérer les sites suivis de ce module dans `cor_site_application` :
-
-``` {.sourceCode .sql}
--- Insérer dans cor_site_module les sites suivis de ce module
-INSERT INTO gn_monitoring.cor_site_module
-    WITH id_module AS(
-        SELECT id_module FROM gn_commons.t_modules
-        WHERE module_code ILIKE 'SHT'
-    )
-    SELECT ti.id_base_site, id_module.id_module
-        FROM pr_monitoring_habitat_territory.t_infos_site ti, id_module;
-```
-
-## Intégrer les perturbations
-
--   ATTENTION AUX DOUBLONS : Vérifier que les perturbations de type `TYPE_PERTURBATION` ne sont pas déjà intégrées
-
-``` {.sourceCode .bash}
--- placez-vous dans le dossier du module suivi_habitat_territoire
-cp data/sht_perturbations.sql /tmp/sht_perturbations.sql
-psql -h < my_host > -U < my_user_pg >  -d < my_db_name > -f /tmp/sht_perturbations.sql &>> var/log/install_sht_perturbations.log
-```
-
-## Intégrer les visites
-
-Le template du CSV pour l'insertion des visites est celui généré par l'export des visites.
-
--   Importer le CSV dans une table temporaire de la BDD avec QGIS (`pr_monitoring_habitat_territory.obs_maille_tmp` dans cet exemple)
--   Identifier les organismes présents dans les observations et intégrez ceux manquants dans UsersHub : `SELECT DISTINCT unnest(string_to_array(organisme, ',')) AS organisme FROM pr_monitoring_habitat_territory.obs_maille_tmp ORDER BY organisme`
--   Identifier les observateurs présents dans les observations et intégrez ceux manquants dans UsersHub : `SELECT DISTINCT unnest(string_to_array(observateu, ',')) AS observateurs FROM pr_monitoring_habitat_territory.obs_maille_tmp ORDER BY observateurs`
--   Remplissez la table des visites :
-
-``` {.sourceCode .sql}
-INSERT INTO gn_monitoring.t_base_visits (id_base_site, visit_date_min)
-SELECT DISTINCT s.id_base_site, "date visit"::date AS date_debut
-    FROM pr_monitoring_habitat_territory.obs_maille_tmp o
-    JOIN gn_monitoring.t_base_sites s ON s.base_site_name = o."nom du sit";
-```
-
--   Remplissez la table des observateurs :
-
-``` {.sourceCode .sql}
-INSERT INTO gn_monitoring.cor_visit_observer
-  (id_base_visit, id_role)
-WITH myuser AS(SELECT lower(unnest(string_to_array(observateu, ','))) AS obs, identifian, "nom du sit" AS name  FROM pr_monitoring_habitat_territory.obs_maille_tmp),
-    roles AS(SELECT lower(nom_role ||' '|| prenom_role) AS nom, id_role FROM utilisateurs.t_roles)
-SELECT DISTINCT v.id_base_visit,r.id_role
-FROM myuser m
-JOIN gn_monitoring.t_base_sites s ON s.base_site_name = m.name
-JOIN gn_monitoring.t_base_visits v ON v.id_base_site = s.id_base_site
-JOIN roles r ON m.obs=r.nom
-ON CONFLICT DO NOTHING;
-```
-
--   Remplissez la table des observations :
-
-``` {.sourceCode .sql}
--- taxons : pr_monitoring_habitat_territory.cor_visit_taxons
-INSERT INTO pr_monitoring_habitat_territory.cor_visit_taxons (id_base_visit, cd_nom)
-WITH mytaxon AS(SELECT unnest(string_to_array(covtaxons, ',')) AS cdnom,
-    identifian, "nom du sit" AS name  FROM pr_monitoring_habitat_territory.obs_maille_tmp)
-SELECT DISTINCT v.id_base_visit, m.cdnom::int
-FROM mytaxon m
-JOIN gn_monitoring.t_base_sites s ON s.base_site_name = m.name
-JOIN gn_monitoring.t_base_visits v ON v.id_base_site = s.id_base_site
-ON CONFLICT DO NOTHING;
-
--- perturbation : pr_monitoring_habitat_territory.cor_visit_perturbation
-INSERT INTO pr_monitoring_habitat_territory.cor_visit_perturbation (id_base_visit, id_nomenclature_perturbation, create_date)
-WITH mypertub AS(SELECT unnest(string_to_array(perturbati, ',')) AS label_perturbation,
-    identifian, "nom du sit" AS name, "date visit"::date AS date_visit  FROM pr_monitoring_habitat_territory.obs_maille_tmp)
-SELECT DISTINCT
-    v.id_base_visit,
-    nm.id_nomenclature,
-    m.date_visit
-FROM mypertub m
-JOIN gn_monitoring.t_base_sites s ON s.base_site_name = m.name
-JOIN gn_monitoring.t_base_visits v ON v.id_base_site = s.id_base_site
-JOIN ref_nomenclatures.t_nomenclatures nm
-    ON nm.id_nomenclature = (SELECT n.id_nomenclature
-                                FROM ref_nomenclatures.t_nomenclatures n
-                                WHERE n.id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_PERTURBATION') AND m.label_perturbation = n.mnemonique LIMIT 1);
-```
-
-## Pour mémoire contenu de l'import de données avant reprise du code
-
-```
-----------------------
--- Insérer geom
-----------------------
-
--- parametrer ref_geo.bib_areas_types --
--- créer le type de mailles 100*100
--- problème : ne supporte pas dimension Z => suppression info dans QGIS
-INSERT INTO ref_geo.bib_areas_types (type_name, type_code, type_desc)
-VALUES ('Mailles100*100m', 'M100m', 'Maille INPN redécoupé en 100m');
-
---insérer les mailles dans l_areas grâce au fichier maille_tmp
-INSERT INTO ref_geo.l_areas (id_type, area_name, area_code, geom, centroid, source)
-SELECT ref_geo.get_id_area_type('M100m'), name, name, geom, ST_CENTROID(geom), 'INPN'
-FROM pr_monitoring_habitat_territory.maille_tmp;
-
--- insérer les mailles dans li_grids
-INSERT INTO ref_geo.li_grids
-SELECT area_code, id_area, ST_XMin(ST_Extent(geom)), ST_XMax(ST_Extent(geom)), ST_YMin(ST_Extent(geom)),ST_YMax(ST_Extent(geom))
-FROM ref_geo.l_areas
-WHERE id_type=ref_geo.get_id_area_type('M100m')
-GROUP by area_code, id_area;
-
-
-
----------------------------------
--- Insérer la liste des habitats
----------------------------------
-
--- insérer une liste d'habitat
-INSERT INTO ref_habitat.bib_list_habitat (list_name)
-VALUES ('Suivi Habitat Territoire');
-
--- Insérer habitat
-INSERT INTO ref_habitat.cor_list_habitat (id_list, cd_hab)
-VALUES (
-    (SELECT id_list FROM ref_habitat.bib_list_habitat WHERE list_name='Suivi Habitat Territoire'),
-    16265); -- CARICION INCURVAE
-
-
-
-----------------------
--- Insérer les sites
-----------------------
-
--- créer nomenclature  HAB --
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, label_fr, definition_fr, source )
-VALUES (ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'), 'HAB', 'Zone d''habitat', 'Zone d''habitat - suivi habitat territoire', 'Zone d''habitat',  'Zone d''habitat issu du module suivi habitat territoire', 'CBNA');
-
-
--- insérer les données dans t_base_sites grâce à celles dans la table maille_tmp
--- ATTENTION: il faut que le maille_tmp.shp soit en 2154, sinon ça donne des erreurs pour afficher les sites.
-INSERT INTO gn_monitoring.t_base_sites
-(id_nomenclature_type_site, base_site_name, base_site_description,  base_site_code, first_use_date, geom )
-SELECT ref_nomenclatures.get_id_nomenclature('TYPE_SITE', 'HAB'), 'HABSHT-', '', name, now(), ST_TRANSFORM(ST_SetSRID(geom, MY_SRID_LOCAL), MY_SRID_WORLD)
-FROM pr_monitoring_habitat_territory.maille_tmp;
-
-
---- mise à jour ldu nom du site pour y ajouter l'identifiant du site
-UPDATE gn_monitoring.t_base_sites SET base_site_name=CONCAT (base_site_name, id_base_site)
-  WHERE base_site_code IN (SELECT name FROM pr_monitoring_habitat_territory.maille_tmp);
-
--- extension de la table t_base_sites : mettre les données dans t_infos_site
-INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
-SELECT id_base_site, 16265
-FROM gn_monitoring.t_base_sites bs
-JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying = bs.base_site_code;
-
-/* TODO Ajouter cd_hab au niveau de la maille ?
-INSERT INTO pr_monitoring_habitat_territory.t_infos_site (id_base_site, cd_hab)
-SELECT id_base_site, zh.cd_hab
-FROM gn_monitoring.t_base_sites bs
-JOIN pr_monitoring_habitat_territory.maille_tmp zh ON zh.name::character varying = bs.base_site_code;
-*/
-
--- Insérer dans cor_site_module les sites suivis de ce module
-INSERT INTO gn_monitoring.cor_site_module
-WITH id_module AS(
-SELECT id_module FROM gn_commons.t_modules
-WHERE module_code ILIKE 'SHT'
-)
-SELECT ti.id_base_site, id_module.id_module
-FROM pr_monitoring_habitat_territory.t_infos_site ti, id_module;
-
-
-
-
-----------------------
--- Insérer les espèces
-----------------------
--- Créer la liste des taxons suivis dans le protocoles SHT "Angiosperme ?"
-/*INSERT INTO taxonomie.bib_listes (id_liste, nom_liste, desc_liste, regne, group2_inpn)
-VALUES ((SELECT MAX(id_liste)+1 FROM taxonomie.bib_listes),'Suivi Habitat Territoire', 'Taxons suivis dans le protocole Suivi Habitat Territoire', 'Plantae', 'Angiospermes');
-*/
-
--- Insérer les taxons suivis dans le protocole SHT dans bib_noms et les ajouter dans la liste SHT
-/*INSERT INTO taxonomie.bib_noms (cd_nom, cd_ref, nom_francais) VALUES (104123, 104123, 'Jonc arctique - Juncus arcticus');
-INSERT INTO taxonomie.cor_nom_liste (id_nom, id_liste) VALUES
-((SELECT max(id_nom) FROM taxonomie.bib_noms), (select id_liste from taxonomie.bib_listes WHERE nom_liste='Suivi Habitat Territoire'));*/
-
-
-
--- insérer les données cor_habitat_taxon : liaison un taxon et son habitat
-INSERT INTO pr_monitoring_habitat_territory.cor_habitat_taxon (id_habitat, cd_nom)
-VALUES
-(16265, 104123),
-(16265, 88386),
-(16265, 88662),
-(16265, 88675),
-(16265, 88380),
-(16265, 88360),
-(16265, 127195),
-(16265, 126806)
-;
-
-```
+Chacun de ces scripts est disponibles dans le dossier `bin/`.
+
+Avant de lancer les scripts, il est nécessaires de correctement les paramètrer à l'aide du fichier `config/imports_settings.ini`. Une section de paramètres concerne chacun d'entre eux. Ces paramètres permettent entre autre d'indiquer :
+ - le chemin et le nom vers le fichier source (CSV ou Shape)
+ - le chemin et le nom du fichier de log où les informations affichées durant son execution seront enregistrées
+ - le nom des tables temporaires dans lesquelles les données sources sont stockées avant import dans les tables de GeoNature. Elles sont toutes crées dans le schema du module.
+ - pour les fichiers source de type Shape (sites), les noms des champs des attributs des objets géographiques
+ - pour les fichiers source de type CSV (visites), les noms des colonnes
+
+ Enfin, pour chaque import le paramètre *import_date* doit être correctement renseigné avec une date au format `yyyy-mm-dd` distincte. Cette date permet d'associer dans la base de données, les sites et visites mais aussi les utilisateurs (=`role`) et organismes à l'import courant.  
+ Laisser en commentaire dans le fichier `imports_settings.ini` les dates utilisées pour chaque import.  
+ Vous n'ête en aucun cas obligé d'utiliser la date courante, vous être libre de choisir celle qui vous convient le mieux.
+
+
+## Format des données
+Voici le détail des champs des fichiers CSV ou Shape attendus par défaut :
+
+
+### Nomenclatures (CSV)
+
+Description des colonnes attendues dans le fichier CSV contenant la liste des nomenclatures utilisée (les types de perturbation des sites) :
+
+ - **type_nomenclature_code** : code du type de nomeclature à laquelle correspond cette valeur de nomenclature. Ex. : *TYPE_PERTURBATION*.
+ - **cd_nomenclature** : code de la nomenclature. Ex. : *GeF*.
+ - **mnemonique** : libellé court de la nomenclature. Ex. *Gestion par le feu*.
+ - **label_default** : libellé par défaut de la nomenclature. Ex. *Gestion par le feu*.
+ - **definition_default** : définition courte par défaut de la nomenclature. Ex. *Type de perturbation : gestion par le feu*.
+ - **label_fr** : libellé en français de la nomenclature. Ex. *Gestion par le feu*.
+ - **definition_fr** : définition courte en français de la nomenclature. Ex. *Type de perturbation : gestion par le feu*.
+ - **cd_nomenclature_broader** : code de la nomenclature parente si elle existe. Utiliser 0 si la nomenclature n'pas de parente.
+ - **hierarchy**: hiérarchie de code numérique sur 3 chiffres séparés par des points. Doit débuter par un point. Ex. *.001* pour une valeur n'ayant pas de parent ou *.001.002* pour la seconde valeur *.002* de la valeur parente *.001*.
+
+
+### Taxons (CSV)
+
+Description des colonnes attendues dans le fichier CSV contenant la liste des taxons suivis :
+
+ - **cd_nom** : code TaxRef du nom du taxon lié a un habitat suivi
+ - **cd_ref** : code TaxRef du nom de référence du taxon lié a un habitat suivi
+ - **name** : nom français à utiliser lors de l'affichage des listes d'autocomplétion.
+ - **comment** : commentaire associé au nom
+
+
+### Habitats (CSV)
+Description des colonnes attendues dans le fichier CSV contenant la liste des habitats suivis :
+
+ - **cd_hab** : code HabRef de l'habitat.
+ - **cd_nom** : code TaxRef du nom du taxon lié à l'habitat.
+ - **comment** : commentaire/note sur l'habitat et le taxon.
+
+Paramètres présent dans le fichier de configuration:
+ - **habitats_table_tmp** : nom de la table temporaire contenant les habitats créée dans Postgresql.
+
+
+### Sites (Shape)
+
+Description des paramètres de configuration permettant d'indiquer les noms des champs utilisés dans les attributs des objets géographiques du fichier Shape pour les sites :
+
+ - **sites_column_type** : nom du champ contenant le type mailles correspondant au site.
+ - **sites_column_code** : nom du champ contenant le code du site.
+ - **sites_column_habitat** : nom du champ contenant le code de l'habitat du site (='cd_hab').
+ - **sites_column_desc** : nom du champ contenant la description du site.
+
+Autres paramètres :
+ - **sites_column_geom** : nom du champ contenant la géométrie du site dans la table temporaire créé dans Postgresql. Ce champ n'a pas à apparaitre dans les attributs des objets géographique. Par défaut, l'utilitaire employé par le script (*shp2pgsql*) créé une colonne ayant pour libellé *geom* en se basant sur les infos géographiques du fichier Shape.
+ - **sites_table_tmp** : nom de la table temporaire contenant les sites créée dans Postgresql.
+ - **sites_meshes_source** : lorsque un site correspond à une maille, la valeur de ce paramètre est utilisée pour renseigner la source de la maille.
+
+
+### Visites et observations (CSV)
+Description des colonnes attendues dans le fichier CSV contenant la liste des visites et observations. Les nom des colonnes peuvent modifié à l'aide des paramètres du fichier de configuration indiqués ici entre parenthèses :
+
+ - **idzp** (*visits_column_id*) : identifiant ou code alphanumérique du site où a eu lieu la visite. Le même site référencé dans 2 imports distincts doit avoir le même identifiant dans ce champ. Deux sites différents ne doivent en aucun cas posséder le même identifiant.
+ - **cd25m** (*visits_column_meshe*) : code de la maille où a eu lieu la visite.
+ - **observateu** (*visits_column_observer*) : liste des observateurs au format "NOM Prénom" séparés par des pipes "|". L'ordre doit correspondre à l'ordre des organismes du champ *organimes*.
+ - **organismes** (*visits_column_organism*) : liste des organimes séparés par des pipes "|". L'ordre doit correspondre à l'ordre des observateurs du champ *observateu*.
+ - **date_deb** (*visits_column_date_start*) : date de début de la visite.
+ - **date_fin** (*visits_column_date_end*) : date de fin de la visite. Elle sera identique à *date_deb* si la visite a eu lieu sur un seul jour.
+ - **presence** (*visits_column_status*) : permet d'indiquer la 'presence' (pr), l'absence (ab) ou l nom observation (na) du taxon sur la maille.
+
+ Autres paramètres :
+ - **visits_table_tmp_visits** : nom de la table temporaire contenant les visites par maille.
+ - **visits_table_tmp_has_observers** : nom de la table temporaire contenant les liens entre visites et observateurs.
+ - **visits_table_tmp_observers** : nom de la table temporaire contenant les prénoms nom des observateurs et leur organisme.
+
+
+## Options des scripts d'import
+
+Il possèdent tous les options suivantes :
+ - `-h` (`--help`) : pour afficher l'aide du script.
+ - `-v` (`--verbosity`) : le script devient verbeux est affiche plus de messages concernant le travail qu'il accomplit.
+ - `-x` (`--debug`) : le mode débogage de Bash est activé.
+ - `-c` (`--config`) : permet d'indiquer le chemin vers un fichier de configuration spécifique. Par défaut, c'est le fichier `config/settings.ini` qui est utilisé.
+ - `-d` (`--delete`) : chacun des imports peut être annulé avec cette option. Attention, il faut s'assurer que le script est correctement configuré avec les paramètres correspondant à l'import que vous souhaitez annuler.
+
+
+## Procédure
+
+Afin que les triggers présents sur les tables soient déclenchés dans le bon ordre et que les scripts trouvent bien les données de référence dont ils ont besoin, il est obligatoire de lancer les scripts dans cet ordre :
+ 1. nomenclatures : `import_nomenclatures.sh`
+ 2. taxons : `import_taxons.sh`
+ 3. habitats : `import_habitats.sh`
+ 4. sites : `import_sites.sh`
+ 5. visites et observations : `import_visits.sh`
+
+Attention, la désinstallation des données importées se fait dans le sens inverse. Il faut commencer par les visites puis passer aux sites...  
+Concernant la désinstallation, il s'agit d'une manipulation délicate à utiliser principalement sur une base de données de test ou lors du développement du module. En production, nous vous conseillons fortement d'éviter son utilisation. Si vous y êtes contraint, veuillez sauvegarder votre base de données auparavant.
+
+Pour lancer un script, ouvrir un terminal et se placer dans le dossier `bin/` du module SFT.
+Ex. pour lancer le script des visites :
+ - en importation : `./import_visits.sh`
+ - en suppression des imports précédents : `./import_visits.sh -d`
