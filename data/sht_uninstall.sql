@@ -2,14 +2,8 @@
 BEGIN;
 
 -- -----------------------------------------------------------------------------
--- REF_NOMENCLATURE
--- Delete nomenclature: ref_nomenclatures.t_nomenclatures,  ref_nomenclatures.bib_nomenclatures_types
--- TODO: vérifier que les perturbations ne sont pas utilisées par un autre module avant de les supprimer !
-DELETE FROM ref_nomenclatures.t_nomenclatures
-    WHERE id_type = ref_nomenclatures.get_id_nomenclature_type(:'perturbationsCode');
-
-DELETE FROM ref_nomenclatures.bib_nomenclatures_types
-    WHERE id_type = ref_nomenclatures.get_id_nomenclature_type(:'perturbationsCode');
+-- SHT schema
+TRUNCATE TABLE :moduleSchema.cor_visit_perturbation ;
 
 
 -- -----------------------------------------------------------------------------
@@ -26,6 +20,16 @@ DELETE FROM taxonomie.bib_noms WHERE id_nom IN (
 );
 
 DELETE FROM taxonomie.bib_listes WHERE nom_liste = :'taxonsListName';
+
+-- -----------------------------------------------------------------------------
+-- REF_NOMENCLATURE
+-- Delete nomenclature: ref_nomenclatures.t_nomenclatures,  ref_nomenclatures.bib_nomenclatures_types
+-- TODO: vérifier que les perturbations ne sont pas utilisées par un autre module avant de les supprimer !
+DELETE FROM ref_nomenclatures.t_nomenclatures
+    WHERE id_type = ref_nomenclatures.get_id_nomenclature_type(:'perturbationsCode');
+
+DELETE FROM ref_nomenclatures.bib_nomenclatures_types
+    WHERE id_type = ref_nomenclatures.get_id_nomenclature_type(:'perturbationsCode');
 
 
 -- -----------------------------------------------------------------------------
@@ -142,7 +146,7 @@ AND NOT EXISTS (
 -- -----------------------------------------------------------------------------
 -- SHT schema
 -- Delete cascade SHT schema
-DROP SCHEMA :moduleSchema CASCADE;
+DROP SCHEMA :moduleSchema CASCADE ;
 
 
 -- -----------------------------------------------------------------------------
@@ -150,14 +154,22 @@ DROP SCHEMA :moduleSchema CASCADE;
 
 -- Remove nomenclature site type value for this module site
 DELETE FROM ref_nomenclatures.t_nomenclatures
-    WHERE cd_nomenclature = :'sitesTypeCode';
+    WHERE cd_nomenclature = :'sitesTypeCode' ;
 
 -- -----------------------------------------------------------------------------
 -- GN_COMMONS
 
+-- Unlink module from dataset
+DELETE FROM gn_commons.cor_module_dataset
+    WHERE id_module = (
+        SELECT id_module
+        FROM gn_commons.t_modules
+        WHERE module_code ILIKE :'moduleCode'
+    ) ;
+
 -- Uninstall module (unlink this module of GeoNature)
 DELETE FROM gn_commons.t_modules
-    WHERE module_code ILIKE :'moduleCode';
+    WHERE module_code ILIKE :'moduleCode' ;
 
 -- -----------------------------------------------------------------------------
 COMMIT;

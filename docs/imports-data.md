@@ -9,7 +9,9 @@ Plusieurs scripts sont disponibles pour importer les données manipulées dans l
 
 Chacun de ces scripts est disponibles dans le dossier `bin/`.
 
-Avant de lancer les scripts, il est nécessaires de correctement les paramètrer à l'aide du fichier `config/imports_settings.ini`. Une section de paramètres concerne chacun d'entre eux. Ces paramètres permettent entre autre d'indiquer :
+Avant de lancer les scripts, il est nécessaires de correctement les paramètrer à l'aide d'un fichier `config/imports_settings.ini`. Vous pouvez copier/coller le fichier `config/imports_settings.sample.ini` en le renomant `imports_settings.ini`.
+
+Dans le fichier `imports_settings.ini`, une section de paramètres concerne chacun d'entre eux. Ces paramètres permettent entre autre d'indiquer :
  - le chemin et le nom vers le fichier source (CSV ou Shape)
  - le chemin et le nom du fichier de log où les informations affichées durant son execution seront enregistrées
  - le nom des tables temporaires dans lesquelles les données sources sont stockées avant import dans les tables de GeoNature. Elles sont toutes crées dans le schema du module.
