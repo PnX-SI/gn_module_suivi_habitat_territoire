@@ -98,8 +98,8 @@ function main() {
 
 function loadCsvInTmpTables() {
     printMsg "Load CSV habitats data in temporary table"
-    export PGPASSWORD="${db_superuser_pass}"; \
-        psql -h "${db_host}" -U "${db_superuser_name}" -d "${db_name}" ${psql_verbosity} \
+    sudo -n -u ${pg_admin_name} -s \
+        psql -d "${db_name}" ${psql_verbosity} \
             -v dbUserName="${user_pg}" \
             -v moduleSchema="${module_schema}" \
             -v habitatsTmpTable="${habitats_table_tmp}" \

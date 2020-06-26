@@ -1,5 +1,7 @@
 BEGIN;
 
+\echo '--------------------------------------------------------------------------------'
+\echo 'Set database variables'
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -7,42 +9,49 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
+\echo '--------------------------------------------------------------------------------'
+\echo 'Create SHT schema'
 CREATE SCHEMA :moduleSchema;
 
+\echo '--------------------------------------------------------------------------------'
+\echo 'Set new database variables'
 SET search_path = :moduleSchema, pg_catalog, public;
-
 SET default_with_oids = false;
 
--- -----------------------------------------------------------------------------
--- Tables and sequences
+\echo '--------------------------------------------------------------------------------'
+\echo 'TABLES'
 
+\echo 'Table `t_infos_site`'
 CREATE TABLE t_infos_site (
     id_infos_site serial NOT NULL,
     id_base_site integer NOT NULL,
     cd_hab integer NOT NULL
 );
 COMMENT ON TABLE :moduleSchema.t_infos_site IS
-    'Extension de t_base_sites de gn_monitoring, permet d\avoir les infos complémentaires d\un site';
+    'Extension de t_base_sites de gn_monitoring, permet d''avoir les infos complémentaires d''un site';
 
 
+\echo 'Table `cor_visit_taxons`'
 CREATE TABLE cor_visit_taxons (
     id_cor_visite_taxons serial NOT NULL,
     id_base_visit integer NOT NULL,
     cd_nom integer NOT NULL
 );
 COMMENT ON TABLE :moduleSchema.cor_visit_taxons IS
-    'Enregistrer la présence d\un taxon dans une maille définie lors d\une visite';
+    'Enregistrer la présence d''un taxon dans une maille définie lors d''une visite';
 
 
+\echo 'Table `cor_visit_perturbation`'
 CREATE TABLE cor_visit_perturbation (
     id_base_visit integer NOT NULL,
     id_nomenclature_perturbation integer NOT NULL,
     create_date timestamp without time zone NOT NULL
 );
 COMMENT ON TABLE :moduleSchema.cor_visit_perturbation IS
-    'Enregistrer les perturbations constatées lors d\une visite';
+    'Enregistrer les perturbations constatées lors d''une visite';
 
 
+\echo 'Table `cor_habitat_taxon`'
 CREATE TABLE cor_habitat_taxon (
     id_cor_habitat_taxon serial NOT NULL,
     id_habitat integer NOT NULL,
@@ -52,6 +61,7 @@ COMMENT ON TABLE :moduleSchema.cor_visit_perturbation IS
     'Enregistrer les taxons de chaque habitat';
 
 
+\echo 'Add primary keys on previous tables'
 ALTER TABLE ONLY t_infos_site
     ADD CONSTRAINT pk_id_t_infos_site
     PRIMARY KEY (id_infos_site);
@@ -69,8 +79,8 @@ ALTER TABLE ONLY cor_habitat_taxon
     PRIMARY KEY (id_cor_habitat_taxon);
 
 
--- -----------------------------------------------------------------------------
--- Foreign keys
+\echo '--------------------------------------------------------------------------------'
+\echo 'FOREIGN KEYS'
 
 ALTER TABLE ONLY t_infos_site
     ADD CONSTRAINT fk_t_infos_site_id_base_site
@@ -109,7 +119,6 @@ ALTER TABLE ONLY cor_visit_perturbation
     REFERENCES ref_nomenclatures.t_nomenclatures (id_nomenclature)
     ON UPDATE CASCADE;
 
-
 ALTER TABLE ONLY cor_habitat_taxon
     ADD CONSTRAINT fk_cor_habitat_taxon_id_habitat
     FOREIGN KEY (id_habitat)
@@ -122,18 +131,18 @@ ALTER TABLE ONLY cor_habitat_taxon
     REFERENCES taxonomie.taxref (cd_nom)
     ON UPDATE CASCADE;
 
--- -----------------------------------------------------------------------------
--- Unique
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'UNIQUE CONSTRAINTS'
 
 ALTER TABLE ONLY cor_visit_taxons
     ADD CONSTRAINT unique_cor_visit_taxons UNIQUE ( id_base_visit, cd_nom );
 
 
--- -----------------------------------------------------------------------------
--- View
+\echo '--------------------------------------------------------------------------------'
+\echo 'VIEWS'
 
--- Create view to export visits
-
+\echo 'Create view to export visits'
 CREATE OR REPLACE VIEW :moduleSchema.export_visits AS WITH
 observers AS(
     SELECT
@@ -227,4 +236,5 @@ FROM gn_monitoring.t_base_sites sites
         ON ar.id_type = bat.id_type
 ORDER BY visits.id_base_visit;
 
+-- ----------------------------------------------------------------------------
 COMMIT;

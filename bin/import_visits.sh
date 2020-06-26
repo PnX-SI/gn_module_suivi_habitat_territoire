@@ -110,8 +110,8 @@ function createTmpTables() {
 
 function importCsvDataByCopy() {
     printMsg "Import visits data into tmp tables"
-    export PGPASSWORD="$db_superuser_pass"; \
-        psql -h "${db_host}" -U "${db_superuser_name}" -d "${db_name}" ${psql_verbosity} \
+    sudo -n -u ${pg_admin_name} -s \
+        psql -d "${db_name}" ${psql_verbosity} \
         -v moduleSchema="${module_schema}" \
         -v visitsTmpTable="${visits_table_tmp_visits}" \
         -v visitsObserversTmpTable="${visits_table_tmp_observers}" \

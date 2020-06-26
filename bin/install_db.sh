@@ -105,6 +105,12 @@ function insertSampleData() {
     if [ "${insert_sample_data}" = true ]; then
         printMsg "Insert SHT data sample"
 
+    printMsg "Insert module sample metadata (acquisition framework and dataset)"
+        export PGPASSWORD="${user_pg_pass}"; \
+            psql -h "${db_host}" -U "${user_pg}" -d "${db_name}" \
+                -v moduleCode="${module_code}" \
+                -f "${data_dir}/sht_sample_metadata.sql"
+
         printMsg "Import nomenclatures data sample"
         bash "${script_dir}/import_nomenclatures.sh" -c "${conf_dir}/install_data_sample.ini" -v
 

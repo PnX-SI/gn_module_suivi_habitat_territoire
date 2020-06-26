@@ -1,8 +1,9 @@
 -- Script to insert references
 BEGIN;
 
--- -------------------------------------------------------------------------------
--- REF GEO
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'REF GEO'
 
 \echo 'Insert 100x100 meters meshes new area type in `ref_geo.bib_areas_types`'
 WITH test_exists AS (
@@ -15,8 +16,7 @@ INSERT INTO ref_geo.bib_areas_types (type_code, type_name, type_desc)
 WHERE NOT EXISTS (
   SELECT id_type FROM test_exists
 )
-RETURNING id_type;
-\echo ''
+RETURNING id_type ;
 
 
 \echo 'Insert 50x50 meters meshes new area type in `ref_geo.bib_areas_types`'
@@ -30,12 +30,11 @@ INSERT INTO ref_geo.bib_areas_types (type_code, type_name, type_desc)
 WHERE NOT EXISTS (
   SELECT id_type FROM test_exists
 )
-RETURNING id_type;
-\echo ''
+RETURNING id_type ;
 
 
--- -------------------------------------------------------------------------------
--- TAXONOMY
+\echo '--------------------------------------------------------------------------------'
+\echo 'TAXONOMY'
 
 \echo 'Create monitored taxons list by SHT protocol'
 WITH test_exists AS (
@@ -53,11 +52,11 @@ INSERT INTO taxonomie.bib_listes (id_liste, nom_liste, desc_liste, regne, group2
 WHERE NOT EXISTS (
   SELECT id_liste FROM test_exists
 )
-RETURNING id_liste;
-\echo ''
+RETURNING id_liste ;
 
--- -------------------------------------------------------------------------------
--- REF HABITATS
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'REF HABITATS'
 
 \echo 'Create monitored habitats list by SHT protocol'
 WITH test_exists AS (
@@ -70,11 +69,11 @@ INSERT INTO ref_habitats.bib_list_habitat (list_name)
 WHERE NOT EXISTS (
   SELECT id_list FROM test_exists
 )
-RETURNING id_list;
-\echo ''
+RETURNING id_list ;
 
--- -------------------------------------------------------------------------------
--- REF NOMENCLATURES
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'REF NOMENCLATURES'
 
 \echo 'Add nomenclature value for SHT site type nomenclature (="TYPE_SITE")'
 WITH test_exists AS (
@@ -94,8 +93,8 @@ SELECT
     'Zone d''habitat - issu du module Suivi Habitat Territoire (SHT)',
     :'sitesTypeSrc'
 WHERE NOT EXISTS (SELECT id_nomenclature FROM test_exists)
-RETURNING id_nomenclature;
-\echo ''
+RETURNING id_nomenclature ;
+
 
 \echo 'Create the "Perturbation" nomenclature type'
 WITH test_exists AS (
@@ -113,8 +112,19 @@ SELECT
     'Nomenclatures des types de perturbations.',
     :'perturbationsSrc'
 WHERE NOT EXISTS (SELECT id_type FROM test_exists)
-RETURNING id_type;
-\echo ''
+RETURNING id_type ;
+
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'COMMONS'
+
+\echo 'Update SHT module'
+UPDATE gn_commons.t_modules
+SET
+    module_label = 'S. Habitat Territoire',
+    module_picto = 'fa-map',
+    module_desc = 'Module de Suivi des Habitats d''un Territoire',
+WHERE module_code = 'SHT' ;
 
 -- -------------------------------------------------------------------------------
 COMMIT;
