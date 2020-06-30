@@ -54,28 +54,6 @@ class CorVisitTaxon(DB.Model):
 
 
 @serializable
-class TNomenclature(DB.Model):
-    __tablename__ = 't_nomenclatures'
-    __table_args__ = {
-        'schema': 'ref_nomenclatures',
-        'extend_existing': True
-    }
-
-    id_nomenclature = DB.Column(
-        DB.Integer,
-        primary_key=True,
-        server_default=DB.FetchedValue()
-    )
-    mnemonique = DB.Column(
-        DB.String(255)
-    )
-    label_default = DB.Column(
-        DB.String(255),
-        nullable=False
-    )
-
-
-@serializable
 class CorVisitPerturbation(DB.Model):
     __tablename__ = 'cor_visit_perturbation'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
@@ -104,26 +82,9 @@ class CorVisitPerturbation(DB.Model):
 
     #t_base_visit = DB.relationship('TVisitSHT', primaryjoin='CorVisitPerturbation.id_base_visit == TVisitSHT.id_base_visit', backref='cor_visit_perturbations')
     t_nomenclature = DB.relationship(
-        'TNomenclature',
-        primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclature.id_nomenclature',
+        'TNomenclatures',
+        primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclatures.id_nomenclature',
         backref='cor_visit_perturbations'
-    )
-
-
-@serializable
-class Taxonomie(DB.Model):
-    __tablename__ = 'taxref'
-    __table_args__ = {
-        'schema': 'taxonomie',
-        'extend_existing': True
-    }
-
-    cd_nom = DB.Column(
-        DB.Integer,
-        primary_key=True
-    )
-    nom_complet = DB.Column(
-        DB.Unicode
     )
 
 

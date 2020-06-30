@@ -6,9 +6,10 @@ from pypnusershub.db.tools import InsufficientRightsError
 
 from geonature.utils.errors import GeonatureApiError
 from geonature.core.gn_monitoring.models import TBaseVisits
+from geonature.core.taxonomie.models import Taxref
 from geonature.utils.env import DB, ROOT_DIR
 
-from .models import Taxonomie, CorHabitatTaxon
+from .models import CorHabitatTaxon
 
 
 class PostYearError (GeonatureApiError):
@@ -87,11 +88,11 @@ def check_year_visit(id_base_site, new_visit_date):
 def get_taxonlist_by_cdhab(cdhab):
     q = DB.session.query(
             CorHabitatTaxon.id_cor_habitat_taxon,
-            Taxonomie.lb_nom
+            Taxref.lb_nom
         ).join(
-            Taxonomie,
-            CorHabitatTaxon.cd_nom == Taxonomie.cd_nom
-        ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxonomie.lb_nom)
+            Taxref,
+            CorHabitatTaxon.cd_nom == Taxref.cd_nom
+        ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxref.lb_nom)
 
     q = q.filter(CorHabitatTaxon.id_habitat == cdhab)
     data = q.all()

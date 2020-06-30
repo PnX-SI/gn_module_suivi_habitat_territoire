@@ -22,6 +22,7 @@ from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, c
 from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import BibOrganismes
 from pypn_habref_api.models import Habref, TypoRef, CorListHabitat
+from geonature.core.taxonomie.models import Taxref
 
 from .repositories import (
     check_user_cruved_visit,
@@ -36,7 +37,6 @@ from .repositories import (
 from .models import (
     TInfosSite,
     CorHabitatTaxon,
-    Taxonomie,
     TVisitSHT,
     TInfosSite,
     CorVisitTaxon,
@@ -54,7 +54,7 @@ def get_habitats(id_list):
     '''
     Récupère les habitats cor_list_habitat à partir de l'identifiant id_list de la table bib_lis_habitat
     '''
-    print(blueprint.config)
+
     q = DB.session.query(
         CorListHabitat.cd_hab,
         CorListHabitat.id_list,
@@ -87,10 +87,10 @@ def get_taxa_by_habitats(cd_hab):
 
     q = DB.session.query(
         CorHabitatTaxon.cd_nom,
-        Taxonomie.nom_complet
+        Taxref.nom_complet
         ).join(
-            Taxonomie, CorHabitatTaxon.cd_nom == Taxonomie.cd_nom
-        ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxonomie.nom_complet)
+            Taxref, CorHabitatTaxon.cd_nom == Taxref.cd_nom
+        ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxref.nom_complet)
 
     q = q.filter(CorHabitatTaxon.id_habitat == cd_hab)
     data = q.all()
@@ -115,9 +115,6 @@ def get_all_sites(info_role):
     Retourne tous les sites
     '''
     parameters = request.args
-    for key in parameters:
-        print(key, ' : ', parameters[key])
-    print('Commune:' + parameters.get('commune', 'Not found'))
     id_type_commune = blueprint.config['id_type_commune']
 
     q = (
@@ -151,7 +148,6 @@ def get_all_sites(info_role):
                 TInfosSite, Habref.lb_hab_fr_complet
             )
         )
-    print(q)
 
     if 'cd_hab' in parameters:
         q = q.filter(TInfosSite.cd_hab == parameters['cd_hab'])
@@ -197,7 +193,7 @@ def get_all_sites(info_role):
         'items_per_page' : items_per_page,
     }
     features = []
-    print(data)
+
     if data:
         for d in data:
             feature = d[0].get_geofeature()
@@ -355,7 +351,6 @@ def patch_visit(idv, info_role):
     Si une donnée n'est pas présente dans les objets observer, cor_visit_taxons ou cor_visit_perurbations, elle sera supprimée de la base de données
     '''
     data = dict(request.get_json())
-    print(data)
     try:
         existingVisit = TVisitSHT.query.filter_by(id_base_visit = idv).first()
         if (existingVisit == None):
