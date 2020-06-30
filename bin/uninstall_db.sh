@@ -4,7 +4,7 @@
 # WARNING : all DATA and structure will be removed.
 #
 # Documentation : https://github.com/PnX-SI/gn_module_suivi_habitat_territoire
-set -euo pipefail
+set -eo pipefail
 
 # DESC: Usage help
 # ARGS: None
@@ -90,6 +90,24 @@ function main() {
             -v perturbationsCode="${perturbations_code}" \
             -v sitesTypeCode="${sites_type_code}" \
             -f "${data_dir}/sht_uninstall.sql"
+
+    #+----------------------------------------------------------------------------------------------------------+
+    printMsg "Remove GeoNature external link to this module"
+    local gn_config_dir="${geonature_settings_path%/*}"
+    local gn_dir="${gn_config_dir%/*}"
+    local gn_el_dir="${gn_dir}/external_modules"
+    cd "${gn_el_dir}"
+    rm -f "${module_code}"
+
+    #+----------------------------------------------------------------------------------------------------------+
+    printMsg "Update GeoNature Frontend: tsconfig.app.json, app/tsconfig.app.json and config"
+    cd "${gn_dir}/backend"
+    . venv/bin/activate
+    geonature generate_frontend_tsconfig
+    geonature generate_frontend_tsconfig_app
+    geonature generate_frontend_modules_route
+    geonature generate_frontend_config --build=false
+    printPretty "${Blink}${Red}WARNING: ${RCol}${Whi} You must rebuild GeoNature to apply change !${RCol}"
 
     #+----------------------------------------------------------------------------------------------------------+
     displayTimeElapsed
