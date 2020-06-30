@@ -91,6 +91,7 @@ function insertDataRefs() {
     printMsg "Create SHT lists (no values => use import scripts) : meshes, taxons, perturbation"
     export PGPASSWORD="${user_pg_pass}"; \
         psql -h "${db_host}" -U "${user_pg}" -d "${db_name}" \
+            -v moduleCode="${module_code}" \
             -v taxonsListName="${taxons_list_name}" \
             -v habitatsListName="${habitats_list_name}" \
             -v perturbationsCode="${perturbations_code}" \

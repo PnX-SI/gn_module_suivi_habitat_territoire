@@ -21,20 +21,4 @@ WITH try_insert_name AS (
     )
     ON CONFLICT ON CONSTRAINT cor_nom_liste_pkey DO NOTHING;
 
--- Delete duplicates rows in autocomplete table
-WITH tax_list AS (
-    SELECT id_liste AS id
-    FROM taxonomie.bib_listes
-    WHERE nom_liste = :'taxonsListName'
-    ORDER BY id_liste ASC
-    LIMIT 1
-)
-DELETE FROM taxonomie.vm_taxref_list_forautocomplete AS vtlf1
-USING taxonomie.vm_taxref_list_forautocomplete AS vtlf2, tax_list
-WHERE vtlf1.ctid < vtlf2.ctid
-	AND vtlf1.cd_nom = vtlf2.cd_nom
-	AND vtlf1.cd_ref = vtlf2.cd_ref
-	AND vtlf1.id_liste = vtlf2.id_liste
-	AND vtlf1.id_liste = (SELECT id FROM tax_list);
-
 COMMIT;

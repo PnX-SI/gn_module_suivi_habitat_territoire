@@ -123,8 +123,8 @@ UPDATE gn_commons.t_modules
 SET
     module_label = 'S. Habitat Territoire',
     module_picto = 'fa-map',
-    module_desc = 'Module de Suivi des Habitats d''un Territoire',
-WHERE module_code = 'SHT' ;
+    module_desc = 'Module de Suivi des Habitats d''un Territoire'
+WHERE module_code ILIKE :'moduleCode' ;
 
 -- -------------------------------------------------------------------------------
 COMMIT;

@@ -155,6 +155,8 @@ function printVerbose() {
     fi
 }
 
+
+
 # DESC: Load default config file
 # ARGS: None
 # OUTS: All variables and constants from default config file.
@@ -183,6 +185,20 @@ function loadUserScriptConfig() {
     fi
 }
 
+# DESC: Load imports config file
+# ARGS: $1 (optional): imports config file path (default ${conf_dir}/imports_settings.ini)
+# OUTS: All variables and constants from imports config file.
+function loadImportsScriptConfig() {
+    local default_user_setting_file_path=$(realpath "${conf_dir}/imports_settings.ini")
+    local config_path=${1:-$default_user_setting_file_path}
+    if [[ -f "${config_path}" ]] ; then
+        source "${config_path}"
+        printVerbose "Loading imports settings '${config_path}': ${Gre-}OK" ${Gra-}
+    else
+        printVerbose "Optional imports settings config file not found at '${config_path}'"
+    fi
+}
+
 # DESC: Load GEoNature config file
 # ARGS: None
 # OUTS: All variables and constants from GeoNature config file.
@@ -197,11 +213,13 @@ function loadGeoNatureConfig() {
 }
 
 # DESC: Load all script config files in right order : default then user settings files
-# ARGS: $1 (optional): User config file path (default ${conf_dir}/settings.ini)
+# ARGS: $1 (optional): import config file path (default ${conf_dir}/imports_settings.ini)
+# ARGS: $2 (optional): user config file path (default ${conf_dir}/settings.ini)
 # OUTS: All variables and constants from default and user config file.
 function loadScriptConfig() {
     loadDefaultScriptConfig
-    loadUserScriptConfig "${1}"
+    loadUserScriptConfig "${2-}"
+    loadImportsScriptConfig "${1-}"
     loadGeoNatureConfig
 }
 
