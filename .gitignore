@@ -6,7 +6,7 @@ __pycache__/*
 log/
 node_modules/
 var/
-venv/
+venv
 
 settings.ini
 imports_settings.ini
