@@ -1,5 +1,8 @@
 BEGIN;
 
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'Add perturbations nomenclatures'
 INSERT INTO ref_nomenclatures.t_nomenclatures (
     id_type,
     cd_nomenclature,
@@ -28,4 +31,7 @@ WHERE NOT EXISTS (
         AND mnemonique = :'mnemonique'
 );
 
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'COMMIT if ALL is OK:'
 COMMIT;

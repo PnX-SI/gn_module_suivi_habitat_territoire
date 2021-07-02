@@ -3,17 +3,14 @@
     overflow-y: auto;
     padding-bottom: 5px;
 }
-
 .searchSite {
     display: flex;
     flex-direction: column;
     margin-bottom: 15px;
 }
-
 .box-shadow {
     box-shadow: 4px 5px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
-
 fieldset {
     padding: 0.35em 0.625em 0.75em !important;
     border: 1px solid silver !important;
@@ -21,20 +18,16 @@ fieldset {
     border-radius: 3px;
     // background-color: #f3f3f3;
 }
-
 legend {
     width: auto;
     font-size: inherit;
 }
-
 .wrapper {
     margin-bottom: 18px;
 }
-
 :host /deep/ .single-selection .datatable-body-row.active .datatable-row-group {
     background-color: rgb(154, 217, 247) !important;
 }
-
 #cover-spin {
     position: fixed;
     width: 100%;
@@ -45,7 +38,6 @@ legend {
     background-color: rgba(0, 0, 0, 0.39);
     z-index: 9999;
 }
-
 :host /deep/ #map .info.leaflet-control {
     padding: 6px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
@@ -58,7 +50,6 @@ legend {
     margin: 0 0 5px;
     color: #777;
 }
-
 :host /deep/ #map .legend.leaflet-control {
     line-height: 18px;
     color: #555;
@@ -70,7 +61,6 @@ legend {
     vertical-align: sub;
     margin-right: 2px;
 }
-  
 @-webkit-keyframes spin {
     from {
         -webkit-transform: rotate(0deg);
@@ -79,7 +69,6 @@ legend {
         -webkit-transform: rotate(360deg);
     }
 }
-  
 @keyframes spin {
     from {
         transform: rotate(0deg);
@@ -88,7 +77,6 @@ legend {
         transform: rotate(360deg);
     }
 }
-  
 #cover-spin::after {
     content: '';
     display: block;
@@ -104,4 +92,9 @@ legend {
     border-radius: 50%;
     -webkit-animation: spin 0.8s linear infinite;
     animation: spin 0.8s linear infinite;
+}
+:host /deep/ .ngx-datatable .datatable-footer .page-count {
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 30%;
+    flex: 1 1 30%;
 }

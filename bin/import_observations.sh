@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Encoding : UTF-8
-# SHT import visits script.
+# SHT import observations script.
 set -eo pipefail
 
 # DESC: Usage help
@@ -9,12 +9,12 @@ set -eo pipefail
 function printScriptUsage() {
     cat << EOF
 Usage: ./$(basename $BASH_SOURCE) [options]
-Update settings.ini, section "Import visits" before run this script.
+Update settings.ini, section "Import observations" before run this script.
      -h | --help: display this help
      -v | --verbose: display more information on what script is doing
      -x | --debug: enable Bash mode debug
      -c | --config: path to config file to use (default : config/settings.ini)
-     -d | --delete: delete all imported visits
+     -d | --delete: delete all imported observations 
 EOF
     exit 0
 }
@@ -74,7 +74,7 @@ function main() {
 
     #+----------------------------------------------------------------------------------------------------------+
     # Start script
-    printInfo "Visits import script started at: ${fmt_time_start}"
+    printInfo "Observatgions import script started at: ${fmt_time_start}"
 
     # Manage verbosity
     if [[ -n ${verbose-} ]]; then
@@ -87,9 +87,9 @@ function main() {
     importCsvDataByCopy
 
     if [[ "$action" = "import" ]]; then
-        importVisits
+        importObservations
     elif [[ "$action" = "delete" ]]; then
-        deleteVisits
+        deleteObservations
     fi
 
     #+----------------------------------------------------------------------------------------------------------+
@@ -102,56 +102,43 @@ function createTmpTables() {
     export PGPASSWORD="${user_pg_pass}"; \
         psql -h "${db_host}" -U "${user_pg}" -d "${db_name}" ${psql_verbosity} \
             -v moduleSchema="${module_schema}" \
-            -v visitsTmpTable="${visits_table_tmp_visits}" \
             -v visitsHasPerturbationsTmpTable="${visits_table_tmp_has_perturbations}" \
             -v visitsHasObserversTmpTable="${visits_table_tmp_has_observers}" \
-            -v visitsObserversTmpTable="${visits_table_tmp_observers}" \
-            -f "${data_dir}/import_visits_tmp_tables.sql"
+            -v visitsTmpTable="${visits_table_tmp_visits}" \
+            -v obsTmpTable="${obs_table_tmp_obs}" \
+            -f "${data_dir}/import_obs_tmp_tables.sql"
 }
 
 function importCsvDataByCopy() {
-    printMsg "Import visits data into tmp tables"
+    printMsg "Import observations data into tmp tables"
     sudo -n -u ${pg_admin_name} -s \
         psql -d "${db_name}" ${psql_verbosity} \
         -v moduleSchema="${module_schema}" \
         -v visitsTmpTable="${visits_table_tmp_visits}" \
-        -v visitsObserversTmpTable="${visits_table_tmp_observers}" \
-        -v visitsHasObserversTmpTable="${visits_table_tmp_has_observers}" \
-        -v visitsHasPerturbationsTmpTable="${visits_table_tmp_has_perturbations}" \
         -v visitsCsvPath="${visits_csv_path}" \
-        -f "${data_dir}/import_visits_copy.sql"
+        -v obsTmpTable="${obs_table_tmp_obs}" \
+        -v obsCsvPath="${obs_csv_path}" \
+        -f "${data_dir}/import_obs_copy.sql"
 }
 
-function importVisits() {
-    printMsg "Insert visits from temporary data"
+function importObservations() {
+    printMsg "Insert observations from temporary data"
     export PGPASSWORD="${user_pg_pass}"; \
         psql -h "${db_host}" -U "${user_pg}" -d "${db_name}" ${psql_verbosity} \
             -v moduleSchema="${module_schema}" \
+            -v obsTmpTable="${obs_table_tmp_obs}" \
             -v visitsTmpTable="${visits_table_tmp_visits}" \
-            -v visitsHasPerturbationsTmpTable="${visits_table_tmp_has_perturbations}" \
-            -v visitsHasObserversTmpTable="${visits_table_tmp_has_observers}" \
-            -v visitsObserversTmpTable="${visits_table_tmp_observers}" \
-            -v datasetCode="${dataset_code}" \
-            -v moduleCode="${module_code}" \
-            -v meshesCode="${meshes_code}" \
-            -v observersListCode="${observers_list_code}" \
-            -v importDate="${import_date}" \
-            -f "${data_dir}/import_visits.sql"
+            -f "${data_dir}/import_obs.sql"
 }
 
-function deleteVisits() {
-    printMsg "Delete visits listed in CSV file"
+function deleteObservations() {
+    printMsg "Delete observations listed in CSV file"
     export PGPASSWORD="${user_pg_pass}"; \
         psql -h "${db_host}" -U "${user_pg}" -d "${db_name}" ${psql_verbosity} \
             -v moduleSchema="${module_schema}" \
+            -v obsTmpTable="${obs_table_tmp_obs}" \
             -v visitsTmpTable="${visits_table_tmp_visits}" \
-            -v visitsHasObserversTmpTable="${visits_table_tmp_has_observers}" \
-            -v visitsObserversTmpTable="${visits_table_tmp_observers}" \
-            -v moduleCode="${module_code}" \
-            -v meshesCode="${meshes_code}" \
-            -v observersListCode="${observers_list_code}" \
-            -v importDate="${import_date}" \
-            -f "${data_dir}/delete_visits.sql"
+            -f "${data_dir}/delete_obs.sql"
 }
 
 main "${@}"

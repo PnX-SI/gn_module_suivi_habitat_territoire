@@ -1,11 +1,12 @@
 # Importation de données pour le module Suivi Habitat Territoire
 
-Plusieurs scripts sont disponibles pour importer les données manipulées dans le module SHT. Les données sources à importer doivent être fourni au format CSV (encodage UTF-8) ou Shape en fonction du type de données suivantes :
+Plusieurs scripts sont disponibles pour importer les données manipulées dans le module SHT. Les données sources à importer doivent être fourni au format CSV (encodage UTF-8, séparateur virgule, guillemets doubles pour protéger les valeurs) ou Shape en fonction du type de données suivantes :
  - nomenclatures (`import_nomenclatures.sh`) : CSV
  - taxons (`import_taxons.sh`) : CSV
  - habitats (`import_habitats.sh`) : CSV
  - sites (`import_sites.sh`) : Shape
- - visites et observations (`import_visits.sh`) : CSV
+ - visites (`import_visits.sh`) : CSV
+ - observations (`import_observations.sh`) : CSV
 
 Chacun de ces scripts est disponibles dans le dossier `bin/`.
 
@@ -67,10 +68,9 @@ Paramètres présent dans le fichier de configuration:
 
 Description des paramètres de configuration permettant d'indiquer les noms des champs utilisés dans les attributs des objets géographiques du fichier Shape pour les sites :
 
- - **sites_column_type** : nom du champ contenant le type mailles correspondant au site.
- - **sites_column_code** : nom du champ contenant le code du site.
- - **sites_column_habitat** : nom du champ contenant le code de l'habitat du site (='cd_hab').
- - **sites_column_desc** : nom du champ contenant la description du site.
+- **sites_column_code** : nom du champ contenant l'identifiant ou code alphanumérique du site.
+ - **sites_column_type** : nom du champ contenant le type mailles (M100m, M50m, M1) correspondant au site. Ce champ doit rester vide si le site n'est pas une maille.
+  - **sites_column_habitat** : nom du champ contenant le code de l'habitat du site (='cd_hab'). Si plusieurs habitats, ils sont séparés par des virgules ",".
 
 Autres paramètres :
  - **sites_column_geom** : nom du champ contenant la géométrie du site dans la table temporaire créé dans Postgresql. Ce champ n'a pas à apparaitre dans les attributs des objets géographique. Par défaut, l'utilitaire employé par le script (*shp2pgsql*) créé une colonne ayant pour libellé *geom* en se basant sur les infos géographiques du fichier Shape.
@@ -78,22 +78,34 @@ Autres paramètres :
  - **sites_meshes_source** : lorsque un site correspond à une maille, la valeur de ce paramètre est utilisée pour renseigner la source de la maille.
 
 
-### Visites et observations (CSV)
-Description des colonnes attendues dans le fichier CSV contenant la liste des visites et observations. Les nom des colonnes peuvent modifié à l'aide des paramètres du fichier de configuration indiqués ici entre parenthèses :
+### Visites (CSV)
+Description des colonnes attendues dans le fichier CSV contenant la liste des visites. Les nom des colonnes peuvent être modifié à l'aide des paramètres du fichier de configuration indiqués ici entre parenthèses :
 
- - **idzp** (*visits_column_id*) : identifiant ou code alphanumérique du site où a eu lieu la visite. Le même site référencé dans 2 imports distincts doit avoir le même identifiant dans ce champ. Deux sites différents ne doivent en aucun cas posséder le même identifiant.
- - **cd25m** (*visits_column_meshe*) : code de la maille où a eu lieu la visite.
- - **observateu** (*visits_column_observer*) : liste des observateurs au format "NOM Prénom" séparés par des pipes "|". L'ordre doit correspondre à l'ordre des organismes du champ *organimes*.
+ - **idvisite** (*visits_column_id*) : identifiant unique de la visite.
+ - **idsite** (*visits_column_site_id*) : identifiant ou code alphanumérique du site où a eu lieu la visite. Le même site référencé dans 2 imports distincts doit avoir le même identifiant dans ce champ. Deux sites différents ne doivent en aucun cas posséder le même identifiant.
+  - **observateu** (*visits_column_observer*) : liste des observateurs au format "NOM Prénom" séparés par des pipes "|". L'ordre doit correspondre à l'ordre des organismes du champ *organimes*.
  - **organismes** (*visits_column_organism*) : liste des organimes séparés par des pipes "|". L'ordre doit correspondre à l'ordre des observateurs du champ *observateu*.
- - **date_deb** (*visits_column_date_start*) : date de début de la visite.
- - **date_fin** (*visits_column_date_end*) : date de fin de la visite. Elle sera identique à *date_deb* si la visite a eu lieu sur un seul jour.
- - **presence** (*visits_column_status*) : permet d'indiquer la 'presence' (pr), l'absence (ab) ou l nom observation (na) du taxon sur la maille.
+ - **date** (*visits_column_date*) : date de la visite.
+ - **usages** (*visits_column_comment*) : commentaire libre.
+ - **perturbations** (*visits_column_perturbation*) : liste de code de perturbations (*cd_nomenclature*) séparés par des pipes "|".
 
  Autres paramètres :
- - **visits_table_tmp_visits** : nom de la table temporaire contenant les visites par maille.
+ - **visits_table_tmp_visits** : nom de la table temporaire contenant les visites.
+ - **visits_table_tmp_has_perturbations** : nom de la table temporaire contenant les liens entre visites et nomenclatures des perturbations.
  - **visits_table_tmp_has_observers** : nom de la table temporaire contenant les liens entre visites et observateurs.
  - **visits_table_tmp_observers** : nom de la table temporaire contenant les prénoms nom des observateurs et leur organisme.
 
+
+### Observations (CSV)
+Description des colonnes attendues dans le fichier CSV contenant la liste des observations. Les nom des colonnes peuvent être modifié à l'aide des paramètres du fichier de configuration indiqués ici entre parenthèses :
+
+ - **idvisite** (*obs_column_visit_id*) : identifiant ou code alphanumérique de la visite où a eu lieu l'observation.
+ - **cd_nom** (*obs_column_cd_nom*) : cd_nom du taxon observé.
+ - **observat** (*obs_column_presence*) : permet d'indiquer la 'presence' (1), l'absence (0) du taxon sur le site lors de la visite.
+
+ Autres paramètres :
+ - **obs_table_tmp_obs** : nom de la table temporaire contenant les observations par visite.
+ 
 
 ## Options des scripts d'import
 
@@ -112,12 +124,13 @@ Afin que les triggers présents sur les tables soient déclenchés dans le bon o
  2. taxons : `import_taxons.sh`
  3. habitats : `import_habitats.sh`
  4. sites : `import_sites.sh`
- 5. visites et observations : `import_visits.sh`
+ 5. visites : `import_visits.sh`
+ 6. observations : `import_observations.sh`
 
-Attention, la désinstallation des données importées se fait dans le sens inverse. Il faut commencer par les visites puis passer aux sites...  
-Concernant la désinstallation, il s'agit d'une manipulation délicate à utiliser principalement sur une base de données de test ou lors du développement du module. En production, nous vous conseillons fortement d'éviter son utilisation. Si vous y êtes contraint, veuillez sauvegarder votre base de données auparavant.
+Attention, la désinstallation des données importées se fait dans le sens inverse. Il faut commencer par les observations puis passer aux visites...  
+Concernant la désinstallation, il s'agit d'une manipulation délicate à utiliser principalement sur une base de données de test ou lors du développement du module. En production, nous vous conseillons fortement d'éviter son utilisation. Si vous y êtes contraint, **veuillez sauvegarder votre base de données auparavant**.
 
-Pour lancer un script, ouvrir un terminal et se placer dans le dossier `bin/` du module SFT.
+Pour lancer un script, ouvrir un terminal et se placer dans le dossier `bin/` du module SHT.
 Ex. pour lancer le script des visites :
  - en importation : `./import_visits.sh`
  - en suppression des imports précédents : `./import_visits.sh -d`

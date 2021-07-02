@@ -104,7 +104,6 @@ function importSites() {
             -v sitesColumnCode="${sites_column_code}" \
             -v sitesColumnType="${sites_column_type}" \
             -v sitesColumnHabitat="${sites_column_habitat}" \
-            -v sitesColumnDesc="${sites_column_desc}" \
             -v sitesMeshesSource="${sites_meshes_source}" \
             -v importDate="${import_date}" \
             -f "${data_dir}/import_sites.sql"

@@ -1,6 +1,7 @@
 BEGIN;
 
--- Insert or update taxon names (used for autocomplete field in SFT filter form)
+\echo '--------------------------------------------------------------------------------'
+\echo 'Insert or update taxon names (used for autocomplete field in SHT filter form)'
 WITH try_insert_name AS (
     INSERT INTO taxonomie.bib_noms (cd_nom, cd_ref, nom_francais, comments)
         VALUES (:nameId, :nameRef, :'name', :'comment')
@@ -21,4 +22,6 @@ WITH try_insert_name AS (
     )
     ON CONFLICT ON CONSTRAINT cor_nom_liste_pkey DO NOTHING;
 
+\echo '--------------------------------------------------------------------------------'
+\echo 'COMMIT if ALL is OK:'
 COMMIT;

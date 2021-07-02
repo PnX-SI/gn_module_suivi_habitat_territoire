@@ -2,7 +2,9 @@
 
 BEGIN;
 
--- Update dataset, module and site id in temporary visit table
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'Update dataset, module and site id in temporary visit table'
 WITH dataset AS (
     SELECT id_dataset AS id
     FROM gn_meta.t_datasets
@@ -14,7 +16,7 @@ module AS (
     WHERE module_code ILIKE :'moduleCode'
 ),
 sites AS (
-    SELECT id_base_site AS id, base_site_code::int AS site_code
+    SELECT id_base_site AS id, base_site_code AS site_code
     FROM gn_monitoring.t_base_sites
 )
 UPDATE :moduleSchema.:visitsTmpTable AS vt
@@ -25,19 +27,22 @@ SET
 FROM dataset, module, sites
 WHERE vt.site_code = sites.site_code;
 
--- Update meshe id in temporary visit table
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'Update meshe id in temporary visit table'
 WITH meshes AS (
     SELECT a.id_area AS id, a.area_code AS code
     FROM ref_geo.l_areas AS a
-    WHERE a.comment ILIKE 'SFT import%'
+    WHERE a.comment ILIKE 'SHT import%'
 )
 UPDATE :moduleSchema.:visitsTmpTable AS vt SET
     meshe_id = meshes.id
 FROM meshes
-WHERE vt.meshe_code = meshes.code;
+WHERE vt.site_code = meshes.code;
 
 
--- Add new base visits if not already exists
+\echo '--------------------------------------------------------------------------------'
+\echo 'Add new base visits if not already exists'
 INSERT INTO gn_monitoring.t_base_visits (
     id_base_site,
     id_dataset,
@@ -52,7 +57,7 @@ SELECT DISTINCT
     vt.module_id,
     vt.date_min,
     vt.date_max,
-    ''
+    vt.comment
 FROM :moduleSchema.:visitsTmpTable AS vt
 WHERE NOT EXISTS (
     SELECT id_base_visit
@@ -66,7 +71,8 @@ WHERE NOT EXISTS (
 );
 
 
--- Update visit id in temporary visit table
+\echo '--------------------------------------------------------------------------------'
+\echo 'Update visit id in temporary visit table'
 WITH visits AS (
     SELECT
         id_base_visit AS id,
@@ -91,7 +97,8 @@ WHERE
     AND v.visit_date_max = vt.date_max;
 
 
--- Update role id in temporary observers table (add new user (=role) if needed)
+\echo '--------------------------------------------------------------------------------'
+\echo 'Update role id in temporary observers table (add new user (=role) if needed)'
 WITH users AS (
     SELECT
         r.id_role AS id,
@@ -115,7 +122,9 @@ WHERE
     AND u.lastname ILIKE ot.lastname
     AND u.organism ILIKE ot.organism;
 
--- Update not added organisms in temporary observers table
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'Update not added organisms in temporary observers table'
 WITH organisms AS (
     SELECT
         id_organisme AS id_organism,
@@ -129,7 +138,9 @@ SET
 FROM organisms AS o
 WHERE ot.organism = o.organism;
 
--- Add new organism if not already exists
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'Add new organism if not already exists'
 INSERT INTO utilisateurs.bib_organismes (nom_organisme)
     SELECT DISTINCT ON (upper(organism)) organism
     FROM :moduleSchema.:visitsObserversTmpTable
@@ -144,7 +155,8 @@ INSERT INTO utilisateurs.bib_organismes (nom_organisme)
 ON CONFLICT DO NOTHING;
 
 
--- Update new added organisms id in temporary observers table
+\echo '--------------------------------------------------------------------------------'
+\echo 'Update new added organisms id in temporary observers table'
 WITH organisms AS (
     SELECT
         id_organisme AS id_organism,
@@ -160,7 +172,8 @@ WHERE ot.organism = o.organism
     AND ot.organism_added IS NULL;
 
 
--- Add new users (=role)
+\echo '--------------------------------------------------------------------------------'
+\echo 'Add new users (=role)'
 INSERT INTO utilisateurs.t_roles (
     prenom_role,
     nom_role,
@@ -174,14 +187,15 @@ INSERT INTO utilisateurs.t_roles (
         lastname,
         organism_id,
         false,
-        'Added by SFT import_visits.sh script.',
-        json_build_object('sft', json_build_object('importDate', :'importDate'))
+        'Added by SHT import_visits.sh script.',
+        json_build_object('sht', json_build_object('importDate', :'importDate'))
     FROM :moduleSchema.:visitsObserversTmpTable AS ot
     WHERE ot.role_id IS NULL AND ot.organism_id IS NOT NULL
 ON CONFLICT DO NOTHING;
 
 
--- Update new added users in temporary observers table
+\echo '--------------------------------------------------------------------------------'
+\echo 'Update new added users in temporary observers table'
 WITH users AS (
     SELECT id_role AS id,
         prenom_role AS firstname,
@@ -200,7 +214,8 @@ WHERE ot.role_id IS NULL
     AND u.id_organism = ot.organism_id;
 
 
--- Link added users to SFT observers list
+\echo '--------------------------------------------------------------------------------'
+\echo 'Link added users to SHT observers list'
 WITH observers_list AS (
     SELECT id_liste AS id
     FROM utilisateurs.t_listes
@@ -213,36 +228,43 @@ INSERT INTO utilisateurs.cor_role_liste (id_role, id_liste)
 ON CONFLICT DO NOTHING;
 
 
+\echo '--------------------------------------------------------------------------------'
+\echo 'COMMIT if ALL is OK:'
 COMMIT;
+
+
 BEGIN;
 
--- Insert in gn_monitoring.cor_visit_observer
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'Insert in gn_monitoring.cor_visit_observer'
 INSERT INTO gn_monitoring.cor_visit_observer (id_base_visit, id_role)
     SELECT DISTINCT v.visit_id, o.role_id
     FROM :moduleSchema.:visitsTmpTable AS v
         JOIN :moduleSchema.:visitsHasObserversTmpTable AS vo
-            ON (v.id_visit_meshe = vo.id_visit_meshe)
+            ON (v.id_visit = vo.id_visit)
         JOIN :moduleSchema.:visitsObserversTmpTable AS o
             ON (vo.id_observer = o.id_observer)
 ON CONFLICT DO NOTHING;
 
 
--- Insert in cor_visit_grid (SFT schema)
-INSERT INTO :moduleSchema.cor_visit_grid (
-    id_area,
+\echo '--------------------------------------------------------------------------------'
+\echo 'Insert in cor_visit_perturbation (SHT schema)'
+INSERT INTO :moduleSchema.cor_visit_perturbation (
     id_base_visit,
-    uuid_base_visit,
-    presence
+    id_nomenclature_perturbation,
+    create_date
 )
-    SELECT DISTINCT meshe_id, visit_id, visit_uuid,
-        CASE
-		    WHEN presence = 'pr' THEN True
-		    WHEN presence = 'na' THEN False
-	    END
-    FROM :moduleSchema.:visitsTmpTable
-    WHERE presence != 'np'
+    SELECT DISTINCT 
+        v.visit_id,
+        vp.id_nomenclature_perturbation,
+        NOW()
+    FROM :moduleSchema.:visitsHasPerturbationsTmpTable AS vp
+        JOIN :moduleSchema.:visitsTmpTable AS v 
+            ON (v.id_visit = vp.id_visit)
 ON CONFLICT DO NOTHING;
 
--- TODO: manage "perturbation" if necessary
 
+\echo '--------------------------------------------------------------------------------'
+\echo 'COMMIT if ALL is OK:'
 COMMIT;

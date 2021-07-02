@@ -1,6 +1,7 @@
 BEGIN;
 
--- ----------------------------------------------------------------------------
+
+\echo '--------------------------------------------------------------------------------'
 \echo 'Insert habitats in SHT habitats list'
 WITH habitat_list AS (
     SELECT id_list AS id
@@ -16,9 +17,9 @@ WHERE NOT EXISTS (
     WHERE clh.id_list = l.id
         AND clh.cd_hab = h.cd_hab
 );
-\echo ''
 
--- ----------------------------------------------------------------------------
+
+\echo '--------------------------------------------------------------------------------'
 \echo 'Insert link between habitats and taxons'
 INSERT INTO :moduleSchema.cor_habitat_taxon (id_habitat, cd_nom)
     SELECT cd_hab, cd_nom
@@ -29,7 +30,8 @@ WHERE NOT EXISTS (
     WHERE cht.id_habitat = h.cd_hab
         AND cht.cd_nom = h.cd_nom
 );
-\echo ''
 
--- ----------------------------------------------------------------------------
+
+\echo '--------------------------------------------------------------------------------'
+\echo 'COMMIT if ALL is OK:'
 COMMIT;

@@ -164,10 +164,10 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       elem.forEach(orga => {
         if (!this.findWithAttr(this.tabOrganism, 'label', orga.nom_organisme)) {
           this.tabOrganism.push({ label: orga.nom_organisme, id: orga.id_organisme });
-          this.tabOrganism.sort((a, b) => {
-            return ('' + a.label).localeCompare('' + b.label);
-          });
         }
+      });
+      this.tabOrganism.sort((a, b) => {
+        return ('' + a.label).localeCompare('' + b.label);
       });
     });
 
@@ -178,9 +178,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe(info => {
         info.forEach(com => {
           this.tabCom.push(com.nom_commune);
-          this.tabCom.sort((a, b) => {
-            return a.localeCompare(b);
-          });
+        });
+        this.tabCom.sort((a, b) => {
+          return a.localeCompare(b);
         });
       });
 
@@ -189,9 +189,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe(habs => {
         habs.forEach(hab => {
           this.tabHab.push({ label: hab.nom_complet, id: hab.cd_hab });
-          this.tabHab.sort((a, b) => {
-            return a.localeCompare(b);
-          });
+        });
+        this.tabHab.sort((a, b) => {
+          return a.localeCompare(b);
         });
       });
 

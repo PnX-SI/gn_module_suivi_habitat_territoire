@@ -54,28 +54,30 @@ def get_habitats(id_list):
     '''
     Récupère les habitats cor_list_habitat à partir de l'identifiant id_list de la table bib_lis_habitat
     '''
-
-    q = DB.session.query(
-        CorListHabitat.cd_hab,
-        CorListHabitat.id_list,
-        Habref.lb_hab_fr_complet
-    ).join (
-        Habref, CorListHabitat.cd_hab == Habref.cd_hab
-    ).filter(
-        CorListHabitat.id_list == id_list
-    ).group_by(CorListHabitat.cd_hab, Habref.lb_hab_fr_complet, CorListHabitat.id_list,)
-
-    data = q.all()
+    query = (DB.session
+        .query(
+            CorListHabitat.cd_hab,
+            CorListHabitat.id_list,
+            Habref.lb_hab_fr
+        )
+        .join(Habref, CorListHabitat.cd_hab == Habref.cd_hab)
+        .filter(CorListHabitat.id_list == id_list)
+        .group_by(
+            CorListHabitat.cd_hab, 
+            CorListHabitat.id_list,
+            Habref.lb_hab_fr,
+        )
+    )
+    results = query.all()
     habitats = []
-
-    if data:
-        for d in data:
-            habitat = dict()
-            habitat['cd_hab'] = str(d[0])
-            habitat['nom_complet'] = str(d[2])
+    if results:
+        for data in results:
+            habitat = {
+                'cd_hab': str(data[0]),
+                'nom_complet': str(data[2]),
+            }
             habitats.append(habitat)
-        return habitats
-    return None
+    return habitats
 
 
 @blueprint.route('/habitats/<cd_hab>/taxons', methods=['GET'])
@@ -121,7 +123,7 @@ def get_all_sites(info_role):
         DB.session.query(
                 TInfosSite,
                 func.max(TBaseVisits.visit_date_min),
-                Habref.lb_hab_fr_complet,
+                Habref.lb_hab_fr,
                 func.count(distinct(TBaseVisits.id_base_visit)),
                 func.string_agg(distinct(BibOrganismes.nom_organisme), ', '),
                 func.string_agg(distinct(LAreas.area_name), ', ')
@@ -145,7 +147,7 @@ def get_all_sites(info_role):
                 LAreas, and_(LAreas.id_area == corSiteArea.c.id_area, LAreas.id_type == id_type_commune)
             )
             .group_by(
-                TInfosSite, Habref.lb_hab_fr_complet
+                TInfosSite, Habref.lb_hab_fr
             )
         )
 
