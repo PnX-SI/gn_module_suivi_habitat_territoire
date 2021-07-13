@@ -21,7 +21,7 @@ from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteModule, TBaseVisits
 from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import BibOrganismes
-from pypn_habref_api.models import Habref, TypoRef, CorListHabitat
+from pypn_habref_api.models import Habref, CorListHabitat
 from geonature.core.taxonomie.models import Taxref
 
 from .repositories import (
@@ -150,9 +150,6 @@ def get_all_sites(info_role):
                 TInfosSite, Habref.lb_hab_fr
             )
         )
-
-    if 'cd_hab' in parameters:
-        q = q.filter(TInfosSite.cd_hab == parameters['cd_hab'])
 
     if 'id_base_site' in parameters:
         q = q.filter(TInfosSite.id_base_site == parameters['id_base_site'])

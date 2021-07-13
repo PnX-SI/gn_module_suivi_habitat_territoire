@@ -1,4 +1,5 @@
 -- Script to remove SHT schema and all data linked to SHT insert in GeoNature DB
+-- TODO : remove users in t_roles and organisms in bib_organismes ?
 BEGIN;
 
 -- -----------------------------------------------------------------------------

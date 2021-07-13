@@ -140,7 +140,7 @@ WHERE EXISTS (
     SELECT DISTINCT vt.visit_id, vo.role_id
     FROM :moduleSchema.:visitsTmpTable AS vt
         JOIN :moduleSchema.:visitsHasObserversTmpTable AS vho
-            ON (vt.id_visit_meshe = vho.id_visit_meshe)
+            ON (vt.id_visit = vho.id_visit)
         JOIN :moduleSchema.:visitsObserversTmpTable AS vo
             ON (vho.id_observer = vo.id_observer)
     WHERE vt.visit_id = o.id_base_visit
@@ -150,10 +150,15 @@ WHERE EXISTS (
 
 \echo '--------------------------------------------------------------------------------'
 \echo 'DELETE FROM utilisateurs.cor_role_list'
+WITH observers_list AS (
+    SELECT id_liste AS id
+    FROM utilisateurs.t_listes
+    WHERE code_liste = :'observersListCode'
+)
 DELETE FROM utilisateurs.cor_role_liste
-USING :moduleSchema.:visitsObserversTmpTable AS o
+USING :moduleSchema.:visitsObserversTmpTable AS o, observers_list AS ol
 WHERE id_role = o.role_id
-    AND id_liste = :'observersListId'
+    AND id_liste = ol.id
     AND o.role_added = True;
 
 
@@ -162,7 +167,7 @@ WHERE id_role = o.role_id
 DELETE FROM utilisateurs.t_roles
 USING :moduleSchema.:visitsObserversTmpTable AS vo
 WHERE id_role = vo.role_id
-    AND role_added = True ;
+    AND vo.role_added = True ;
 
 
 \echo '--------------------------------------------------------------------------------'
@@ -170,7 +175,7 @@ WHERE id_role = vo.role_id
 DELETE FROM utilisateurs.bib_organismes
 USING :moduleSchema.:visitsObserversTmpTable AS vo
 WHERE id_organisme = vo.organism_id
-    AND organism_added = True ;
+    AND vo.organism_added = True ;
 
 
 \echo '--------------------------------------------------------------------------------'

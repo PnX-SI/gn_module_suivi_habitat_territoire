@@ -10,20 +10,20 @@ export_srid = 2154
 # Liste des types d'export disponible
 export_available_format = ["geojson", "csv", "shapefile"]
 
-# Identifiant du datasaet à utiliser pour les données SHT.
+# Identifiant du dataset à utiliser pour les données SHT.
 # Valeur du champ `id_dataset` de la table `gn_meta.t_datasets`.
-# Devrait correspondre au paramètre "dataset_id" du fichier config/settings.ini
+# Devrait correspondre au paramètre "dataset_id" du fichier config/settings.default.ini
 id_dataset = 1
 # Valeur du champ `id_type` dans la table `ref_geo.bib_areas_types`.
 # Par défaut, id pour l'entrée avec type_name="Communes" et type_code="COM"
 id_type_commune = 25
 # Identifiant de la liste d'utilisateurs réalisant des visites pour SHT.
 # Valeur du champ `id_liste` dans la table `utilisateurs.t_listes`.
-# Devrait correspondre au paramètre "observers_list_code" du fichier config/settings.ini
+# Devrait correspondre au paramètre "observers_list_code" du fichier config/settings.default.ini
 id_menu_list_user = 1
 # Valeur du champ `id_list` dans la table `ref_habitats.bib_list_habitat`.
 # Par défaut, id pour l'entrée avec list_name="Suivi Habitat Territoire"
-# Sauf si modifié via les paramètre "habitats_list_name" du fichier config/settings.ini
+# Sauf si modifié via les paramètre "habitats_list_name" du fichier config/settings.default.ini
 id_bib_list_habitat = 1
 
 # Gestion des messages configurables

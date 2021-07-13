@@ -22,11 +22,16 @@ Module GeoNature de Suivi des Habitats sur un Territoire (SHT) du réseau Flore 
     * le compléter à partir du fichier d'exemple ``config/settings.sample.ini``
     * (optionel) surcoucher éventuellement un des paramètres présent dans le fichier ``config/settings.default.ini``
 * Réaliser les imports nécessaires au fonctionnement du module à l'aide des scripts disponibles :
-  * les valeurs pour la nomenclature "Perturbation" (`import_nomenclatures.sh`)
-  * les taxons suivis qui correspondent aux habitats suivis(`import_taxons.sh`)
-  * les habitats et les taxons associées (`import_habitats.sh`)
-  * les sites (`import_sites.sh`)
-  * les visites et observations (`import_visits.sh`)
+  * placer les fichiers CSV à importer dans le dossier `data/imports/`
+  * configurer les paramètres d'import : `cp config/imports_settings.sample.ini config/imports_settings.ini ; vi config/imports_settings.ini`
+  * se placer dans le dossier des scripts : `cd bin/`
+  * importer :
+    * les valeurs pour la nomenclature "Perturbation" : `./import_nomenclatures.sh -v`
+    * les taxons qui correspondent aux habitats suivis : `./import_taxons.sh -v`
+    * les habitats et les taxons associées : `./import_habitats.sh -v`
+    * les sites : `./import_sites.sh -v`
+    * les visites (optionnel) : `./import_visits.sh -v`
+    * les observations (optionnel) : `./import_observations.sh -v`
 * Vous trouverez plus d'informations sur l'importation de données et ces scripts dans [la documentation qui leur est dédiée](docs/import-data.md).
 * Complétez la configuration du module dans le fichier ``config/conf_gn_module.toml`` en surcouchant les valeurs par défaut présentes dans le fichier ``config/conf_gn_module.sample.toml``:
   * Commande pour copier le fichier par défaut : ``cp config/conf_gn_module.sample.toml config/conf_gn_module.toml``
