@@ -170,12 +170,8 @@ class TInfosSite(DB.Model):
     t_base_site = DB.relationship('TBaseSites')
     geom = association_proxy('t_base_site', 'geom')
 
-    def get_geofeature(self, recursif=True):
-        return self.as_geofeature(
-            'geom',
-            'id_infos_site',
-            recursif
-        )
+    def get_geofeature(self):
+        return self.as_geofeature('geom', 'id_infos_site')
 
 
 @serializable
