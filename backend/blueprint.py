@@ -63,7 +63,7 @@ def get_habitats(id_list):
         .join(Habref, CorListHabitat.cd_hab == Habref.cd_hab)
         .filter(CorListHabitat.id_list == id_list)
         .group_by(
-            CorListHabitat.cd_hab, 
+            CorListHabitat.cd_hab,
             CorListHabitat.id_list,
             Habref.lb_hab_fr,
         )
@@ -197,11 +197,6 @@ def get_all_sites(info_role):
         for d in data:
             feature = d[0].get_geofeature()
             id_site = feature['properties']['id_base_site']
-            base_site_code = feature['properties']['t_base_site']['base_site_code']
-            base_site_description = feature['properties']['t_base_site']['base_site_description'] or 'Aucune description'
-            base_site_name = feature['properties']['t_base_site']['base_site_name']
-            if feature['properties']['t_base_site']:
-                del feature['properties']['t_base_site']
             if 'year' in parameters:
                 for dy in data_year:
                     #  récupérer la bonne date max du site si on filtre sur année
@@ -217,9 +212,6 @@ def get_all_sites(info_role):
             feature['properties']['nom_commune'] = str(d[5])
             if d[4] == None:
                 feature['properties']['organisme'] = 'Aucun'
-            feature['properties']['base_site_code'] = base_site_code
-            feature['properties']['base_site_description'] = base_site_description
-            feature['properties']['base_site_name'] = base_site_name
             features.append(feature)
 
         return [pageInfo,FeatureCollection(features)]
