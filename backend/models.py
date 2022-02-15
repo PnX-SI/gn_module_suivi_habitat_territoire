@@ -20,13 +20,16 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import func
 
 from pypnusershub.db.models import User
+from utils_flask_sqla.serializers import serializable
+from utils_flask_sqla.generic import GenericQuery
+from utils_flask_sqla_geo.serializers import geoserializable
 
 from geonature.utils.env import DB
-from geonature.utils.utilssqlalchemy import (
-    serializable,
-    geoserializable,
-    GenericQuery,
-)
+#from geonature.utils.utilssqlalchemy import (
+#    serializable,
+#    geoserializable,
+#    GenericQuery,
+#)
 from geonature.utils.utilsgeometry import shapeserializable
 from geonature.core.gn_monitoring.models import TBaseSites, TBaseVisits, corVisitObserver
 from pypnnomenclature.models import TNomenclatures
@@ -80,10 +83,10 @@ class CorVisitPerturbation(DB.Model):
         default=func.now()
     )
 
-    #t_base_visit = DB.relationship('TVisitSHT', primaryjoin='CorVisitPerturbation.id_base_visit == TVisitSHT.id_base_visit', backref='cor_visit_perturbations')
     t_nomenclature = DB.relationship(
         'TNomenclatures',
         primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclatures.id_nomenclature',
+        uselist=False,
         backref='cor_visit_perturbations'
     )
 
@@ -93,31 +96,19 @@ class TVisitSHT(TBaseVisits):
     __tablename__ = 't_base_visits'
     __table_args__ = {
         'schema': 'gn_monitoring',
-        'extend_existing': True
+        'extend_existing': True,
     }
 
     cor_visit_perturbation = DB.relationship(
         'CorVisitPerturbation',
+        lazy="joined",
         backref='t_base_visits'
     )
     cor_visit_taxons = DB.relationship(
         "CorVisitTaxon",
+        lazy="joined",
         backref='t_base_visits'
     )
-
-    observers = DB.relationship(
-        'User',
-        secondary=corVisitObserver,
-        primaryjoin=(
-            corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
-        ),
-        secondaryjoin=(corVisitObserver.c.id_role == User.id_role),
-        foreign_keys=[
-            corVisitObserver.c.id_base_visit,
-            corVisitObserver.c.id_role
-        ]
-    )
-
 
 @serializable
 class CorHabitatTaxon(DB.Model):

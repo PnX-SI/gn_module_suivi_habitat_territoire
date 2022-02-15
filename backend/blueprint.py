@@ -4,6 +4,7 @@ import datetime
 from flask import Blueprint, request, session, current_app, send_from_directory, abort, jsonify
 from sqlalchemy.sql.expression import func
 from sqlalchemy import and_, distinct, desc
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from geoalchemy2.shape import to_shape
 from geojson import FeatureCollection, Feature
@@ -14,9 +15,10 @@ from pypnusershub.db.tools import InsufficientRightsError
 from pypnusershub.db.models import User
 from pypnnomenclature.models import TNomenclatures
 from pypn_habref_api.models import Habref, TypoRef, CorListHabitat
+from utils_flask_sqla.response import json_resp, to_json_resp, to_csv_resp
+
 from geonature.utils.env import DB, ROOT_DIR
 from geonature.utils.utilsgeometry import FionaShapeService
-from geonature.utils.utilssqlalchemy import json_resp, to_json_resp, to_csv_resp
 from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteModule, TBaseVisits
@@ -227,11 +229,35 @@ def get_visits(info_role):
     Retourne toutes les visites du module
     '''
     parameters = request.args
-    q = DB.session.query(TVisitSHT)
+    query = (
+        DB.session
+        .query(TVisitSHT, User)
+        .options(
+            joinedload(TVisitSHT.cor_visit_taxons)
+        )
+        .outerjoin(
+            corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
+        )
+        .outerjoin(
+            User, User.id_role == corVisitObserver.c.id_role
+        )
+    )
     if 'id_base_site' in parameters:
-        q = q.filter(TVisitSHT.id_base_site == parameters['id_base_site']).order_by(desc(TVisitSHT.visit_date_min))
-    data = q.all()
-    return [d.as_dict(True) for d in data]
+        query = (
+            query
+            .filter(TVisitSHT.id_base_site == parameters['id_base_site'])
+            .order_by(desc(TVisitSHT.visit_date_min))
+        )
+    data = query.all()
+
+    visits = {}
+    for d in data:
+        infos = d[0].as_dict(fields=['cor_visit_taxons'])
+        if infos['id_base_visit'] not in visits:
+            infos['observers'] = []
+            visits[infos['id_base_visit']] = infos
+        visits[infos['id_base_visit']]['observers'].append(d[1].as_dict())
+    return list(visits.values())
 
 @blueprint.route('/visits/years', methods=['GET'])
 @json_resp
@@ -265,13 +291,35 @@ def get_visit(id_visit, info_role):
     '''
     Retourne une visite
     '''
-    data = DB.session.query(TVisitSHT).get(id_visit)
+    return get_visit_details(id_visit)
 
-    visit = []
-    if data:
-        cvisit = data.as_dict(recursif=True)
+def get_visit_details(id_visit):
+    query = (
+        DB.session
+        .query(TVisitSHT, User)
+        .options(
+            joinedload(TVisitSHT.cor_visit_taxons),
+            #joinedload(TVisitSHT.observers),
+            joinedload(TVisitSHT.cor_visit_perturbation)
+        )
+        .outerjoin(
+            corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
+        )
+        .outerjoin(
+            User, User.id_role == corVisitObserver.c.id_role
+        )
+        .filter(TBaseVisits.id_base_visit == id_visit)
+    )
+    data_all = query.all()
+
+    if data_all:
+        data = data_all[0]
+        fields = ['cor_visit_taxons', 'cor_visit_perturbation', 'cor_visit_perturbation.t_nomenclature']
+        cvisit = data[0].as_dict(fields=fields)
+        cvisit['observers'] = [d[1].as_dict() for d in data_all]
         if 'cor_visit_perturbation' in cvisit:
             tab_visit_perturbation = cvisit.pop('cor_visit_perturbation')
+            visit = []
             for index, per in enumerate(tab_visit_perturbation):
                 visit.append(per['t_nomenclature'])
             cvisit['cor_visit_perturbation'] = visit
@@ -324,7 +372,7 @@ def post_visit(info_role):
         visit_taxon = CorVisitTaxon(**taxon)
         visit.cor_visit_taxons.append(visit_taxon)
 
-    visit.as_dict(True)
+    # Add observers
     observers = (
         DB.session
         .query(User)
@@ -337,8 +385,10 @@ def post_visit(info_role):
     # Insert visit in DB
     DB.session.add(visit)
     DB.session.commit()
+    DB.session.refresh(visit)
 
     # Return new visit
+    return get_visit_details(visit.id_base_visit)
 
 
 @blueprint.route('/visits/<int:idv>', methods=['PATCH'])
@@ -359,7 +409,7 @@ def patch_visit(idv, info_role):
         resp.status_code = 404
         return resp
 
-    existingVisit = existingVisit.as_dict(recursif=True)
+    existingVisit = existingVisit.as_dict()
     dateIsUp = data['visit_date_min'] != existingVisit['visit_date_min']
 
     if dateIsUp:
@@ -408,8 +458,7 @@ def patch_visit(idv, info_role):
 
     DB.session.commit()
 
-    return mergeVisit.as_dict(recursif=True)
-
+    return get_visit_details(mergeVisit.id_base_visit)
 
 
 @blueprint.route('/organismes', methods=['GET'])
