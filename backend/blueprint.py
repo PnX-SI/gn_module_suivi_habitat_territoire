@@ -3,7 +3,7 @@ import datetime
 
 from flask import Blueprint, request, session, current_app, send_from_directory, abort, jsonify
 from sqlalchemy.sql.expression import func
-from sqlalchemy import and_ , distinct, desc
+from sqlalchemy import and_, distinct, desc
 from sqlalchemy.exc import SQLAlchemyError
 from geoalchemy2.shape import to_shape
 from geojson import FeatureCollection, Feature
@@ -11,8 +11,9 @@ from numpy import array
 from shapely.geometry import *
 
 from pypnusershub.db.tools import InsufficientRightsError
-from pypnnomenclature.models import TNomenclatures
 from pypnusershub.db.models import User
+from pypnnomenclature.models import TNomenclatures
+from pypn_habref_api.models import Habref, TypoRef, CorListHabitat
 from geonature.utils.env import DB, ROOT_DIR
 from geonature.utils.utilsgeometry import FionaShapeService
 from geonature.utils.utilssqlalchemy import json_resp, to_json_resp, to_csv_resp
@@ -21,7 +22,6 @@ from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteModule, TBaseVisits
 from geonature.core.ref_geo.models import LAreas
 from geonature.core.users.models import BibOrganismes
-from pypn_habref_api.models import Habref, CorListHabitat
 from geonature.core.taxonomie.models import Taxref
 
 from .repositories import (
@@ -86,7 +86,6 @@ def get_taxa_by_habitats(cd_hab):
     '''
     tous les taxons d'un habitat
     '''
-
     q = DB.session.query(
         CorHabitatTaxon.cd_nom,
         Taxref.nom_complet
@@ -98,7 +97,6 @@ def get_taxa_by_habitats(cd_hab):
     data = q.all()
 
     taxons = []
-
     if data:
         for d in data:
             taxon = dict()
@@ -121,35 +119,38 @@ def get_all_sites(info_role):
 
     q = (
         DB.session.query(
-                TInfosSite,
-                func.max(TBaseVisits.visit_date_min),
-                Habref.lb_hab_fr,
-                func.count(distinct(TBaseVisits.id_base_visit)),
-                func.string_agg(distinct(BibOrganismes.nom_organisme), ', '),
-                func.string_agg(distinct(LAreas.area_name), ', ')
-            ).outerjoin(
-                TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
-            # get habitat cd_hab
-            ).outerjoin(
-                Habref, TInfosSite.cd_hab == Habref.cd_hab
-            # get organisms of a site
-            ).outerjoin(
-                corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
-            ).outerjoin(
-                User, User.id_role == corVisitObserver.c.id_role
-            ).outerjoin(
-                BibOrganismes, BibOrganismes.id_organisme == User.id_organisme
-            )
-            # get municipalities of a site
-            .outerjoin(
-                corSiteArea, corSiteArea.c.id_base_site == TInfosSite.id_base_site
-            ).outerjoin(
-                LAreas, and_(LAreas.id_area == corSiteArea.c.id_area, LAreas.id_type == id_type_commune)
-            )
-            .group_by(
-                TInfosSite, Habref.lb_hab_fr
-            )
+            TInfosSite,
+            func.max(TBaseVisits.visit_date_min),
+            Habref.lb_hab_fr,
+            func.count(distinct(TBaseVisits.id_base_visit)),
+            func.string_agg(distinct(BibOrganismes.nom_organisme), ', '),
+            func.string_agg(distinct(LAreas.area_name), ', ')
+        ).outerjoin(
+            TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
+        # get habitat cd_hab
+        ).outerjoin(
+            Habref, TInfosSite.cd_hab == Habref.cd_hab
+        # get organisms of a site
+        ).outerjoin(
+            corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
+        ).outerjoin(
+            User, User.id_role == corVisitObserver.c.id_role
+        ).outerjoin(
+            BibOrganismes, BibOrganismes.id_organisme == User.id_organisme
         )
+        # get municipalities of a site
+        .outerjoin(
+            corSiteArea, corSiteArea.c.id_base_site == TInfosSite.id_base_site
+        ).outerjoin(
+            LAreas, and_(LAreas.id_area == corSiteArea.c.id_area, LAreas.id_type == id_type_commune)
+        )
+        .group_by(
+            TInfosSite, Habref.lb_hab_fr
+        )
+    )
+
+    if 'cd_hab' in parameters:
+        q = q.filter(TInfosSite.cd_hab == parameters['cd_hab'])
 
     if 'id_base_site' in parameters:
         q = q.filter(TInfosSite.id_base_site == parameters['id_base_site'])
@@ -239,14 +240,14 @@ def get_years_visits():
     Retourne toutes les années de visites du module
     '''
 
-    q = DB.session.query(
-        func.to_char(TVisitSHT.visit_date_min, 'YYYY')
-        ).join(
-            TInfosSite, TInfosSite.id_base_site == TVisitSHT.id_base_site
-        ).order_by( desc(func.to_char(TVisitSHT.visit_date_min, 'YYYY'))
-        ).group_by( func.to_char(TVisitSHT.visit_date_min, 'YYYY') )
-
-    data = q.all()
+    query = (
+        DB.session
+        .query(func.to_char(TVisitSHT.visit_date_min, 'YYYY'))
+        .join(TInfosSite, TInfosSite.id_base_site == TVisitSHT.id_base_site)
+        .order_by(desc(func.to_char(TVisitSHT.visit_date_min, 'YYYY')))
+        .group_by(func.to_char(TVisitSHT.visit_date_min, 'YYYY'))
+    )
+    data = query.all()
 
     if data:
         tab_years = []
@@ -281,7 +282,6 @@ def get_visit(id_visit, info_role):
         return cvisit
     return None
 
-
 @blueprint.route('/visits', methods=['POST'])
 @permissions.check_cruved_scope('C', True, module_code="SHT")
 @json_resp
@@ -289,48 +289,56 @@ def post_visit(info_role):
     '''
     Poster une nouvelle visite
     '''
+    # Get data from request
     data = dict(request.get_json())
+
+    # Check data
     check_year_visit(data['id_base_site'], data['visit_date_min'][0:4])
 
     # Set generic infos got from config
     data['id_dataset'] = blueprint.config['id_dataset']
     data['id_module'] = blueprint.config['ID_MODULE']
 
-    tab_visit_taxons = []
-    tab_observer = []
-    tab_perturbation = []
-
-    if 'cor_visit_taxons' in data:
-        tab_visit_taxons = data.pop('cor_visit_taxons')
-    if 'cor_visit_observer' in data:
-        tab_observer = data.pop('cor_visit_observer')
+    # Remove data properties before create SQLA object with it
+    perturbations = []
     if 'cor_visit_perturbation' in data:
-        tab_perturbation = data.pop('cor_visit_perturbation')
+        perturbations = data.pop('cor_visit_perturbation')
+    taxons = []
+    if 'cor_visit_taxons' in data:
+        taxons = data.pop('cor_visit_taxons')
+    observers_ids = []
+    if 'cor_visit_observer' in data:
+        observers_ids = data.pop('cor_visit_observer')
 
+
+    # Build visit to insert in DB
     visit = TVisitSHT(**data)
 
+    # Add perturbations
+    for perturbation in perturbations:
+        visit_perturbation = CorVisitPerturbation(**perturbation)
+        visit.cor_visit_perturbation.append(visit_perturbation)
 
-    for per in tab_perturbation:
-        visit_per = CorVisitPerturbation(**per)
-        visit.cor_visit_perturbation.append(visit_per)
-
-    for t in tab_visit_taxons:
-        visit_taxons = CorVisitTaxon(**t)
-        visit.cor_visit_taxons.append(visit_taxons)
-
-    observers = DB.session.query(User).filter(
-        User.id_role.in_(tab_observer)
-    ).all()
-    for o in observers:
-        visit.observers.append(o)
+    # Add taxons
+    for taxon in taxons:
+        visit_taxon = CorVisitTaxon(**taxon)
+        visit.cor_visit_taxons.append(visit_taxon)
 
     visit.as_dict(True)
+    observers = (
+        DB.session
+        .query(User)
+        .filter(User.id_role.in_(observers_ids))
+        .all()
+    )
+    for observer in observers:
+        visit.observers.append(observer)
 
+    # Insert visit in DB
     DB.session.add(visit)
-
     DB.session.commit()
 
-    return visit.as_dict(recursif=True)
+    # Return new visit
 
 
 @blueprint.route('/visits/<int:idv>', methods=['PATCH'])
@@ -480,50 +488,56 @@ def export_visit(info_role):
     '''
     Télécharge les données d'une visite (ou des visites )
     '''
-
     parameters = request.args
     export_format = parameters['export_format'] if 'export_format' in request.args else 'shapefile'
 
     file_name = datetime.datetime.now().strftime('%Y_%m_%d_%Hh%Mm%S')
-    q = (DB.session.query(ExportVisits))
 
+    # Build query
+    query = DB.session.query(ExportVisits)
     if 'id_base_visit' in parameters:
-        q = (DB.session.query(ExportVisits)
-             .filter(ExportVisits.idbvisit == parameters['id_base_visit'])
-             )
+        query = (
+            DB.session
+            .query(ExportVisits)
+            .filter(ExportVisits.idbvisit == parameters['id_base_visit'])
+        )
     elif 'id_base_site' in parameters:
-        q = (DB.session.query(ExportVisits)
-             .filter(ExportVisits.idbsite == parameters['id_base_site'])
-             )
+        query = (
+            DB.session
+            .query(ExportVisits)
+            .filter(ExportVisits.idbsite == parameters['id_base_site'])
+        )
     elif 'organisme' in parameters:
-        q = (DB.session.query(ExportVisits)
-             .filter(ExportVisits.organisme == parameters['organisme'])
-             )
+        query = (
+            DB.session.query(ExportVisits)
+            .filter(ExportVisits.organisme == parameters['organisme'])
+        )
     elif 'commune' in parameters:
-        q = (DB.session.query(ExportVisits)
-             .filter(ExportVisits.area_name == parameters['commune'])
-             )
+        query = (
+            DB.session.query(ExportVisits)
+            .filter(ExportVisits.area_name == parameters['commune'])
+        )
     elif 'year' in parameters:
-        q = (DB.session.query(ExportVisits)
-             .filter(func.date_part('year', ExportVisits.visitdate) == parameters['year'])
-             )
+        query = (
+            DB.session.query(ExportVisits)
+            .filter(func.date_part('year', ExportVisits.visitdate) == parameters['year'])
+        )
     elif 'cd_hab' in parameters:
-        q = (DB.session.query(ExportVisits)
-             .filter(ExportVisits.cd_hab == parameters['cd_hab'])
-             )
+        query = (
+            DB.session.query(ExportVisits)
+            .filter(ExportVisits.cd_hab == parameters['cd_hab'])
+        )
+    data = query.all()
 
-    data = q.all()
     features = []
 
-    # formate data
+    # Format data
     cor_hab_taxon = []
     flag_cdhab = 0
-
     tab_header = []
     column_name = get_base_column_name()
     column_name_pro = get_pro_column_name()
     mapping_columns = get_mapping_columns()
-
     tab_visit = []
 
     for d in data:
@@ -531,14 +545,14 @@ def export_visit(info_role):
 
         # Get list hab/taxon
         cd_hab = visit['cd_hab']
-        if flag_cdhab !=  cd_hab:
+        if flag_cdhab != cd_hab:
             cor_hab_taxon = get_taxonlist_by_cdhab(cd_hab)
             flag_cdhab = cd_hab
 
-        # remove html tag
-        visit['lbhab'] = striphtml( visit['lbhab'])
+        # Remove html tag
+        visit['lbhab'] = striphtml(visit['lbhab'])
 
-        # geom
+        # Geom
         geom_wkt = to_shape(d.geom)
         if export_format == 'geojson':
             visit['geom_wkt'] = geom_wkt
@@ -548,7 +562,7 @@ def export_visit(info_role):
         # Translate label column
         visit = dict((mapping_columns[key], value) for (key, value) in visit.items() if key in mapping_columns)
 
-        # pivot taxon
+        # Pivot taxon
         if visit['nomvtaxon']:
             for taxon, cover in visit['nomvtaxon'].items():
                 visit[taxon] = cover
@@ -556,8 +570,8 @@ def export_visit(info_role):
 
         tab_visit.append(visit)
 
+    # Run export
     if export_format == 'geojson':
-
         for d in tab_visit:
             feature = mapping(d['geom_wkt'])
             d.pop('geom_wkt', None)
@@ -565,25 +579,20 @@ def export_visit(info_role):
             features.append(feature)
             features.append(properties)
         result = FeatureCollection(features)
-
         return to_json_resp(
             result,
             as_file=True,
             filename=file_name,
             indent=4
         )
-
     elif export_format == 'csv':
-
         tab_header = column_name + [clean_string(x) for x in cor_hab_taxon] + column_name_pro
-
         return to_csv_resp(
             file_name,
             tab_visit,
             tab_header,
             ';'
         )
-
     else:
         dir_path = str(ROOT_DIR / 'backend/static/shapefiles')
 
