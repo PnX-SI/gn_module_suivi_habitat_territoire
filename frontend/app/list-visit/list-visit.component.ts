@@ -153,7 +153,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
       error => {
         if (error.status != 404) {
           this.toastr.error(
-            'Une erreur est survenue lors de la modification de votre relevé',
+            'Une erreur est survenue lors de la récupération des données du relevé.',
             '',
             {positionClass: 'toast-top-right'}
           );
