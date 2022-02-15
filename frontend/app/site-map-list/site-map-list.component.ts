@@ -180,7 +180,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.tabCom.push(com.nom_commune);
         });
         this.tabCom.sort((a, b) => {
-          return a.localeCompare(b);
+          return ('' + a).localeCompare('' + b);
         });
       });
 
@@ -191,7 +191,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.tabHab.push({ label: hab.nom_complet, id: hab.cd_hab });
         });
         this.tabHab.sort((a, b) => {
-          return a.localeCompare(b);
+          return ('' + a).localeCompare('' + b);
         });
       });
 
