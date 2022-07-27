@@ -32,23 +32,23 @@ default_list_visit_columns = [
 ]
 
 class GnModuleSchemaConf(Schema):
-    zoom_center = fields.List(fields.Float(), missing=zoom_center)
-    zoom = fields.Integer(missing=10)
+    zoom_center = fields.List(fields.Float(), load_default=zoom_center)
+    zoom = fields.Integer(load_default=10)
 
-    export_srid = fields.Integer(missing=2154)
-    export_available_format = fields.List(fields.String(), missing=export_available_format)
+    export_srid = fields.Integer(load_default=2154)
+    export_available_format = fields.List(fields.String(), load_default=export_available_format)
 
-    id_dataset = fields.Integer(missing=1)
-    id_type_commune = fields.Integer(missing=25)
-    id_menu_list_user = fields.Integer(missing=1)
-    id_bib_list_habitat = fields.Integer(missing=1)
+    id_dataset = fields.Integer(load_default=1)
+    id_type_commune = fields.Integer(load_default=25)
+    id_menu_list_user = fields.Integer(load_default=1)
+    id_bib_list_habitat = fields.Integer(load_default=1)
 
-    site_message=fields.Dict(missing=site_message)
-    list_visit_message = fields.Dict(missing=list_visit_message)
-    detail_list_visit_message = fields.Dict(missing=detail_list_visit_message)
+    site_message=fields.Dict(load_default=site_message)
+    list_visit_message = fields.Dict(load_default=list_visit_message)
+    detail_list_visit_message = fields.Dict(load_default=detail_list_visit_message)
 
-    default_site_columns = fields.List(fields.Dict(), missing=default_site_columns)
-    default_list_visit_columns = fields.List(fields.Dict(), missing=default_list_visit_columns)
+    default_site_columns = fields.List(fields.Dict(), load_default=default_site_columns)
+    default_list_visit_columns = fields.List(fields.Dict(), load_default=default_list_visit_columns)
 
-    pagination_serverside = fields.Boolean(missing=False)
-    items_per_page = fields.Integer(missing=5)
+    pagination_serverside = fields.Boolean(load_default=False)
+    items_per_page = fields.Integer(load_default=5)
