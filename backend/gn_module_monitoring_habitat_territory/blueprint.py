@@ -22,6 +22,7 @@ from geonature.utils.utilsgeometry import FionaShapeService
 from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteModule, TBaseVisits
+from geonature.core.gn_commons.models import TModules
 from geonature.core.ref_geo.models import LAreas
 from pypnusershub.db.models import Organisme
 from geonature.core.taxonomie.models import Taxref
@@ -501,7 +502,9 @@ def get_commune(module_code, info_role):
     params = request.args
     q = DB.session.query(LAreas.area_name).distinct().outerjoin(
         corSiteArea, LAreas.id_area == corSiteArea.c.id_area).outerjoin(
-        corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site).filter(corSiteModule.c.module_code == module_code)
+        corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site).outerjoin(
+        TModules, TModules.id_module == corSiteModule.c.id_module
+        ).filter(TModules.module_code == module_code)
 
     if 'id_area_type' in params:
         q = q.filter(LAreas.id_type == params['id_area_type'])

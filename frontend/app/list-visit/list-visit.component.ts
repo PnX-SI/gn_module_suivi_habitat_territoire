@@ -32,7 +32,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   public rows = [];
   public paramApp = this.storeService.queryString.append(
     'id_application',
-    ModuleConfig.ID_MODULE.toString()
+    ModuleConfig.MODULE_CODE.toString()
   );
   public addIsAllowed = false;
   public exportIsAllowed = false;

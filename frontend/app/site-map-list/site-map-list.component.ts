@@ -172,7 +172,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this._api
-      .getCommune(ModuleConfig.ID_MODULE, {
+      .getCommune(ModuleConfig.MODULE_CODE, {
         id_area_type: this.storeService.shtConfig.id_type_commune
       })
       .subscribe(info => {

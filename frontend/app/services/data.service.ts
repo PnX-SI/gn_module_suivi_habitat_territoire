@@ -49,9 +49,9 @@ export class DataService {
     );
   }
 
-  getCommune(id_module: number, params: any) {
+  getCommune(module_code: string, params: any) {
     return this.http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/communes/${id_module}`,
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/communes/${module_code}`,
       this.transformToHttpParams(params)
     );
   }
