@@ -10,13 +10,9 @@ Module GeoNature de Suivi des Habitats sur un Territoire (SHT) du réseau Flore 
 * Installez GeoNature (https://github.com/PnX-SI/GeoNature) en version 2.3.0 ou supérieure.
 * Téléchargez la dernière version stable du module (``wget https://github.com/PnX-SI/gn_module_suivi_habitat_territoire/archive/X.Y.Z.zip``) dans ``/home/myuser/``
 * Dézippez la dans ``/home/myuser/`` (``unzip X.Y.Z.zip``)
-* Placez-vous dans le répertoire ``backend`` de GeoNature et lancez les commandes suivantes (le nom du module abrégé en "sht" est utilisé comme code) :
+* Placez-vous dans le répertoire ``geonature/backend`` et lancez les commandes ``source venv/bin/activate`` puis ``geonature install_packaged_gn_module <chemin_vers_le_module> GN_MODULE_HABITAT_TERRITOIRE``
+* Complétez la configuration du module (``config/conf_gn_module.toml`` à partir des paramètres présents dans ``config/conf_gn_module.toml.example`` dont vous pouvez surcoucher les valeurs par défaut. Puis relancez la mise à jour de la configuration (depuis le répertoire ``geonature/backend`` et une fois dans le venv (``source venv/bin/activate``) : ``geonature update_module_configuration GN_MODULE_HABITAT_TERRITOIRE``)
 
-```
-    source venv/bin/activate
-    geonature install_gn_module <mon_chemin_absolu_vers_le_module> <url_relative_du_module>
-    # Exemple geonature install_gn_module /home/`whoami`/gn_module_suivi_habitat_territoire-X.Y.Z /sht)
-```
 
 * L'installation du module doit créer le fichier ``config/settings.ini`` et y stocker le chemin vers le fichier de configuration de GeoNature. Vous pouvez maintenant :
     * le compléter à partir du fichier d'exemple ``config/settings.sample.ini``

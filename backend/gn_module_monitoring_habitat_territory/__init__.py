@@ -1,2 +1,2 @@
 MODULE_CODE = "SHT"
-MODULE_PICTO = "fa-leaf"
+MODULE_PICTO = "fa-map"

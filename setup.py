@@ -10,9 +10,8 @@ with (root_dir / "README.md").open() as f:
 with (root_dir / "requirements.in").open() as f:
     requirements = f.read().splitlines()
 
-
 setuptools.setup(
-    name="gn_module_suivi_habitat_territoire",
+    name="gn_module_monitoring_habitat_territory",
     version=version,
     description="Module Conservation Suivi Flore Territoire",
     long_description=long_description,
@@ -26,11 +25,11 @@ setuptools.setup(
     install_requires=requirements,
     entry_points={
         "gn_module": [
-            "code = gn_module_suivi_habitat_territoire:MODULE_CODE",
-            "picto = gn_module_suivi_habitat_territoire:MODULE_PICTO",
-            "blueprint = gn_module_suivi_habitat_territoire.blueprint:blueprint",
-            "config_schema = gn_module_suivi_habitat_territoire.conf_schema_toml:GnModuleSchemaConf",
-            "migrations = gn_module_suivi_habitat_territoire:migrations",
+            "code = gn_module_monitoring_habitat_territory:MODULE_CODE",
+            "picto = gn_module_monitoring_habitat_territory:MODULE_PICTO",
+            "blueprint = gn_module_monitoring_habitat_territory.blueprint:blueprint",
+            "config_schema = gn_module_monitoring_habitat_territory.conf_schema_toml:GnModuleSchemaConf",
+            # "migrations = gn_module_monitoring_habitat_territory:migrations",
         ],
     },
     classifiers=[

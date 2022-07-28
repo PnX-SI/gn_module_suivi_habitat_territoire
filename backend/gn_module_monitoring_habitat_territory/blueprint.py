@@ -23,7 +23,7 @@ from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
 from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteModule, TBaseVisits
 from geonature.core.ref_geo.models import LAreas
-from geonature.core.users.models import BibOrganismes
+from pypnusershub.db.models import Organisme
 from geonature.core.taxonomie.models import Taxref
 
 from .repositories import (
@@ -47,7 +47,7 @@ from .models import (
 )
 
 
-blueprint = Blueprint('pr_suivi_habitat_territoire', __name__)
+blueprint = Blueprint('SHT', __name__)
 
 
 @blueprint.route('/habitats/<id_list>', methods=['GET'])
@@ -125,7 +125,7 @@ def get_all_sites(info_role):
             func.max(TBaseVisits.visit_date_min),
             Habref.lb_hab_fr,
             func.count(distinct(TBaseVisits.id_base_visit)),
-            func.string_agg(distinct(BibOrganismes.nom_organisme), ', '),
+            func.string_agg(distinct(Organisme.nom_organisme), ', '),
             func.string_agg(distinct(LAreas.area_name), ', ')
         ).outerjoin(
             TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
@@ -138,7 +138,7 @@ def get_all_sites(info_role):
         ).outerjoin(
             User, User.id_role == corVisitObserver.c.id_role
         ).outerjoin(
-            BibOrganismes, BibOrganismes.id_organisme == User.id_organisme
+            Organisme, Organisme.id_organisme == User.id_organisme
         )
         # get municipalities of a site
         .outerjoin(
@@ -158,7 +158,7 @@ def get_all_sites(info_role):
         q = q.filter(TInfosSite.id_base_site == parameters['id_base_site'])
 
     if 'organisme' in parameters:
-        q = q.filter(BibOrganismes.id_organisme == parameters['organisme'])
+        q = q.filter(Organisme.id_organisme == parameters['organisme'])
 
     if 'commune' in parameters:
         q = q.filter(LAreas.area_name == parameters['commune'])
@@ -345,7 +345,7 @@ def post_visit(info_role):
 
     # Set generic infos got from config
     data['id_dataset'] = blueprint.config['id_dataset']
-    data['id_module'] = blueprint.config['ID_MODULE']
+    data['module_code'] = blueprint.config['MODULE_CODE']
 
     # Remove data properties before create SQLA object with it
     perturbations = []
@@ -470,9 +470,9 @@ def get_organisme(info_role):
     '''
 
     q = DB.session.query(
-        BibOrganismes.nom_organisme, User.nom_role, User.prenom_role, User.id_organisme
+        Organisme.nom_organisme, User.nom_role, User.prenom_role, User.id_organisme
         ).outerjoin(
-            User, BibOrganismes.id_organisme == User.id_organisme
+            User, Organisme.id_organisme == User.id_organisme
         ).distinct().join(
             corVisitObserver, User.id_role == corVisitObserver.c.id_role
         ).join(
@@ -491,17 +491,17 @@ def get_organisme(info_role):
     return None
 
 
-@blueprint.route('/communes/<id_module>', methods=['GET'])
+@blueprint.route('/communes/<module_code>', methods=['GET'])
 @permissions.check_cruved_scope('R', True, module_code="SHT")
 @json_resp
-def get_commune(id_module, info_role):
+def get_commune(module_code, info_role):
     '''
     Retourne toutes les communes présents dans le module
     '''
     params = request.args
     q = DB.session.query(LAreas.area_name).distinct().outerjoin(
         corSiteArea, LAreas.id_area == corSiteArea.c.id_area).outerjoin(
-        corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site).filter(corSiteModule.c.id_module == id_module)
+        corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site).filter(corSiteModule.c.module_code == module_code)
 
     if 'id_area_type' in params:
         q = q.filter(LAreas.id_type == params['id_area_type'])
