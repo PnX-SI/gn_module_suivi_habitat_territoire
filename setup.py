@@ -29,7 +29,7 @@ setuptools.setup(
             "picto = gn_module_monitoring_habitat_territory:MODULE_PICTO",
             "blueprint = gn_module_monitoring_habitat_territory.blueprint:blueprint",
             "config_schema = gn_module_monitoring_habitat_territory.conf_schema_toml:GnModuleSchemaConf",
-            # "migrations = gn_module_monitoring_habitat_territory:migrations",
+            "migrations = gn_module_monitoring_habitat_territory:migrations",
         ],
     },
     classifiers=[

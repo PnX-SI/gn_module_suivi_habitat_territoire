@@ -2,10 +2,10 @@
 BEGIN;
 
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'REF GEO'
+-- -----------------------------------------------------------------------------
+-- REF GEO
 
-\echo 'Insert 100x100 meters meshes new area type in `ref_geo.bib_areas_types`'
+-- Insert 100x100 meters meshes new area type in `ref_geo.bib_areas_types`
 WITH test_exists AS (
     SELECT id_type
     FROM ref_geo.bib_areas_types
@@ -19,7 +19,7 @@ WHERE NOT EXISTS (
 RETURNING id_type ;
 
 
-\echo 'Insert 50x50 meters meshes new area type in `ref_geo.bib_areas_types`'
+-- Insert 50x50 meters meshes new area type in `ref_geo.bib_areas_types`
 WITH test_exists AS (
     SELECT id_type
     FROM ref_geo.bib_areas_types
@@ -33,10 +33,10 @@ WHERE NOT EXISTS (
 RETURNING id_type ;
 
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'TAXONOMY'
+-- -----------------------------------------------------------------------------
+-- TAXONOMY
 
-\echo 'Create monitored taxons list by SHT protocol'
+-- Create monitored taxons list by SHT protocol
 WITH test_exists AS (
     SELECT id_liste
     FROM taxonomie.bib_listes
@@ -55,10 +55,10 @@ WHERE NOT EXISTS (
 RETURNING id_liste ;
 
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'REF HABITATS'
+-- -----------------------------------------------------------------------------
+-- REF HABITATS
 
-\echo 'Create monitored habitats list by SHT protocol'
+-- Create monitored habitats list by SHT protocol
 WITH test_exists AS (
     SELECT id_list
     FROM ref_habitats.bib_list_habitat
@@ -72,10 +72,10 @@ WHERE NOT EXISTS (
 RETURNING id_list ;
 
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'REF NOMENCLATURES'
+-- -----------------------------------------------------------------------------
+-- REF NOMENCLATURES
 
-\echo 'Add nomenclature value for SHT site type nomenclature (="TYPE_SITE")'
+-- Add nomenclature value for SHT site type nomenclature (="TYPE_SITE")
 WITH test_exists AS (
     SELECT id_nomenclature
     FROM ref_nomenclatures.t_nomenclatures
@@ -96,7 +96,7 @@ WHERE NOT EXISTS (SELECT id_nomenclature FROM test_exists)
 RETURNING id_nomenclature ;
 
 
-\echo 'Create the "Perturbation" nomenclature type'
+-- Create the "Perturbation" nomenclature type
 WITH test_exists AS (
     SELECT id_type
     FROM ref_nomenclatures.bib_nomenclatures_types
@@ -115,16 +115,17 @@ WHERE NOT EXISTS (SELECT id_type FROM test_exists)
 RETURNING id_type ;
 
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'COMMONS'
+-- -----------------------------------------------------------------------------
+-- COMMONS
 
-\echo 'Update SHT module'
+-- Update SHT module
 UPDATE gn_commons.t_modules
 SET
     module_label = 'S. Habitat Territoire',
     module_picto = 'fa-map',
     module_desc = 'Module de Suivi des Habitats d''un Territoire'
 WHERE module_code ILIKE :'moduleCode' ;
+  AND NOT EXISTS module_code ILIKE :'moduleCode' ;
 
 -- -------------------------------------------------------------------------------
 COMMIT;
