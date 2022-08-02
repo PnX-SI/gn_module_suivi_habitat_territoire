@@ -85,7 +85,7 @@ AND NOT EXISTS (
 -- Delete names list : taxonomie.bib_listes, taxonomie.cor_nom_liste, taxonomie.bib_noms
 WITH names_deleted AS (
 	DELETE FROM taxonomie.cor_nom_liste WHERE id_liste IN (
-		SELECT id_liste FROM taxonomie.bib_listes WHERE nom_liste = :'taxonsListName'
+		SELECT id_liste FROM taxonomie.bib_listes WHERE nom_liste = 'Suivi Habitat Territoire'
 	)
 	RETURNING id_nom
 )
@@ -93,7 +93,7 @@ DELETE FROM taxonomie.bib_noms WHERE id_nom IN (
 	SELECT id_nom FROM names_deleted
 );
 
-DELETE FROM taxonomie.bib_listes WHERE nom_liste = :'taxonsListName';
+DELETE FROM taxonomie.bib_listes WHERE nom_liste = 'Suivi Habitat Territoire';
 
 
 -- -----------------------------------------------------------------------------
@@ -101,11 +101,11 @@ DELETE FROM taxonomie.bib_listes WHERE nom_liste = :'taxonsListName';
 
 DELETE FROM ref_habitats.cor_list_habitat
     WHERE id_list IN (
-        SELECT id_list FROM ref_habitats.bib_list_habitat WHERE list_name = :'habitatsListName'
+        SELECT id_list FROM ref_habitats.bib_list_habitat WHERE list_name = 'Suivi Habitat Territoire'
     ) ;
 
 DELETE FROM ref_habitats.bib_list_habitat
-    WHERE list_name = :'habitatsListName';
+    WHERE list_name = 'Suivi Habitat Territoire';
 
 -- -----------------------------------------------------------------------------
 -- REF NOMENCLATURES
@@ -113,10 +113,10 @@ DELETE FROM ref_habitats.bib_list_habitat
 -- Delete nomenclature: ref_nomenclatures.t_nomenclatures,  ref_nomenclatures.bib_nomenclatures_types
 -- TODO: vérifier que les perturbations ne sont pas utilisées par un autre module avant de les supprimer !
 DELETE FROM ref_nomenclatures.t_nomenclatures
-    WHERE id_type = ref_nomenclatures.get_id_nomenclature_type(:'perturbationsCode');
+    WHERE id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_PERTURBATION');
 
 DELETE FROM ref_nomenclatures.bib_nomenclatures_types
-    WHERE id_type = ref_nomenclatures.get_id_nomenclature_type(:'perturbationsCode');
+    WHERE id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_PERTURBATION');
 
 
 -- -----------------------------------------------------------------------------
@@ -127,12 +127,12 @@ DELETE FROM gn_commons.cor_module_dataset
     WHERE id_module = (
         SELECT id_module
         FROM gn_commons.t_modules
-        WHERE module_code ILIKE :'moduleCode'
+        WHERE module_code ILIKE 'sht'
     ) ;
 
 -- Uninstall module (unlink this module of GeoNature)
 DELETE FROM gn_commons.t_modules
-    WHERE module_code ILIKE :'moduleCode' ;
+    WHERE module_code ILIKE 'sht' ;
 
 
 -- -----------------------------------------------------------------------------
@@ -143,18 +143,18 @@ DELETE FROM gn_monitoring.cor_site_module
     WHERE id_module = (
         SELECT id_module
         FROM gn_commons.t_modules
-        WHERE module_code ILIKE :'moduleCode'
+        WHERE module_code ILIKE 'sht'
     ) ;
 
 -- Remove links between sites and areas
 DELETE FROM gn_monitoring.cor_site_area WHERE id_base_site IN (
-        SELECT id_base_site FROM :moduleSchema.t_infos_site
+        SELECT id_base_site FROM pr_monitoring_habitat_territory.t_infos_site
     ) ;
 
 -- Remove base sites data
 DELETE FROM gn_monitoring.t_base_sites
     WHERE id_base_site IN (
-        SELECT id_base_site FROM :moduleSchema.t_infos_site
+        SELECT id_base_site FROM pr_monitoring_habitat_territory.t_infos_site
     ) ;
 
 -- -----------------------------------------------------------------------------
