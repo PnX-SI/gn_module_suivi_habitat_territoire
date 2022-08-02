@@ -8,7 +8,7 @@ Create Date: 2022-08-02 09:06:46.349489
 import importlib
 
 from alembic import op
-import sqlalchemy as text
+from sqlalchemy.sql import text
 
 # revision identifiers, used by Alembic.
 revision = 'ad6a22b06caf'

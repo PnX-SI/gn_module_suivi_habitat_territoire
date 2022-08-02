@@ -1,7 +1,7 @@
 BEGIN;
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'Set database variables'
+-- -----------------------------------------------------------------------------
+-- Set database variables
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -9,59 +9,59 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'Create SHT schema'
-CREATE SCHEMA :moduleSchema;
+-- -----------------------------------------------------------------------------
+-- Create SHT schema
+CREATE SCHEMA pr_monitoring_habitat_territory;
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'Set new database variables'
-SET search_path = :moduleSchema, pg_catalog, public;
+-- -----------------------------------------------------------------------------
+-- Set new database variables
+SET search_path = pr_monitoring_habitat_territory, pg_catalog, public;
 SET default_with_oids = false;
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'TABLES'
+-- -----------------------------------------------------------------------------
+-- TABLES
 
-\echo 'Table `t_infos_site`'
+-- Table `t_infos_site`
 CREATE TABLE t_infos_site (
     id_infos_site serial NOT NULL,
     id_base_site integer NOT NULL,
     cd_hab integer NOT NULL
 );
-COMMENT ON TABLE :moduleSchema.t_infos_site IS
+COMMENT ON TABLE pr_monitoring_habitat_territory.t_infos_site IS
     'Extension de t_base_sites de gn_monitoring, permet d''avoir les infos complémentaires d''un site';
 
 
-\echo 'Table `cor_visit_taxons`'
+-- 'Table `cor_visit_taxons`
 CREATE TABLE cor_visit_taxons (
     id_cor_visite_taxons serial NOT NULL,
     id_base_visit integer NOT NULL,
     cd_nom integer NOT NULL
 );
-COMMENT ON TABLE :moduleSchema.cor_visit_taxons IS
+COMMENT ON TABLE pr_monitoring_habitat_territory.cor_visit_taxons IS
     'Enregistrer la présence d''un taxon dans une maille définie lors d''une visite';
 
 
-\echo 'Table `cor_visit_perturbation`'
+--  'Table `cor_visit_perturbation`
 CREATE TABLE cor_visit_perturbation (
     id_base_visit integer NOT NULL,
     id_nomenclature_perturbation integer NOT NULL,
     create_date timestamp without time zone NOT NULL
 );
-COMMENT ON TABLE :moduleSchema.cor_visit_perturbation IS
+COMMENT ON TABLE pr_monitoring_habitat_territory.cor_visit_perturbation IS
     'Enregistrer les perturbations constatées lors d''une visite';
 
 
-\echo 'Table `cor_habitat_taxon`'
+--  'Table `cor_habitat_taxon`
 CREATE TABLE cor_habitat_taxon (
     id_cor_habitat_taxon serial NOT NULL,
     id_habitat integer NOT NULL,
     cd_nom integer NOT NULL
 );
-COMMENT ON TABLE :moduleSchema.cor_visit_perturbation IS
+COMMENT ON TABLE pr_monitoring_habitat_territory.cor_visit_perturbation IS
     'Enregistrer les taxons de chaque habitat';
 
 
-\echo 'Add primary keys on previous tables'
+--  'Add primary keys on previous tables'
 ALTER TABLE ONLY t_infos_site
     ADD CONSTRAINT pk_id_t_infos_site
     PRIMARY KEY (id_infos_site);
@@ -79,8 +79,8 @@ ALTER TABLE ONLY cor_habitat_taxon
     PRIMARY KEY (id_cor_habitat_taxon);
 
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'FOREIGN KEYS'
+-- -----------------------------------------------------------------------------
+-- FOREIGN KEYS
 
 ALTER TABLE ONLY t_infos_site
     ADD CONSTRAINT fk_t_infos_site_id_base_site
@@ -132,18 +132,18 @@ ALTER TABLE ONLY cor_habitat_taxon
     ON UPDATE CASCADE;
 
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'UNIQUE CONSTRAINTS'
+-- -----------------------------------------------------------------------------
+-- UNIQUE CONSTRAINTS
 
 ALTER TABLE ONLY cor_visit_taxons
     ADD CONSTRAINT unique_cor_visit_taxons UNIQUE ( id_base_visit, cd_nom );
 
 
-\echo '--------------------------------------------------------------------------------'
-\echo 'VIEWS'
+-- -----------------------------------------------------------------------------
+-- VIEWS
 
-\echo 'Create view to export visits'
-CREATE OR REPLACE VIEW :moduleSchema.export_visits AS WITH
+-- Create view to export visits
+CREATE OR REPLACE VIEW pr_monitoring_habitat_territory.export_visits AS WITH
 observers AS(
     SELECT
         v.id_base_visit,
@@ -161,7 +161,7 @@ perturbations AS(
         v.id_base_visit,
         string_agg(n.label_default, ',') AS label_perturbation
     FROM gn_monitoring.t_base_visits v
-        JOIN :moduleSchema.cor_visit_perturbation p
+        JOIN pr_monitoring_habitat_territory.cor_visit_perturbation p
             ON v.id_base_visit = p.id_base_visit
         JOIN ref_nomenclatures.t_nomenclatures n
             ON p.id_nomenclature_perturbation = n.id_nomenclature
@@ -187,7 +187,7 @@ taxons AS (
         ) AS nom_valide_taxon,
         string_agg(tr.cd_nom::text, ',') AS cover_cdnom
     FROM gn_monitoring.t_base_visits v
-        JOIN :moduleSchema.cor_visit_taxons t
+        JOIN pr_monitoring_habitat_territory.cor_visit_taxons t
             ON t.id_base_visit = v.id_base_visit
         JOIN taxonomie.taxref tr
             ON t.cd_nom = tr.cd_nom
@@ -224,7 +224,7 @@ FROM gn_monitoring.t_base_sites sites
         ON per.id_base_visit = visits.id_base_visit
     JOIN area
         ON area.id_base_site = sites.id_base_site
-    JOIN :moduleSchema.t_infos_site info
+    JOIN pr_monitoring_habitat_territory.t_infos_site info
         ON info.id_base_site = sites.id_base_site
     JOIN ref_habitats.habref habref
         ON habref.cd_hab = info.cd_hab
