@@ -84,7 +84,7 @@ def get_csv_field_names(f, encoding, delimiter):
 def upgrade():
     cursor = op.get_bind().connection.cursor()
     with importlib.resources.open_text(
-        "gn_module_priority_flora.migrations.data", "perturbation_nomenclatures.csv"
+        "gn_module_monitoring_habitat_territory.migrations.data", "perturbation_nomenclatures.csv"
     ) as csvfile:
         logger.info("Inserting perturbations nomenclatures…")
         copy_from_csv(
