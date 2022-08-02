@@ -40,12 +40,12 @@ RETURNING id_type ;
 WITH test_exists AS (
     SELECT id_liste
     FROM taxonomie.bib_listes
-    WHERE nom_liste = :'taxonsListName'
+    WHERE nom_liste = 'Suivi Habitat Territoire'
 )
 INSERT INTO taxonomie.bib_listes (id_liste, nom_liste, desc_liste, regne, group2_inpn)
   SELECT
       (SELECT MAX(id_liste) + 1 FROM taxonomie.bib_listes),
-      :'taxonsListName',
+      'Suivi Habitat Territoire',
       'Taxons suivis dans le protocole Suivi Habitat Territoire',
       'Plantae',
       'Angiospermes'
@@ -62,10 +62,10 @@ RETURNING id_liste ;
 WITH test_exists AS (
     SELECT id_list
     FROM ref_habitats.bib_list_habitat
-    WHERE list_name = :'habitatsListName'
+    WHERE list_name = 'Suivi Habitat Territoire'
 )
 INSERT INTO ref_habitats.bib_list_habitat (list_name)
-  SELECT :'habitatsListName'
+  SELECT 'Suivi Habitat Territoire'
 WHERE NOT EXISTS (
   SELECT id_list FROM test_exists
 )
@@ -80,18 +80,18 @@ WITH test_exists AS (
     SELECT id_nomenclature
     FROM ref_nomenclatures.t_nomenclatures
     WHERE id_type = ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE')
-        AND cd_nomenclature = :'sitesTypeCode'
+        AND cd_nomenclature = 'HAB'
 )
 INSERT INTO ref_nomenclatures.t_nomenclatures
     (id_type, cd_nomenclature, mnemonique, label_default, label_fr, definition_fr, source)
 SELECT
     ref_nomenclatures.get_id_nomenclature_type('TYPE_SITE'),
-    :'sitesTypeCode',
+    'HAB',
     'Zone d''habitat',
     'Zone d''habitat - suivi habitat territoire',
     'Zone d''habitat',
     'Zone d''habitat - issu du module Suivi Habitat Territoire (SHT)',
-    :'sitesTypeSrc'
+    'CBNA'
 WHERE NOT EXISTS (SELECT id_nomenclature FROM test_exists)
 RETURNING id_nomenclature ;
 
@@ -100,17 +100,17 @@ RETURNING id_nomenclature ;
 WITH test_exists AS (
     SELECT id_type
     FROM ref_nomenclatures.bib_nomenclatures_types
-    WHERE mnemonique = :'perturbationsCode'
+    WHERE mnemonique = 'TYPE_PERTURBATION'
 )
 INSERT INTO ref_nomenclatures.bib_nomenclatures_types
     (mnemonique, label_default, definition_default, label_fr, definition_fr, source)
 SELECT
-    :'perturbationsCode',
+    'TYPE_PERTURBATION',
     'Type de perturbations',
     'Nomenclature des types de perturbations.',
     'Type de perturbations',
     'Nomenclatures des types de perturbations.',
-    :'perturbationsSrc'
+    'CBNA'
 WHERE NOT EXISTS (SELECT id_type FROM test_exists)
 RETURNING id_type ;
 
@@ -124,8 +124,9 @@ SET
     module_label = 'S. Habitat Territoire',
     module_picto = 'fa-map',
     module_desc = 'Module de Suivi des Habitats d''un Territoire'
-WHERE module_code ILIKE :'moduleCode' ;
-  AND NOT EXISTS module_code ILIKE :'moduleCode' ;
-
+WHERE module_code ILIKE 'sht' ;
+/*
+AND module_code ILIKE 'sht' ;
+*/
 -- -------------------------------------------------------------------------------
 COMMIT;
