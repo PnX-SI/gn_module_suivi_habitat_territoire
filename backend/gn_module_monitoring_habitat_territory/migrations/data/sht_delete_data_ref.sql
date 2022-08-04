@@ -25,7 +25,6 @@ ALTER TABLE ref_geo.li_municipalities DISABLE TRIGGER tri_meta_dates_change_li_m
 ALTER TABLE ref_geo.li_municipalities DROP CONSTRAINT fk_li_municipalities_id_area;
 ALTER TABLE ref_geo.li_grids DROP CONSTRAINT fk_li_grids_id_area;
 ALTER TABLE gn_synthese.cor_area_synthese DROP CONSTRAINT fk_cor_area_synthese_id_area;
-ALTER TABLE gn_synthese.cor_area_taxon DROP CONSTRAINT fk_cor_area_taxon_id_area;
 ALTER TABLE gn_sensitivity.cor_sensitivity_area DROP CONSTRAINT fk_cor_sensitivity_area_id_area_fkey;
 ALTER TABLE gn_monitoring.cor_site_area DROP CONSTRAINT fk_cor_site_area_id_area;
 
@@ -51,9 +50,6 @@ ALTER TABLE ref_geo.li_grids ADD CONSTRAINT fk_li_grids_id_area
     FOREIGN KEY (id_area) REFERENCES ref_geo.l_areas(id_area)
     ON UPDATE CASCADE ON DELETE cascade  ;
 ALTER TABLE gn_synthese.cor_area_synthese ADD CONSTRAINT fk_cor_area_synthese_id_area
-    FOREIGN KEY (id_area) REFERENCES ref_geo.l_areas(id_area)
-    ON UPDATE cascade ;
-ALTER TABLE gn_synthese.cor_area_taxon ADD CONSTRAINT fk_cor_area_taxon_id_area
     FOREIGN KEY (id_area) REFERENCES ref_geo.l_areas(id_area)
     ON UPDATE cascade ;
 ALTER TABLE gn_sensitivity.cor_sensitivity_area ADD CONSTRAINT fk_cor_sensitivity_area_id_area_fkey
