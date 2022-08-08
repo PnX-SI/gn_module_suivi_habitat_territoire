@@ -13,7 +13,7 @@ with (root_dir / "requirements.in").open() as f:
 setuptools.setup(
     name="gn_module_monitoring_habitat_territory",
     version=version,
-    description="Module Conservation Suivi Flore Territoire",
+    description="Module Conservation Suivi Habitat Territoire",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     maintainer="Parcs nationaux des Écrins et des Cévennes, Conservatoire Botanique National Alpin",

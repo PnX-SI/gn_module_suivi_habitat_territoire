@@ -44,7 +44,6 @@ function initScript() {
     readonly conf_dir="${root_dir}/config"
     readonly data_dir="${bin_dir}/data"
     readonly import_dir="${data_dir}/imports"
-    readonly sample_dir="${data_dir}/sample"
     readonly var_dir="${root_dir}/var"
     readonly log_dir="${var_dir}/log"
     readonly tmp_dir="${var_dir}/tmp"

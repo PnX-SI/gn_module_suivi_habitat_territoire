@@ -1,13 +1,7 @@
-BEGIN;
 
 -- -----------------------------------------------------------------------------
 -- Set database variables
-SET statement_timeout = 0;
-SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SET check_function_bodies = false;
-SET client_min_messages = warning;
 
 -- -----------------------------------------------------------------------------
 -- Create SHT schema
@@ -236,5 +230,4 @@ FROM gn_monitoring.t_base_sites sites
         ON ar.id_type = bat.id_type
 ORDER BY visits.id_base_visit;
 
--- ----------------------------------------------------------------------------
-COMMIT;
+
