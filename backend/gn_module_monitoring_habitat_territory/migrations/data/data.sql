@@ -31,4 +31,4 @@ SET
     module_label = 'S. Habitat Territoire',
     module_picto = 'fa-map',
     module_desc = 'Module de Suivi des Habitats d''un Territoire'
-WHERE module_code ILIKE 'sht' ;
+WHERE module_code ILIKE 'SHT' ;
