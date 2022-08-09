@@ -20,7 +20,7 @@ depends_on = None
 def upgrade():
     operations = text(
         importlib.resources.read_text(
-            "gn_module_monitoring_habitat_territory.migrations.data", "sht_schema.sql"
+            "gn_module_monitoring_habitat_territory.migrations.data", "schema.sql"
         )
     )
     op.get_bind().execute(operations)

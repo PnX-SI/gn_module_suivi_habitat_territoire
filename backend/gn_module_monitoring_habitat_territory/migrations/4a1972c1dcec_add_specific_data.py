@@ -25,7 +25,7 @@ depends_on = (
 def upgrade():
     operations = text(
         importlib.resources.read_text(
-            "gn_module_monitoring_habitat_territory.migrations.data", "sht_data_ref.sql"
+            "gn_module_monitoring_habitat_territory.migrations.data", "data.sql"
         )
     )
     op.get_bind().execute(operations)
@@ -34,7 +34,7 @@ def upgrade():
 def downgrade():
     operations = text(
         importlib.resources.read_text(
-            "gn_module_monitoring_habitat_territory.migrations.data", "sht_delete_data_ref.sql"
+            "gn_module_monitoring_habitat_territory.migrations.data", "delete_data.sql"
         )
     )
     op.get_bind().execute(operations)
