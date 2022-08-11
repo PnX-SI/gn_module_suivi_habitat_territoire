@@ -38,3 +38,23 @@ def downgrade():
         )
     )
     op.get_bind().execute(operations)
+    delete_module("sht")
+
+
+def delete_module(module_code):
+    operation = text("""
+        -- Unlink module from dataset
+        DELETE FROM gn_commons.cor_module_dataset
+            WHERE id_module = (
+                SELECT id_module
+                FROM gn_commons.t_modules
+                WHERE module_code = :moduleCode
+            ) ;
+        -- Uninstall module (unlink this module of GeoNature)
+        DELETE FROM gn_commons.t_modules
+            WHERE module_code = :moduleCode ;
+    """)
+    op.get_bind().execute(operation, {"moduleCode" : module_code}
+)
+
+    
