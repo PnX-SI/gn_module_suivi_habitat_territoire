@@ -23,17 +23,10 @@ from pypnusershub.db.models import User
 from utils_flask_sqla.serializers import serializable
 from utils_flask_sqla.generic import GenericQuery
 from utils_flask_sqla_geo.serializers import geoserializable
-
 from geonature.utils.env import DB
-#from geonature.utils.utilssqlalchemy import (
-#    serializable,
-#    geoserializable,
-#    GenericQuery,
-#)
+
 from geonature.utils.utilsgeometry import shapeserializable
 from geonature.core.gn_monitoring.models import TBaseSites, TBaseVisits, corVisitObserver
-from pypnnomenclature.models import TNomenclatures
-
 
 @serializable
 class CorVisitTaxon(DB.Model):
@@ -55,27 +48,22 @@ class CorVisitTaxon(DB.Model):
     )
     cd_nom = DB.Column(DB.Integer)
 
-
 @serializable
 class CorVisitPerturbation(DB.Model):
     __tablename__ = 'cor_visit_perturbation'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
     id_base_visit = DB.Column(
-        DB.ForeignKey(
-            'gn_monitoring.t_base_visits.id_base_visit',
-            onupdate='CASCADE'
-        ),
+        "id_base_visit",
+        DB.Integer,
+        ForeignKey("gn_monitoring.t_base_visits.id_base_visit"),
         primary_key=True,
-        nullable=False
     )
     id_nomenclature_perturbation = DB.Column(
-        DB.ForeignKey(
-            'ref_nomenclatures.t_nomenclatures.id_nomenclature',
-            onupdate='CASCADE'
-        ),
+        "id_nomenclature_perturbation",
+        DB.Integer,
+        ForeignKey("ref_nomenclatures.t_nomenclatures.id_nomenclature"),
         primary_key=True,
-        nullable=False
     )
     create_date = DB.Column(
         DB.DateTime,
@@ -84,12 +72,8 @@ class CorVisitPerturbation(DB.Model):
     )
 
     t_nomenclature = DB.relationship(
-        'TNomenclatures',
-        primaryjoin='CorVisitPerturbation.id_nomenclature_perturbation == TNomenclatures.id_nomenclature',
-        uselist=False,
-        backref='cor_visit_perturbations'
+        "TNomenclatures",
     )
-
 
 @serializable
 class TVisitSHT(TBaseVisits):
@@ -116,15 +100,16 @@ class CorHabitatTaxon(DB.Model):
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
     id_cor_habitat_taxon = DB.Column(
+        "id_cor_habitat_taxon",
         DB.Integer,
         primary_key=True,
         server_default=DB.FetchedValue()
     )
     id_habitat = DB.Column(
-        DB.ForeignKey(
-            'ref_habitats.habref.cd_hab',
-            onupdate='CASCADE'
-        ),
+        "id_habitat",
+        DB.Integer,
+        ForeignKey("ref_habitats.habref.cd_hab"),
+        primary_key=True,
         nullable=False
     )
     cd_nom = DB.Column(
@@ -134,10 +119,7 @@ class CorHabitatTaxon(DB.Model):
 
     habref = DB.relationship(
         'Habref',
-        primaryjoin='CorHabitatTaxon.id_habitat == Habref.cd_hab',
-        backref='cor_habitat_taxons'
     )
-
 
 @geoserializable
 @serializable
@@ -163,7 +145,6 @@ class TInfosSite(DB.Model):
 
     def get_geofeature(self):
         return self.as_geofeature('geom', 'id_infos_site')
-
 
 @serializable
 @geoserializable
