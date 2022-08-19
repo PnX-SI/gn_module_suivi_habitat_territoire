@@ -214,12 +214,18 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   onChargeList(param?) {
     this._api.getSites(param).subscribe(
       data => {
+        console.log("data : ", data);
         this.sites = data[1];
         this.page.totalElements = data[0].totalItems;
         this.page.size = data[0].items_per_page;
         this.mapListService.loadTableData(data[1]);
         this.filteredData = this.mapListService.tableData;
-
+        if (data[0].totalItems == 0) {
+          let msg = "Aucune donnée n'est disponible avec ces paramètres.";
+          this.toastr.warning(msg, '', {
+            positionClass: 'toast-top-right'
+          });
+        }
         this.dataLoaded = true;
       },
       error => {

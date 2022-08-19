@@ -181,22 +181,20 @@ def get_all_sites(info_role):
 
     page = request.args.get('page', 1, type=int)
     items_per_page = blueprint.config['items_per_page']
-    pagination_serverside = blueprint.config['pagination_serverside']
+    # pagination_serverside = blueprint.config['pagination_serverside']
 
-    if (pagination_serverside):
-        pagination = q.paginate(page, items_per_page, False)
-        data = pagination.items
-        totalItems = pagination.total
-    else:
-        totalItems = 0
-        data = q.all()
+    pagination = q.paginate(page, items_per_page, False)
+    # data = pagination.items
+    totalItems = pagination.total
+    # totalItems = 0
+    data = q.all()
 
     pageInfo= {
         'totalItems' : totalItems,
         'items_per_page' : items_per_page,
     }
-    features = []
 
+    features = []
     if data:
         for d in data:
             feature = d[0].get_geofeature()
@@ -219,7 +217,7 @@ def get_all_sites(info_role):
             features.append(feature)
 
         return [pageInfo,FeatureCollection(features)]
-    return None
+    return [pageInfo,FeatureCollection(features)]
 
 
 @blueprint.route('/visits', methods=['GET'])
@@ -543,52 +541,28 @@ def export_visit(info_role):
     parameters = request.args
     export_format = parameters['export_format'] if 'export_format' in request.args else 'shapefile'
 
-    file_name = datetime.datetime.now().strftime('%Y_%m_%d_%Hh%Mm%S')
-
     # Build query
     query = DB.session.query(ExportVisits)
     if 'id_base_visit' in parameters:
-        query = (
-            DB.session
-            .query(ExportVisits)
-            .filter(ExportVisits.idbvisit == parameters['id_base_visit'])
-        )
+        query = query.filter(ExportVisits.idbvisit == parameters['id_base_visit'])
     elif 'id_base_site' in parameters:
-        query = (
-            DB.session
-            .query(ExportVisits)
-            .filter(ExportVisits.idbsite == parameters['id_base_site'])
-        )
+        query = query.filter(ExportVisits.idbsite == parameters['id_base_site'])
     elif 'organisme' in parameters:
-        query = (
-            DB.session.query(ExportVisits)
-            .filter(ExportVisits.organisme == parameters['organisme'])
-        )
+        query = query.filter(ExportVisits.organisme == parameters['organisme'])
     elif 'commune' in parameters:
-        query = (
-            DB.session.query(ExportVisits)
-            .filter(ExportVisits.area_name == parameters['commune'])
-        )
+        query = query.filter(ExportVisits.area_name == parameters['commune'])
     elif 'year' in parameters:
         query = (
-            DB.session.query(ExportVisits)
-            .filter(func.date_part('year', ExportVisits.visitdate) == parameters['year'])
+            query.filter(func.date_part('year', ExportVisits.visitdate) == parameters['year'])
         )
     elif 'cd_hab' in parameters:
-        query = (
-            DB.session.query(ExportVisits)
-            .filter(ExportVisits.cd_hab == parameters['cd_hab'])
-        )
-    data = query.all()
+        query = query.filter(ExportVisits.cd_hab == parameters['cd_hab'])
 
-    features = []
+    data = query.all()
 
     # Format data
     cor_hab_taxon = []
     flag_cdhab = 0
-    tab_header = []
-    column_name = get_base_column_name()
-    column_name_pro = get_pro_column_name()
     mapping_columns = get_mapping_columns()
     tab_visit = []
 
@@ -622,6 +596,8 @@ def export_visit(info_role):
 
         tab_visit.append(visit)
 
+    features = []
+    file_name = datetime.datetime.now().strftime('%Y_%m_%d_%Hh%Mm%S')
     # Run export
     if export_format == 'geojson':
         for d in tab_visit:
@@ -638,6 +614,9 @@ def export_visit(info_role):
             indent=4
         )
     elif export_format == 'csv':
+        column_name = get_base_column_name()
+        column_name_pro = get_pro_column_name()
+        tab_header = []
         tab_header = column_name + [clean_string(x) for x in cor_hab_taxon] + column_name_pro
         return to_csv_resp(
             file_name,

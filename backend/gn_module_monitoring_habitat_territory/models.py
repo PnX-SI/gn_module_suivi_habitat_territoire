@@ -153,14 +153,11 @@ class ExportVisits(DB.Model):
     __tablename__ = 'export_visits'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
-    idarea = DB.Column(
-        DB.Integer,
-        primary_key=True
-    )
     idbvisit = DB.Column(
         DB.Integer,
         primary_key=True
     )
+    
     idbsite = DB.Column(DB.Integer)
     visitdate = DB.Column(DB.DateTime)
     observers = DB.Column(DB.Unicode)
@@ -174,4 +171,3 @@ class ExportVisits(DB.Model):
     lbperturb = DB.Column(DB.Unicode)
     geom = DB.Column(Geometry('GEOMETRY', 2154))
     covtaxons = DB.Column(DB.Unicode)
-    id_type = DB.Column(DB.Integer)
