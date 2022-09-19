@@ -34,7 +34,7 @@
     nano config/conf_gn_module.toml
     ```
     - Vous trouverez les paramètres possibles dans le fichier : `config/conf_gn_module.toml.example`.
-    - Les valeurs par défaut dans : `backend/gn_module_habitat_territory/conf_schema_toml.py`
+    - Les valeurs par défaut dans : `backend/gn_module_monitoring_habitat_territory/conf_schema_toml.py`
 7. Mettre à jour le frontend :
     ```bash
     geonature update-configuration --build false && geonature generate-frontend-tsconfig && geonature generate-frontend-tsconfig-app && geonature generate-frontend-modules-route
@@ -53,7 +53,7 @@ Suivez la procédure suivante :
     ```
 1. Désinstaller le package du virtual env :
     ```
-    pip uninstall gn-module-monitoring-flora-territory
+    pip uninstall gn-module-monitoring-habitat-territory
     ```
     - Possibilité de voir le nom du module avec : `pip list`
 1. Supprimer la ligne relative au module dans `gn_commons.t_modules`
