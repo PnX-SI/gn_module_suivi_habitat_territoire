@@ -1,17 +1,46 @@
 # CHANGELOG
 
-## v1.0.0 (unreleased)
+## [Unreleased]
 
-Première version stable du module compatible avec GeoNature v2.3.2.
+## [1.0.0] - 2022-09-22
 
-**Fonctionnalités**
+### Added
 
-**Corrections**
+* Add Alembic support.
+* Compatibility with GeoNature v2.9.2.
+* Add new module architecture ("packaged").
+* Replace use of id by code for module.
+* All Bash import scripts with their SQL files move to `bin/` directory.
+* Update module documentation.
 
-## v1.0.0-rc.1 (2019-07-30)
+## [1.0.0-beta] - 2022-02-15
 
-## v0.0.3 - Refact export (2019-05-28)
+First stable version. Compatibility with GeoNature v2.3.2.
 
-## v0.0.2 - Fix export (2019-04-15)
+### Added
 
-## v0.0.1 - Beta (2019-04-11)
+* Update compatibility to GeoNature v2.3.0
+* Add Bash imports scripts for : observations, visits, nomenclatures, habitats, sites, taxons.
+* Add import script shared library of Bash functions.
+* Add documentation for new Bash scripts.
+* Add uninstall module script.
+
+### Fixed
+
+* Remove useless checking SQL file.
+* Improve install module script.
+* Use new utils-flask-sqla syntax.
+
+## [0.0.3] - 2019-05-28
+### Added
+
+* Refactorization of export.
+## [0.0.2] - 2019-04-15
+### Fixed
+
+* Fix export.
+
+
+## [0.0.1] - 2019-04-11
+
+Initial version.
