@@ -2,3 +2,6 @@ fieldset:disabled {
     color: #6c757d;
     pointer-events: none;
 }
+form.ng-invalid {
+    border-left-style: none !important;
+}

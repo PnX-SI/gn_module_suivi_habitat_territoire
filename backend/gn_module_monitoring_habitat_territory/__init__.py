@@ -1,0 +1,2 @@
+MODULE_CODE = "SHT"
+MODULE_PICTO = "fa-map"

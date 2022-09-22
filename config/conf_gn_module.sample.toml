@@ -1,0 +1,52 @@
+# Fichier listant les paramètres du module et leurs valeurs par défaut
+
+# Coordonnées latitude, longitude permettant d'indiquer le centre des cartes du module
+zoom_center = [44.63891, 6.11608]
+# Zoom par défaut utilisé pour les cartes du module
+zoom = 12
+
+# SRID utilisé pour les exports géographiques
+export_srid = 2154
+# Liste des types d'export disponible
+export_available_format = ["geojson", "csv", "shapefile"]
+
+# Identifiant du dataset à utiliser pour les données SHT.
+# Valeur du champ `id_dataset` de la table `gn_meta.t_datasets`.
+# Devrait correspondre au paramètre "dataset_id" du fichier config/settings.default.ini
+id_dataset = 1
+# Valeur du champ `id_type` dans la table `ref_geo.bib_areas_types`.
+# Par défaut, id pour l'entrée avec type_name="Communes" et type_code="COM"
+id_type_commune = 25
+# Identifiant de la liste d'utilisateurs réalisant des visites pour SHT.
+# Valeur du champ `id_liste` dans la table `utilisateurs.t_listes`.
+# Devrait correspondre au paramètre "observers_list_code" du fichier config/settings.default.ini
+id_menu_list_user = 1
+# Valeur du champ `id_list` dans la table `ref_habitats.bib_list_habitat`.
+# Par défaut, id pour l'entrée avec list_name="Suivi Habitat Territoire"
+# Sauf si modifié via les paramètre "habitats_list_name" du fichier config/settings.default.ini
+id_bib_list_habitat = 1
+
+# Gestion des messages configurables
+site_message = { emptyMessage = "Aucun site à afficher ", totalMessage = "sites(s) au total" }
+list_visit_message = { emptyMessage = "Aucune visite sur ce site ", totalMessage = "visites au total" }
+detail_list_visit_message = { emptyMessage = "Aucune autre visite sur ce site ", totalMessage = "visites au total" }
+
+# Colonnes à afficher dans la table des sites sur la page d'accueil
+default_site_columns = [
+    { name = "Identifiant", prop = "id_base_site", width = "90" },
+    { name = "Habitat", prop = "nom_habitat", width = "350" },
+    { name = "Nombre de visites", prop = "nb_visit", width = "120" },
+    { name = "Date de la dernière visite", prop = "date_max", width = "160" },
+    { name = "Organisme", prop = "organisme", width = "200"}
+]
+# Colonnes à afficher dans la table des visites sur la page d'un site
+default_list_visit_columns = [
+    { name = "Date", prop = "visit_date_min", width = "120"},
+    { name = "Observateur(s)", prop = "observers", width = "350"},
+    { name = "Espèce(s) présente(s)", prop = "state", width = "120"}
+]
+
+# Indique si la pagination doit être réalisé côté serveur (=true) ou côté navigateur (=false)
+pagination_serverside = false
+# Nombre d'éléments par page page pour les listes paginées
+items_per_page = 5

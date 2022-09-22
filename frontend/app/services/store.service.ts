@@ -1,8 +1,10 @@
 import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Layer } from 'leaflet';
-import { ModuleConfig } from '../module.config';
+
 import { BehaviorSubject } from 'rxjs';
+import { Layer } from 'leaflet';
+
+import { ModuleConfig } from '../module.config';
 import { AppConfig } from '@geonature_config/app.config';
 
 @Injectable()
@@ -41,7 +43,7 @@ export class StoreService {
 
   public queryString = new HttpParams();
 
-  public currentSite$: BehaviorSubject<any> = new BehaviorSubject();
+  public currentSite$: BehaviorSubject<any | undefined> = new BehaviorSubject(undefined);
 
   public urlLoad = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/export_visit`;
 
@@ -63,7 +65,7 @@ export class StoreService {
         year= currentDate.getFullYear() - date_max.getFullYear();
       }
     }
-  
+
     return this.getColor(year);
   }
 
