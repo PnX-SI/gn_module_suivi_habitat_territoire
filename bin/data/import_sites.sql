@@ -29,7 +29,7 @@ $function$ ;
 \echo '--------------------------------------------------------------------------------'
 \echo 'Fix sites geom with force2D'
 ALTER TABLE :moduleSchema.:sitesTableTmp
-ALTER COLUMN :sitesColumnGeom TYPE geometry(MULTIPOLYGON, :sridLocal)
+ALTER COLUMN :sitesColumnGeom TYPE geometry(GEOMETRY, :sridLocal)
 USING ST_Force2D(:sitesColumnGeom) ;
 
 
@@ -40,8 +40,12 @@ USING ST_Force2D(:sitesColumnGeom) ;
 \echo 'Insert data in "t_base_sites" with data in temporary table'
 \echo 'WARNING: your Shape file must used the same SRID than you database (usually 2154)'
 INSERT INTO gn_monitoring.t_base_sites (
-    id_nomenclature_type_site, base_site_name, base_site_description, 
-    base_site_code, first_use_date, geom
+    id_nomenclature_type_site,
+    base_site_name,
+    base_site_description, 
+    base_site_code,
+    first_use_date,
+    geom
 )
     SELECT
         ref_nomenclatures.get_id_nomenclature('TYPE_SITE', :'sitesTypeCode'),
