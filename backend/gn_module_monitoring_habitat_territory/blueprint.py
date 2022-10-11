@@ -344,7 +344,12 @@ def post_visit(info_role):
 
     # Set generic infos got from config
     data['id_dataset'] = blueprint.config['id_dataset']
-    data['module_code'] = blueprint.config['MODULE_CODE']
+    data['id_module'] =  (
+        DB.session
+        .query(TModules.id_module)
+        .filter(TModules.module_code == blueprint.config['MODULE_CODE'])
+        .scalar()
+    )
 
     # Remove data properties before create SQLA object with it
     perturbations = []
