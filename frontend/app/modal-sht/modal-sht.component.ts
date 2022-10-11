@@ -27,7 +27,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   private formDataSubscription;
   public formVisit: FormGroup;
   private _modalRef: NgbModalRef;
-  public species: any = [];
+  public species: any[] = [];
   public cd_hab;
   public nom_habitat;
   public id_base_site;
@@ -39,7 +39,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
     cor_visit_perturbation: [],
     comments: ''
   };
-  public modalTitle = 'Saisie d\'un relevé';
+  public modalTitle = "Saisie d'un relevé";
   public disabledForm = false;
   public onUpVisit = false;
   public labelUpVisit = 'Éditer le relevé';
@@ -84,7 +84,8 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   }
 
   initializeData() {
-    this.formDataSubscription = this.storeService.getCurrentSite()
+    this.formDataSubscription = this.storeService
+      .getCurrentSite()
       .flatMap(currentSite => {
         this.cd_hab = currentSite.cd_hab;
         this.nom_habitat = currentSite.nom_habitat;
@@ -93,14 +94,15 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
         return forkJoin({
           currentVisit: this.getCurrentVisit(),
           taxons: this._api.getTaxons(this.cd_hab)
-        })
-      }).flatMap(results => {
-        this.visit = Object.keys(results.currentVisit).length > 0
-          ? results.currentVisit
-          : this.visit;
+        });
+      })
+      .flatMap(results => {
+        this.visit =
+          Object.keys(results.currentVisit).length > 0 ? results.currentVisit : this.visit;
         this.species = this.formatTaxons(results.taxons);
-        return of({visit: this.visit, species: this.species});
-      }).subscribe(data => {
+        return of({ visit: this.visit, species: this.species });
+      })
+      .subscribe(data => {
         this.patchForm();
         this.clearTaxonsControls();
         this.addTaxonsControls();
@@ -158,14 +160,14 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   clearTaxonsControls() {
     // WARNING: use removeAt() with a loop to not destroy subscriptions
     while (this.taxonsVisit.length !== 0) {
-      this.taxonsVisit.removeAt(0)
+      this.taxonsVisit.removeAt(0);
     }
   }
 
   checkPermission() {
     this.userService.check_user_cruved_visit('U', this.visit).subscribe(ucruved => {
       this.isAllowed = ucruved;
-    })
+    });
   }
 
   onSave() {
@@ -210,17 +212,15 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       currentForm['cor_visit_perturbation'] !== null &&
       currentForm['cor_visit_perturbation'] !== undefined
     ) {
-      formatedData['cor_visit_perturbation'] = currentForm['cor_visit_perturbation']
-        .map(pertu => {
-          return { id_nomenclature_perturbation: pertu.id_nomenclature };
-        });
+      formatedData['cor_visit_perturbation'] = currentForm['cor_visit_perturbation'].map(pertu => {
+        return { id_nomenclature_perturbation: pertu.id_nomenclature };
+      });
     }
 
     // observers
-    formatedData['cor_visit_observer'] = currentForm['cor_visit_observer']
-      .map(obs => {
-        return obs.id_role;
-      });
+    formatedData['cor_visit_observer'] = currentForm['cor_visit_observer'].map(obs => {
+      return obs.id_role;
+    });
 
     return formatedData;
   }
@@ -286,5 +286,4 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       );
     }
   }
-
 }
