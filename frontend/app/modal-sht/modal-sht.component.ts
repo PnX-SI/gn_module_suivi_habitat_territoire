@@ -309,13 +309,12 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
         positionClass: 'toast-top-right'
       });
     } else {
-      this.toastr.error(
-        'Une erreur est survenue lors de l\'enregistrement de votre relevé',
-        '',
-        {
-          positionClass: 'toast-top-right'
-        }
-      );
+      let msg = `Une erreur est survenue lors de l'enregistrement de votre relevé : ${
+        error.error.description
+      }`;
+      this.toastr.error(msg, '', {
+        positionClass: 'toast-top-right'
+      });
     }
   }
 }
