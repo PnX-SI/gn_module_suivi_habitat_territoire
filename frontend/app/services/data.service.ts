@@ -87,4 +87,10 @@ export class DataService {
       data
     );
   }
+
+  getTaxonsInfos(scinameCode) {
+    return this.http.get<any>(
+      `${AppConfig.API_TAXHUB}/taxref/${scinameCode}`
+    );
+  }
 }

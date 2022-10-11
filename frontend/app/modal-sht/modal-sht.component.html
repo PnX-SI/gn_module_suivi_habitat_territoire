@@ -85,7 +85,15 @@
                 </div>
             </fieldset>
         </form>
+
+        <div *ngIf="nonHabitatTaxa.length > 0">
+            <h4>Taxons présents non compris dans l'habitat</h4>
+            <ul>
+                <li *ngFor="let taxaCode of nonHabitatTaxa"><i>{{taxaCode}}</i></li>
+            </ul>
+        </div>
     </div>
+
     <div class="modal-footer">
         <button
             type="button"

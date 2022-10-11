@@ -28,6 +28,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
   public formVisit: FormGroup;
   private _modalRef: NgbModalRef;
   public species: any[] = [];
+  public nonHabitatTaxa: any[] = [];
   public cd_hab;
   public nom_habitat;
   public id_base_site;
@@ -100,6 +101,10 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
         this.visit =
           Object.keys(results.currentVisit).length > 0 ? results.currentVisit : this.visit;
         this.species = this.formatTaxons(results.taxons);
+        this.nonHabitatTaxa = this.extractNonHabitatTaxa(
+          this.visit['cor_visit_taxons'],
+          results.taxons
+        );
         return of({ visit: this.visit, species: this.species });
       })
       .subscribe(data => {
@@ -138,6 +143,33 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       species[idx] = element;
     });
     return species;
+  }
+
+  private extractNonHabitatTaxa(observedTaxa, habitatTaxa) {
+    let nonHabitatTaxaCodes = [];
+    if (observedTaxa.length > 0) {
+      observedTaxa.forEach(visitTaxon => {
+        let nonHabitat = true;
+        habitatTaxa.forEach(habitatTaxon => {
+          if (visitTaxon.cd_nom == habitatTaxon.cd_nom) {
+            nonHabitat = false;
+          }
+        });
+        if (nonHabitat) {
+          nonHabitatTaxaCodes.push(visitTaxon.cd_nom);
+        }
+      });
+    }
+
+    let nonHabitatTaxa = [];
+    if (nonHabitatTaxaCodes.length > 0) {
+      for (let scinameCode of nonHabitatTaxaCodes) {
+        this._api.getTaxonsInfos(scinameCode).subscribe(data => {
+          nonHabitatTaxa.push(data.nom_complet);
+        });
+      }
+    }
+    return nonHabitatTaxa;
   }
 
   patchForm() {
