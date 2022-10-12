@@ -157,7 +157,7 @@ class ExportVisits(DB.Model):
         DB.Integer,
         primary_key=True
     )
-    
+
     idbsite = DB.Column(DB.Integer)
     visitdate = DB.Column(DB.DateTime)
     observers = DB.Column(DB.Unicode)
@@ -170,4 +170,5 @@ class ExportVisits(DB.Model):
     comments = DB.Column(DB.Unicode)
     lbperturb = DB.Column(DB.Unicode)
     geom = DB.Column(Geometry('GEOMETRY', 2154))
+    geojson = DB.Column(DB.Unicode)
     covtaxons = DB.Column(DB.Unicode)

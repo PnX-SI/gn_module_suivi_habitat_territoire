@@ -163,6 +163,7 @@ def get_mapping_columns():
         'comments': 'Commentaires',
         'geom': 'Géométrie',
         'geom_wkt': 'geom_wkt',
+        'geojson': 'geojson',
         'cd_hab': 'cdhab',
         'covtaxons': 'covtaxons',
         'nomvtaxon': 'nomvtaxon'

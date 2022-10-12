@@ -584,10 +584,9 @@ def export_visit(info_role):
         visit['lbhab'] = striphtml(visit['lbhab'])
 
         # Geom
-        geom_wkt = to_shape(d.geom)
-        if export_format == 'geojson':
-            visit['geom_wkt'] = geom_wkt
-        else:
+
+        if export_format != 'geojson':
+            geom_wkt = to_shape(d.geom)
             visit['geom'] = geom_wkt
 
         # Translate label column
@@ -606,11 +605,14 @@ def export_visit(info_role):
     # Run export
     if export_format == 'geojson':
         for d in tab_visit:
-            feature = mapping(d['geom_wkt'])
-            d.pop('geom_wkt', None)
-            properties = d
+            feature = {
+                'type': 'Feature',
+                'geometry': json.loads(d['geojson']),
+            }
+            d.pop('geojson', None)
+            d.pop('geom', None)
+            feature['properties'] = d
             features.append(feature)
-            features.append(properties)
         result = FeatureCollection(features)
         return to_json_resp(
             result,
