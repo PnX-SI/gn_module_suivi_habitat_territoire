@@ -1,27 +1,23 @@
 import json
 import datetime
 
-from flask import Blueprint, request, session, current_app, send_from_directory, abort, jsonify
+from flask import Blueprint, request, session, send_from_directory, jsonify
 from sqlalchemy.sql.expression import func
 from sqlalchemy import and_, distinct, desc
 from sqlalchemy.orm import joinedload
-from sqlalchemy.exc import SQLAlchemyError
 from geoalchemy2.shape import to_shape
-from geojson import FeatureCollection, Feature
-from numpy import array
+from geojson import FeatureCollection
 from shapely.geometry import *
 
-from pypnusershub.db.tools import InsufficientRightsError
 from pypnusershub.db.models import User
-from pypnnomenclature.models import TNomenclatures
-from pypn_habref_api.models import Habref, TypoRef, CorListHabitat
+from pypn_habref_api.models import Habref, CorListHabitat
 from utils_flask_sqla.response import json_resp, to_json_resp, to_csv_resp
 
 from geonature.utils.env import DB, ROOT_DIR
 from geonature.utils.utilsgeometry import FionaShapeService
 from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
-from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteModule, TBaseVisits
+from geonature.core.gn_monitoring.models import corVisitObserver, corSiteArea, corSiteModule, TBaseVisits, TBaseSites
 from geonature.core.gn_commons.models import TModules
 from geonature.core.ref_geo.models import LAreas
 from pypnusershub.db.models import Organisme
@@ -127,28 +123,26 @@ def get_all_sites(info_role):
             Habref.lb_hab_fr,
             func.count(distinct(TBaseVisits.id_base_visit)),
             func.string_agg(distinct(Organisme.nom_organisme), ', '),
-            func.string_agg(distinct(LAreas.area_name), ', ')
+            func.string_agg(distinct(LAreas.area_name), ', '),
+            TBaseSites
+        ).outerjoin(
+            TBaseSites, TBaseSites.id_base_site == TInfosSite.id_base_site
         ).outerjoin(
             TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
-        # get habitat cd_hab
         ).outerjoin(
             Habref, TInfosSite.cd_hab == Habref.cd_hab
-        # get organisms of a site
         ).outerjoin(
             corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit
         ).outerjoin(
             User, User.id_role == corVisitObserver.c.id_role
         ).outerjoin(
             Organisme, Organisme.id_organisme == User.id_organisme
-        )
-        # get municipalities of a site
-        .outerjoin(
+        ).outerjoin(
             corSiteArea, corSiteArea.c.id_base_site == TInfosSite.id_base_site
         ).outerjoin(
             LAreas, and_(LAreas.id_area == corSiteArea.c.id_area, LAreas.id_type == id_type_commune)
-        )
-        .group_by(
-            TInfosSite, Habref.lb_hab_fr
+        ).group_by(
+            TInfosSite.id_infos_site, TBaseSites.id_base_site, Habref.lb_hab_fr
         )
     )
 
@@ -211,9 +205,14 @@ def get_all_sites(info_role):
             feature['properties']['nom_habitat'] = str(d[2])
             feature['properties']['nb_visit'] = str(d[3])
             feature['properties']['organisme'] = str(d[4])
-            feature['properties']['nom_commune'] = str(d[5])
             if d[4] == None:
                 feature['properties']['organisme'] = 'Aucun'
+            feature['properties']['nom_commune'] = str(d[5])
+            base_site = d[6]
+            feature['properties']['base_site_code'] = base_site.base_site_code
+            feature['properties']['base_site_description'] = base_site.base_site_description
+            feature['properties']['base_site_name'] = base_site.base_site_name
+
             features.append(feature)
 
         return [pageInfo,FeatureCollection(features)]
