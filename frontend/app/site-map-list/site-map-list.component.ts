@@ -214,7 +214,6 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   onChargeList(param?) {
     this._api.getSites(param).subscribe(
       data => {
-        console.log("data : ", data);
         this.sites = data[1];
         this.page.totalElements = data[0].totalItems;
         this.page.size = data[0].items_per_page;
@@ -265,8 +264,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   onEachFeature(feature, layer) {
     let site = feature.properties;
     this.mapListService.layerDict[feature.id] = layer;
-
-    const customPopup = '<div class="title">' + site.date_max + '</div>';
+    const customPopup = `<div class="title">${site.date_max}</div>`;
     const customOptions = {
       className: 'custom-popup'
     };
@@ -287,7 +285,6 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   toggleStyle(selectedLayer) {
-    let site;
     // override toogle style map-list toggle the style of selected layer
     if (this.mapListService.selectedLayer !== undefined) {
       this.mapListService.selectedLayer.closePopup();
@@ -306,21 +303,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onRowSelect(row) {
     let id = row.selected[0]['id_infos_site'];
-    let site = row.selected[0];
     const selectedLayer = this.mapListService.layerDict[id];
     this.toggleStyle(selectedLayer);
-    this.zoomOnSelectedLayer(this._map, selectedLayer, 16);
-  }
-
-  zoomOnSelectedLayer(map, layer, zoom) {
-    let latlng;
-
-    if (layer instanceof L.Polygon || layer instanceof L.Polyline) {
-      latlng = (layer as any).getCenter();
-      map.setView(latlng, zoom);
-    } else {
-      latlng = layer._latlng;
-    }
+    this.mapListService.zoomOnSelectedLayer(this._map, selectedLayer);
   }
 
   onInfo(id_base_site) {
@@ -354,26 +339,28 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     var self = this;
     var legend = new L.Control({ position: 'bottomright' });
 
-    legend.onAdd = function(map) {
+    legend.onAdd = function (map) {
+      const currentYear = new Date().getFullYear();
       var div = L.DomUtil.create('div', 'info legend'),
         grades = {
-          0: 'Visite cette année',
-          1: '+1 an',
-          2: '+2 ans',
-          3: '+3 ans',
-          4: '+4 ans ou jamais '
+          0: currentYear.toString(),
+          1: (currentYear - 1).toString(),
+          2: (currentYear - 2).toString(),
+          3: (currentYear - 3).toString(),
+          4: (currentYear - 4).toString() + ', avant ou jamais '
         };
 
       var keys = Object.keys(grades);
+      div.innerHTML = '<p>Dernière visite en :</p>';
       for (var i = 0; i < keys.length; i++) {
         div.innerHTML +=
           '<div style= "width: 20px;height: 20px ;display: inline-block; border: 1px solid ' +
           self.storeService.getColor(Number(keys[i])).color +
-          '"><i style="background-color:' +
+          '; background-color:' +
           self.storeService.getColor(Number(keys[i])).color +
           ';opacity:' +
           self.storeService.getColor(Number(keys[i])).fillOpacity +
-          '"></i></div> ' +
+          ';"></div> ' +
           grades[i] +
           '<br>';
       }

@@ -57,12 +57,12 @@ export class StoreService {
 
   getLayerStyle(site) {
     let year: Number= 10;
-    if(site) {
+    if (site) {
       let currentDate = new Date();
       let date_max = new Date(site.date_max);
       let isdate = this.isValidDate(date_max);
       if (isdate) {
-        year= currentDate.getFullYear() - date_max.getFullYear();
+        year = currentDate.getFullYear() - date_max.getFullYear();
       }
     }
 
@@ -79,11 +79,11 @@ export class StoreService {
           return this.styleOldVisit;
           break;
         case 2:
-          this.styleOldVisit.fillOpacity = 0.4;
+          this.styleOldVisit.fillOpacity = 0.5;
           return this.styleOldVisit;
           break;
         case 3:
-          this.styleOldVisit.fillOpacity = 0.6;
+          this.styleOldVisit.fillOpacity = 0.8;
           return this.styleOldVisit;
           break;
         default:
