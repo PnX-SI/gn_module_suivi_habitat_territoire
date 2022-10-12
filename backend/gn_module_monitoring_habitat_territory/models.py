@@ -161,7 +161,7 @@ class ExportVisits(DB.Model):
     idbsite = DB.Column(DB.Integer)
     visitdate = DB.Column(DB.DateTime)
     observers = DB.Column(DB.Unicode)
-    organisme = DB.Column(DB.Unicode)
+    organisms = DB.Column(DB.Unicode)
     bsitename = DB.Column(DB.Unicode)
     area_name = DB.Column(DB.Unicode)
     lbhab = DB.Column(DB.Unicode)
