@@ -168,19 +168,15 @@ def get_all_sites(info_role):
                 TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site
             ).group_by(TInfosSite.id_base_site)
         )
-
         data_year = q_year.all()
 
         q = q.filter(func.date_part('year', TBaseVisits.visit_date_min) == parameters['year'])
 
     page = request.args.get('page', 1, type=int)
     items_per_page = blueprint.config['items_per_page']
-    # pagination_serverside = blueprint.config['pagination_serverside']
 
     pagination = q.paginate(page, items_per_page, False)
-    # data = pagination.items
     totalItems = pagination.total
-    # totalItems = 0
     data = q.all()
 
     pageInfo= {
@@ -193,20 +189,27 @@ def get_all_sites(info_role):
         for d in data:
             feature = d[0].get_geofeature()
             id_site = feature['properties']['id_base_site']
-            if 'year' in parameters:
+
+            if d[1] == None:
+                feature['properties']['date_max'] = 'Aucune visite'
+            elif 'year' not in parameters:
+                feature['properties']['date_max'] = str(d[1])
+            else:
+                feature['properties']['date_max'] = None
                 for dy in data_year:
                     #  récupérer la bonne date max du site si on filtre sur année
                     if id_site == dy[0]:
-                        feature['properties']['date_max'] = str(d[1])
-            else:
-                feature['properties']['date_max'] = str(d[1])
-                if d[1] == None:
-                    feature['properties']['date_max'] = 'Aucune visite'
+                        current_date = str(dy[1])
+                        if (feature['properties']['date_max'] is None
+                            or feature['properties']['date_max'] < current_date) :
+                            feature['properties']['date_max'] = current_date
+
             feature['properties']['nom_habitat'] = str(d[2])
             feature['properties']['nb_visit'] = str(d[3])
-            feature['properties']['organisme'] = str(d[4])
             if d[4] == None:
                 feature['properties']['organisme'] = 'Aucun'
+            else:
+                feature['properties']['organisme'] = str(d[4])
             feature['properties']['nom_commune'] = str(d[5])
             base_site = d[6]
             feature['properties']['base_site_code'] = base_site.base_site_code

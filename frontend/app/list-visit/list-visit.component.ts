@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import * as L from 'leaflet';
 
 import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { MapService } from '@geonature_common/map/map.service';
@@ -37,7 +38,6 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   public addIsAllowed = false;
   public exportIsAllowed = false;
 
-
   @ViewChild('geojson')
   geojson: GeojsonComponent;
 
@@ -61,19 +61,22 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   checkPermission() {
     this.userService.check_user_cruved_visit('E').subscribe(ucruved => {
       this.exportIsAllowed = ucruved;
-    })
+    });
     this.userService.check_user_cruved_visit('C').subscribe(ucruved => {
       this.addIsAllowed = ucruved;
-    })
+    });
   }
 
   ngAfterViewInit() {
     this.mapService.map.doubleClickZoom.disable();
     this.getSites();
+    this.addLegend();
   }
 
   onEachFeature(feature, layer) {
-    layer.setStyle(this.storeService.getLayerStyle(this.site));
+    let site = feature.properties;
+    let currentStyle = this.storeService.getLayerStyle(site);
+    layer.setStyle(currentStyle);
   }
 
   getSites() {
@@ -92,15 +95,9 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         this.cdHabitat = properties.cd_hab;
 
         // UP cd_hab nom_habitat id site
-        this.storeService.setCurrentSite(
-          properties.cd_hab,
-          properties.nom_habitat,
-          this.idSite
-        );
+        this.storeService.setCurrentSite(properties.cd_hab, properties.nom_habitat, this.idSite);
 
         this.geojson.currentGeoJson$.subscribe(currentLayer => {
-          let currentStyle = this.storeService.getLayerStyle(properties);
-          currentLayer.setStyle(currentStyle);
           this.mapService.map.fitBounds(currentLayer.getBounds());
         });
 
@@ -113,11 +110,11 @@ export class ListVisitComponent implements OnInit, OnDestroy {
       error => {
         let msg = '';
         if (error.status == 403) {
-          msg = "Vous n'êtes pas autorisé à afficher ces données."
+          msg = "Vous n'êtes pas autorisé à afficher ces données.";
         } else {
-          msg = 'Une erreur est survenue lors de la récupération des informations sur le serveur.'
+          msg = 'Une erreur est survenue lors de la récupération des informations sur le serveur.';
         }
-        this.toastr.error(msg, '', {positionClass: 'toast-top-right'});
+        this.toastr.error(msg, '', { positionClass: 'toast-top-right' });
         console.log('Error: ', error);
       }
     );
@@ -131,8 +128,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
           let count = visit.observers.length;
           visit.observers.forEach((obs, index) => {
             if (count > 1) {
-              if (index + 1 == count)
-                fullName += obs.nom_role + ' ' + obs.prenom_role;
+              if (index + 1 == count) fullName += obs.nom_role + ' ' + obs.prenom_role;
               else fullName += obs.nom_role + ' ' + obs.prenom_role + ', ';
             } else fullName = obs.nom_role + ' ' + obs.prenom_role;
           });
@@ -155,11 +151,19 @@ export class ListVisitComponent implements OnInit, OnDestroy {
           this.toastr.error(
             'Une erreur est survenue lors de la récupération des données du relevé.',
             '',
-            {positionClass: 'toast-top-right'}
+            { positionClass: 'toast-top-right' }
           );
         }
       }
     );
+  }
+
+  addLegend() {
+    let legend = new L.Control({ position: 'bottomright' });
+    legend.onAdd = () => {
+      return this.storeService.buildMapLegend();
+    };
+    legend.addTo(this.mapService.map);
   }
 
   backToSites() {

@@ -149,7 +149,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       iconAnchor: [13, 41],
       // DOC: for URL to img in assets see https://geonature.readthedocs.io/fr/latest/development.html#frontend
       iconUrl: `external_assets/${ModuleConfig.MODULE_URL}/marker-icon.png`,
-      shadowUrl: `external_assets/${ModuleConfig.MODULE_URL}/marker-shadow.png`,
+      shadowUrl: `external_assets/${ModuleConfig.MODULE_URL}/marker-shadow.png`
     });
     this._deflate_features = L.deflate({
       minSize: 10,
@@ -184,16 +184,14 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       });
 
-    this._api
-      .getHabitatsList(ModuleConfig.id_bib_list_habitat)
-      .subscribe(habs => {
-        habs.forEach(hab => {
-          this.tabHab.push({ label: hab.nom_complet, id: hab.cd_hab });
-        });
-        this.tabHab.sort((a, b) => {
-          return ('' + a).localeCompare('' + b);
-        });
+    this._api.getHabitatsList(ModuleConfig.id_bib_list_habitat).subscribe(habs => {
+      habs.forEach(hab => {
+        this.tabHab.push({ label: hab.nom_complet, id: hab.cd_hab });
       });
+      this.tabHab.sort((a, b) => {
+        return ('' + a).localeCompare('' + b);
+      });
+    });
 
     this._api.getVisitsYears().subscribe(years => {
       years.forEach((year, i) => {
@@ -205,7 +203,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   private findWithAttr(array, attr, value) {
     for (let i = 0; i < array.length; i++) {
       if (array[i][attr] === value) {
-          return true;
+        return true;
       }
     }
     return false;
@@ -214,9 +212,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   onChargeList(param?) {
     this._api.getSites(param).subscribe(
       data => {
-        this.sites = data[1];
         this.page.totalElements = data[0].totalItems;
         this.page.size = data[0].items_per_page;
+        this.sites = data[1];
         this.mapListService.loadTableData(data[1]);
         this.filteredData = this.mapListService.tableData;
         if (data[0].totalItems == 0) {
@@ -263,7 +261,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onEachFeature(feature, layer) {
     let site = feature.properties;
-    this.mapListService.layerDict[feature.id] = layer;
+    this.mapListService.layerDict[site.id_base_site] = layer;
     const customPopup = `<div class="title">${site.date_max}</div>`;
     const customOptions = {
       className: 'custom-popup'
@@ -271,20 +269,33 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     layer.bindPopup(customPopup, customOptions);
     layer.on({
       click: e => {
-        this.toggleStyle(layer);
-        this.onMapClick(feature.id);
+        this.togglePopup(layer);
+        this.onMapClick(site.id_base_site);
       }
     });
 
-    //manage color with date
-    let currentStyle = this.storeService.getLayerStyle(feature.properties);
+    // Manage color with date
+    let currentStyle = this.storeService.getLayerStyle(site);
     layer.setStyle(currentStyle);
 
     // Add deflate to layer
     layer.addTo(this._deflate_features);
   }
 
-  toggleStyle(selectedLayer) {
+  onMapClick(id): void {
+    const integerId = parseInt(id);
+    this.mapListService.selectedRow = [];
+    this.mapListService.selectedRow.push(this.mapListService.tableData[integerId]);
+  }
+
+  onRowSelect(row) {
+    let id = row.selected[0]['id_base_site'];
+    const selectedLayer = this.mapListService.layerDict[id];
+    this.mapListService.zoomOnSelectedLayer(this._map, selectedLayer);
+    this.togglePopup(selectedLayer);
+  }
+
+  togglePopup(selectedLayer) {
     // override toogle style map-list toggle the style of selected layer
     if (this.mapListService.selectedLayer !== undefined) {
       this.mapListService.selectedLayer.closePopup();
@@ -293,26 +304,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mapListService.selectedLayer.openPopup();
   }
 
-  onMapClick(id): void {
-    const integerId = parseInt(id);
-    this.mapListService.selectedRow = [];
-    this.mapListService.selectedRow.push(
-      this.mapListService.tableData[integerId]
-    );
-  }
-
-  onRowSelect(row) {
-    let id = row.selected[0]['id_infos_site'];
-    const selectedLayer = this.mapListService.layerDict[id];
-    this.toggleStyle(selectedLayer);
-    this.mapListService.zoomOnSelectedLayer(this._map, selectedLayer);
-  }
-
   onInfo(id_base_site) {
-    this.router.navigate([
-      `${ModuleConfig.MODULE_URL}/listVisit`,
-      id_base_site
-    ]);
+    this.router.navigate([`${ModuleConfig.MODULE_URL}/listVisit`, id_base_site]);
   }
 
   addCustomControl() {
@@ -336,37 +329,10 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   addLegend() {
-    var self = this;
-    var legend = new L.Control({ position: 'bottomright' });
-
-    legend.onAdd = function (map) {
-      const currentYear = new Date().getFullYear();
-      var div = L.DomUtil.create('div', 'info legend'),
-        grades = {
-          0: currentYear.toString(),
-          1: (currentYear - 1).toString(),
-          2: (currentYear - 2).toString(),
-          3: (currentYear - 3).toString(),
-          4: (currentYear - 4).toString() + ', avant ou jamais '
-        };
-
-      var keys = Object.keys(grades);
-      div.innerHTML = '<p>Dernière visite en :</p>';
-      for (var i = 0; i < keys.length; i++) {
-        div.innerHTML +=
-          '<div style= "width: 20px;height: 20px ;display: inline-block; border: 1px solid ' +
-          self.storeService.getColor(Number(keys[i])).color +
-          '; background-color:' +
-          self.storeService.getColor(Number(keys[i])).color +
-          ';opacity:' +
-          self.storeService.getColor(Number(keys[i])).fillOpacity +
-          ';"></div> ' +
-          grades[i] +
-          '<br>';
-      }
-      return div;
+    let legend = new L.Control({ position: 'bottomright' });
+    legend.onAdd = () => {
+      return this.storeService.buildMapLegend();
     };
-
     legend.addTo(this._map);
   }
 
