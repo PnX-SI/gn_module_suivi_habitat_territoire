@@ -33,7 +33,7 @@ default_list_visit_columns = [
 
 class GnModuleSchemaConf(Schema):
     zoom_center = fields.List(fields.Float(), load_default=zoom_center)
-    zoom = fields.Integer(load_default=10)
+    zoom = fields.Integer(load_default=8)
 
     export_srid = fields.Integer(load_default=2154)
     export_available_format = fields.List(fields.String(), load_default=export_available_format)
