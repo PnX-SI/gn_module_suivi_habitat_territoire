@@ -341,7 +341,6 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       data => {
         this.page.totalElements = data[0].totalItems;
         this.page.size = data[0].items_per_page;
-        console.log('Set new sites:', data[1]);
         this.sites = data[1];
         this.mapListService.loadTableData(data[1]);
         this.filteredData = this.mapListService.tableData;
