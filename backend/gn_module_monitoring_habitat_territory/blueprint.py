@@ -94,6 +94,7 @@ def get_taxa_by_habitats(cd_hab):
         .group_by(
             CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxref.nom_complet
         )
+       .order_by(Taxref.nom_complet)
     )
 
     q = q.filter(CorHabitatTaxon.id_habitat == cd_hab)
