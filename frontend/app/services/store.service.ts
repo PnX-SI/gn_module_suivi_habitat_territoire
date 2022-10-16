@@ -15,15 +15,9 @@ export class StoreService {
   public shtConfig = ModuleConfig;
 
   public visitStyle = {
-    color: 'rgb(0,128,0)',
+    color: 'rgba(123, 123, 123, .5)',
     fill: true,
-    fillOpacity: 0.3,
-    weight: 3
-  };
-  public originStyle = {
-    color: 'rgb(51,51,51)',
-    fill: true,
-    fillOpacity: 0.3,
+    fillOpacity: 0.5,
     weight: 3
   };
 
@@ -44,6 +38,16 @@ export class StoreService {
   }
 
   getLayerStyle(site) {
+    let diffYear = this.getDiffYear(site);
+    return this.getStyle(diffYear);
+  }
+
+  getYearColor(site) {
+    let diffYear = this.getDiffYear(site);
+    return this.getColorName(diffYear);
+  }
+
+  private getDiffYear(site): Number {
     let diffYear: Number = 10;
     if (site) {
       let currentDate = new Date();
@@ -53,31 +57,48 @@ export class StoreService {
         diffYear = currentDate.getFullYear() - dateMax.getFullYear();
       }
     }
-    return this.getColor(diffYear);
+    return diffYear;
   }
 
-  getColor(diffYear) {
+  private isValidDate(date) {
+    var timestamp = Date.parse(date);
+    return isNaN(timestamp) ? false : true;
+  }
+
+  private getStyle(diffYear) {
+    let opacity = this.visitStyle.fillOpacity;
     switch (diffYear) {
       case 0:
-        this.visitStyle.color = 'rgba(0,128,0,.5)';
+        this.visitStyle.color = `rgba(42, 129, 203, ${opacity})`;
         return this.visitStyle;
       case 1:
-        this.visitStyle.color = 'rgba(255,182,193,.5)';
+        this.visitStyle.color = `rgba(42, 173, 39, ${opacity})`;
         return this.visitStyle;
       case 2:
-        this.visitStyle.color = 'rgba(255,20,147,.5)';
+        this.visitStyle.color = `rgba(255, 211, 38, ${opacity})`;
         return this.visitStyle;
       case 3:
-        this.visitStyle.color = 'rgba(138,43,226,.5)';
+        this.visitStyle.color = `rgba(203, 132, 39, ${opacity})`;
         return this.visitStyle;
       default:
-        return this.originStyle;
+        this.visitStyle.color = `rgba(203, 43, 62, ${opacity})`;
+        return this.visitStyle;
     }
   }
 
-  isValidDate(date) {
-    var timestamp = Date.parse(date);
-    return isNaN(timestamp) ? false : true;
+  private getColorName(diffYear) {
+    switch (diffYear) {
+      case 0:
+        return 'blue';
+      case 1:
+        return 'green';
+      case 2:
+        return 'yellow';
+      case 3:
+        return 'orange';
+      default:
+        return 'red';
+    }
   }
 
   buildMapLegend() {
@@ -95,7 +116,7 @@ export class StoreService {
     div.innerHTML = '<p>Dernière visite en :</p>';
     for (let i = 0; i < keys.length; i++) {
       let diffYear = Number(keys[i]);
-      let style = this.getColor(diffYear);
+      let style = this.getStyle(diffYear);
       div.innerHTML += `
         <div style= "width: 20px; height: 20px; display: inline-block;
           border: 1px solid ${style.color};

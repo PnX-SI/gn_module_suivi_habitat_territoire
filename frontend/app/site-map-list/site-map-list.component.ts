@@ -30,12 +30,12 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   public dataLoaded = false;
   public center;
   public zoom;
-  private _map;
+  private map;
   public filterForm: FormGroup;
   public oldFilterDate;
   public page = new Page();
   public isAllowed = false;
-  private _deflate_features;
+  private deflateFeatures;
 
   @Output()
   onDeleteFiltre = new EventEmitter<any>();
@@ -141,22 +141,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    this._map = this.mapService.getMap();
-
-    // Init leaflet.deflate
-    var iconMarker = L.icon({
-      iconSize: [25, 41],
-      iconAnchor: [13, 41],
-      // DOC: for URL to img in assets see https://geonature.readthedocs.io/fr/latest/development.html#frontend
-      iconUrl: `external_assets/${ModuleConfig.MODULE_URL}/marker-icon.png`,
-      shadowUrl: `external_assets/${ModuleConfig.MODULE_URL}/marker-shadow.png`
-    });
-    this._deflate_features = L.deflate({
-      minSize: 10,
-      markerOptions: { icon: iconMarker }
-    });
-    this._deflate_features.addTo(this._map);
-
+    this.map = this.mapService.getMap();
+    this.addDeflateFeature();
     this.addCustomControl();
     this.addLegend();
 
@@ -209,11 +195,153 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     return false;
   }
 
-  onChargeList(param?) {
+  private checkPermission() {
+    this.userService.check_user_cruved_visit('E').subscribe(ucruved => {
+      this.isAllowed = ucruved;
+    });
+  }
+
+  setPage(pageInfo) {
+    this.page.pageNumber = pageInfo.offset;
+    if (this.storeService.shtConfig.pagination_serverside) {
+      this.onSetParams('page', (pageInfo.offset + 1).toString());
+    }
+  }
+
+  onEachFeature(feature, layer) {
+    let site = feature.properties;
+    this.mapListService.layerDict[site.id_base_site] = layer;
+    const customPopup = `<div class="title">${site.date_max}</div>`;
+    const customOptions = {
+      className: 'custom-popup'
+    };
+    layer.bindPopup(customPopup, customOptions);
+    layer.on({
+      click: e => {
+        this.togglePopup(layer);
+        this.onMapClick(site.id_base_site);
+      }
+    });
+
+    // Manage color with date
+    let currentStyle = this.storeService.getLayerStyle(site);
+    layer.setStyle(currentStyle);
+
+    // Add deflate to layer
+    layer.addTo(this.deflateFeatures);
+  }
+
+  private onMapClick(id): void {
+    const integerId = parseInt(id);
+    this.mapListService.selectedRow = [];
+    this.mapListService.selectedRow.push(this.mapListService.tableData[integerId]);
+  }
+
+  onRowSelect(row) {
+    let id = row.selected[0]['id_base_site'];
+    const selectedLayer = this.mapListService.layerDict[id];
+    this.mapListService.zoomOnSelectedLayer(this.map, selectedLayer);
+    this.togglePopup(selectedLayer);
+  }
+
+  private togglePopup(selectedLayer) {
+    // override toogle style map-list toggle the style of selected layer
+    if (this.mapListService.selectedLayer !== undefined) {
+      this.mapListService.selectedLayer.closePopup();
+    }
+    this.mapListService.selectedLayer = selectedLayer;
+    this.mapListService.selectedLayer.openPopup();
+  }
+
+  onInfo(id_base_site) {
+    this.router.navigate([`${ModuleConfig.MODULE_URL}/listVisit`, id_base_site]);
+  }
+
+  private addDeflateFeature() {
+    // Init leaflet.deflate
+    this.deflateFeatures = L.deflate({
+      minSize: 10,
+      markerOptions: layer => {
+        let color = this.storeService.getYearColor(layer['feature'].properties);
+        let iconMarker = {
+          icon: new L.Icon({
+            iconUrl: `external_assets/${ModuleConfig.MODULE_URL}//marker-icon-2x-${color}.png`,
+            shadowUrl: `external_assets/${ModuleConfig.MODULE_URL}/marker-shadow.png`,
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          })
+        };
+        return iconMarker;
+      }
+    });
+    this.deflateFeatures.addTo(this.map);
+  }
+
+  private addCustomControl() {
+    let initzoomcontrol = new L.Control();
+    initzoomcontrol.setPosition('topleft');
+    initzoomcontrol.onAdd = () => {
+      var container = L.DomUtil.create(
+        'button',
+        ' btn btn-sm btn-outline-shadow leaflet-bar leaflet-control leaflet-control-custom'
+      );
+      container.innerHTML =
+        '<i class="material-icons" style="vertical-align: text-bottom">crop_free</i>';
+      container.style.padding = '4px 4px 1px';
+      container.title = "Réinitialiser l'emprise de la carte";
+      container.onclick = () => {
+        this.map.setView(this.center, this.zoom);
+      };
+      return container;
+    };
+    initzoomcontrol.addTo(this.map);
+  }
+
+  private addLegend() {
+    let legend = new L.Control({ position: 'bottomright' });
+    legend.onAdd = () => {
+      return this.storeService.buildMapLegend();
+    };
+    legend.addTo(this.map);
+  }
+
+  private onSearchDate(event) {
+    this.onSetParams('year', event);
+    this.oldFilterDate = event;
+  }
+
+  private onSearchOrganisme(event) {
+    this.onSetParams('organisme', event);
+  }
+
+  private onSearchCom(event) {
+    this.onSetParams('commune', event);
+  }
+
+  private onSearchHab(event) {
+    this.onSetParams('cd_hab', event);
+  }
+
+  private onSetParams(param: string, value) {
+    this.storeService.queryString = this.storeService.queryString.set(param, value);
+    this.onChargeList(this.storeService.queryString);
+  }
+
+  private onDeleteParams(param: string, value) {
+    this.storeService.queryString = this.storeService.queryString.delete(param);
+    this.onChargeList(this.storeService.queryString);
+  }
+
+  private onChargeList(param?) {
+    //this.sites = undefined;
+
     this._api.getSites(param).subscribe(
       data => {
         this.page.totalElements = data[0].totalItems;
         this.page.size = data[0].items_per_page;
+        console.log('Set new sites:', data[1]);
         this.sites = data[1];
         this.mapListService.loadTableData(data[1]);
         this.filteredData = this.mapListService.tableData;
@@ -243,130 +371,5 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dataLoaded = true;
       }
     );
-  }
-
-  checkPermission() {
-    this.userService.check_user_cruved_visit('E').subscribe(ucruved => {
-      this.isAllowed = ucruved;
-    });
-  }
-
-  setPage(pageInfo) {
-    this.page.pageNumber = pageInfo.offset;
-    if (this.storeService.shtConfig.pagination_serverside) {
-      this.onSetParams('page', pageInfo.offset + 1);
-      this.onChargeList(this.storeService.queryString.toString());
-    }
-  }
-
-  onEachFeature(feature, layer) {
-    let site = feature.properties;
-    this.mapListService.layerDict[site.id_base_site] = layer;
-    const customPopup = `<div class="title">${site.date_max}</div>`;
-    const customOptions = {
-      className: 'custom-popup'
-    };
-    layer.bindPopup(customPopup, customOptions);
-    layer.on({
-      click: e => {
-        this.togglePopup(layer);
-        this.onMapClick(site.id_base_site);
-      }
-    });
-
-    // Manage color with date
-    let currentStyle = this.storeService.getLayerStyle(site);
-    layer.setStyle(currentStyle);
-
-    // Add deflate to layer
-    layer.addTo(this._deflate_features);
-  }
-
-  onMapClick(id): void {
-    const integerId = parseInt(id);
-    this.mapListService.selectedRow = [];
-    this.mapListService.selectedRow.push(this.mapListService.tableData[integerId]);
-  }
-
-  onRowSelect(row) {
-    let id = row.selected[0]['id_base_site'];
-    const selectedLayer = this.mapListService.layerDict[id];
-    this.mapListService.zoomOnSelectedLayer(this._map, selectedLayer);
-    this.togglePopup(selectedLayer);
-  }
-
-  togglePopup(selectedLayer) {
-    // override toogle style map-list toggle the style of selected layer
-    if (this.mapListService.selectedLayer !== undefined) {
-      this.mapListService.selectedLayer.closePopup();
-    }
-    this.mapListService.selectedLayer = selectedLayer;
-    this.mapListService.selectedLayer.openPopup();
-  }
-
-  onInfo(id_base_site) {
-    this.router.navigate([`${ModuleConfig.MODULE_URL}/listVisit`, id_base_site]);
-  }
-
-  addCustomControl() {
-    let initzoomcontrol = new L.Control();
-    initzoomcontrol.setPosition('topleft');
-    initzoomcontrol.onAdd = () => {
-      var container = L.DomUtil.create(
-        'button',
-        ' btn btn-sm btn-outline-shadow leaflet-bar leaflet-control leaflet-control-custom'
-      );
-      container.innerHTML =
-        '<i class="material-icons" style="vertical-align: text-bottom">crop_free</i>';
-      container.style.padding = '4px 4px 1px';
-      container.title = "Réinitialiser l'emprise de la carte";
-      container.onclick = () => {
-        this._map.setView(this.center, this.zoom);
-      };
-      return container;
-    };
-    initzoomcontrol.addTo(this._map);
-  }
-
-  addLegend() {
-    let legend = new L.Control({ position: 'bottomright' });
-    legend.onAdd = () => {
-      return this.storeService.buildMapLegend();
-    };
-    legend.addTo(this._map);
-  }
-
-  onSearchDate(event) {
-    this.onSetParams('year', event);
-    this.oldFilterDate = event;
-    this.onChargeList(this.storeService.queryString);
-  }
-
-  onSearchOrganisme(event) {
-    this.onSetParams('organisme', event);
-    this.onChargeList(this.storeService.queryString);
-  }
-
-  onSearchCom(event) {
-    this.onSetParams('commune', event);
-    this.onChargeList(this.storeService.queryString);
-  }
-
-  onSearchHab(event) {
-    this.onSetParams('cd_hab', event);
-    this.onChargeList(this.storeService.queryString);
-  }
-
-  onDelete() {
-    this.onChargeList();
-  }
-
-  onSetParams(param: string, value) {
-    this.storeService.queryString = this.storeService.queryString.set(param, value);
-  }
-
-  onDeleteParams(param: string, value) {
-    this.storeService.queryString = this.storeService.queryString.delete(param);
-    this.onChargeList(this.storeService.queryString);
   }
 }
