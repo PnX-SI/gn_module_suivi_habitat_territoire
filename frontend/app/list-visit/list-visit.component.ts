@@ -21,6 +21,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   public site;
   public currentSite = {};
   public show = true;
+  public loadingIndicator = false;
   public idSite;
   public nomHabitat;
   public organisme;
@@ -81,6 +82,8 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   }
 
   getSites() {
+    this.loadingIndicator = true;
+
     this.paramApp = this.paramApp.append('id_base_site', this.idSite);
     this._api.getSites(this.paramApp).subscribe(
       data => {
@@ -123,11 +126,12 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   }
 
   getVisits() {
+    this.loadingIndicator = true;
+
     this._api.getVisits({ id_base_site: this.idSite }).subscribe(
       data => {
         data.forEach(visit => {
           let observersList = [];
-          let count = visit.observers.length;
           visit.observers.forEach((obs, index) => {
             observersList.push(`${obs.userFullName} (${obs.organismName})`);
           });
@@ -143,9 +147,11 @@ export class ListVisitComponent implements OnInit, OnDestroy {
           visit.state = pres + ' / ' + this.taxons.length;
         });
 
+        this.loadingIndicator = false;
         this.rows = data;
       },
       error => {
+        this.loadingIndicator = false;
         if (error.status != 404) {
           this.toastr.error(
             'Une erreur est survenue lors de la récupération des données du relevé.',

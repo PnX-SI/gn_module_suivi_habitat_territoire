@@ -27,7 +27,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   public tabCom = [];
   public tabHab = [];
   public tabYears = [];
-  public dataLoaded = false;
+  public loadingIndicator = true;
   public center;
   public zoom;
   private map;
@@ -356,6 +356,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private onChargeList(param?) {
+    this.loadingIndicator = true;
     this.api.getSites(param).subscribe(
       data => {
         this.page.totalElements = data[0].totalItems;
@@ -369,7 +370,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
             positionClass: 'toast-top-right'
           });
         }
-        this.dataLoaded = true;
+        this.loadingIndicator = false;
       },
       error => {
         let msg =
@@ -386,7 +387,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
           });
           console.log('Error getsites: ', error);
         }
-        this.dataLoaded = true;
+        this.loadingIndicator = false;
       }
     );
   }

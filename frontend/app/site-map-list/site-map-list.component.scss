@@ -28,6 +28,8 @@ legend {
 :host /deep/ .single-selection .datatable-body-row.active .datatable-row-group {
     background-color: rgb(154, 217, 247) !important;
 }
+
+// Global spinner
 #cover-spin {
     position: fixed;
     width: 100%;
@@ -70,6 +72,7 @@ legend {
     -webkit-animation: spin 0.8s linear infinite;
     animation: spin 0.8s linear infinite;
 }
+
 :host /deep/ .ngx-datatable .datatable-footer .page-count {
     -webkit-box-flex: 1;
     -ms-flex: 1 1 30%;
