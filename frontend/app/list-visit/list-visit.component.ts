@@ -25,6 +25,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   public nomHabitat;
   public organisme;
   public nomCommune;
+  public siteUuid;
   public siteName;
   public siteCode;
   public siteDesc;
@@ -89,6 +90,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         this.organisme = properties.organisme;
         this.nomCommune = properties.nom_commune;
         this.nomHabitat = properties.nom_habitat;
+        this.siteUuid = properties.base_site_uuid;
         this.siteName = properties.base_site_name;
         this.siteCode = properties.base_site_code;
         this.siteDesc = properties.base_site_description;
