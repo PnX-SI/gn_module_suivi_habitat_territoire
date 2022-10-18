@@ -127,6 +127,23 @@ export class StoreService {
     }
     return div;
   }
+
+  loadQueryString() {
+    this.queryString = new HttpParams({
+      fromString: localStorage.getItem('sht-filters-querystring')
+    });
+  }
+
+  saveQueryString() {
+    localStorage.setItem('sht-filters-querystring', this.queryString.toString());
+  }
+
+  clearQueryString() {
+    let filterkey = this.queryString.keys();
+    filterkey.forEach(key => {
+      this.queryString = this.queryString.delete(key);
+    });
+  }
 }
 
 

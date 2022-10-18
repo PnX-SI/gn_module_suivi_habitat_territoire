@@ -42,28 +42,49 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     public mapService: MapService,
-    private _api: DataService,
+    private api: DataService,
     public storeService: StoreService,
     public mapListService: MapListService,
     public router: Router,
     private toastr: ToastrService,
-    private _fb: FormBuilder,
+    private formBuilder: FormBuilder,
     private userService: UserService
   ) {}
 
   ngOnInit() {
-    this.onChargeList();
     this.center = this.storeService.shtConfig.zoom_center;
     this.zoom = this.storeService.shtConfig.zoom;
+
+    this.loadInitialData();
     this.checkPermission();
+    this.initializeFilterForm();
+    this.initializeFilterControls();
+  }
 
-    this.filterForm = this._fb.group({
-      filterYear: null,
-      filterOrga: null,
-      filterCom: null,
-      filterHab: null
+  private loadInitialData() {
+    this.storeService.loadQueryString();
+    this.onChargeList(this.storeService.queryString);
+  }
+
+  private initializeFilterForm() {
+    this.filterForm = this.formBuilder.group({
+      filterYear: this.getInitialFilterValue('year'),
+      filterOrga: this.getInitialFilterValue('organisme'),
+      filterCom: this.getInitialFilterValue('commune'),
+      filterHab: this.getInitialFilterValue('cd_hab')
     });
+    console.log(this.filterForm)
+  }
 
+  private getInitialFilterValue(filterName) {
+    let value = null;
+    if (this.storeService.queryString.has(filterName)) {
+      value = this.storeService.queryString.get(filterName);
+    }
+    return value;
+  }
+
+  private initializeFilterControls() {
     this.filterForm.controls.filterYear.valueChanges
       .filter(input => {
         return input != null && input.toString().length === 4;
@@ -134,10 +155,8 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    let filterkey = this.storeService.queryString.keys();
-    filterkey.forEach(key => {
-      this.storeService.queryString = this.storeService.queryString.delete(key);
-    });
+    this.storeService.saveQueryString();
+    this.storeService.clearQueryString();
   }
 
   ngAfterViewInit() {
@@ -146,7 +165,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addCustomControl();
     this.addLegend();
 
-    this._api.getOrganisme().subscribe(elem => {
+    this.api.getOrganisme().subscribe(elem => {
       elem.forEach(orga => {
         if (!this.findWithAttr(this.tabOrganism, 'label', orga.nom_organisme)) {
           this.tabOrganism.push({ label: orga.nom_organisme, id: orga.id_organisme });
@@ -157,7 +176,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     });
 
-    this._api
+    this.api
       .getCommune(ModuleConfig.MODULE_CODE, {
         id_area_type: this.storeService.shtConfig.id_type_commune
       })
@@ -170,7 +189,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       });
 
-    this._api.getHabitatsList(ModuleConfig.id_bib_list_habitat).subscribe(habs => {
+    this.api.getHabitatsList(ModuleConfig.id_bib_list_habitat).subscribe(habs => {
       habs.forEach(hab => {
         this.tabHab.push({ label: hab.nom_complet, id: hab.cd_hab });
       });
@@ -179,7 +198,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     });
 
-    this._api.getVisitsYears().subscribe(years => {
+    this.api.getVisitsYears().subscribe(years => {
       years.forEach((year, i) => {
         this.tabYears.push({ label: year[i], id: year[i] });
       });
@@ -326,18 +345,18 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private onSetParams(param: string, value) {
     this.storeService.queryString = this.storeService.queryString.set(param, value);
+    this.storeService.saveQueryString();
     this.onChargeList(this.storeService.queryString);
   }
 
   private onDeleteParams(param: string, value) {
     this.storeService.queryString = this.storeService.queryString.delete(param);
+    this.storeService.saveQueryString();
     this.onChargeList(this.storeService.queryString);
   }
 
   private onChargeList(param?) {
-    //this.sites = undefined;
-
-    this._api.getSites(param).subscribe(
+    this.api.getSites(param).subscribe(
       data => {
         this.page.totalElements = data[0].totalItems;
         this.page.size = data[0].items_per_page;
