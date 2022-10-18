@@ -34,10 +34,9 @@ from .repositories import (
     check_year_visit,
     get_taxonlist_by_cdhab,
     clean_string,
-    striphtml,
-    get_base_column_name,
-    get_pro_column_name,
-    get_mapping_columns,
+    strip_html,
+    get_export_columns_names,
+    get_export_mapping_columns,
 )
 from .models import (
     TInfosSite,
@@ -539,66 +538,79 @@ def export_visit(info_role):
     export_format = parameters["export_format"] if "export_format" in request.args else "shapefile"
 
     # Build query
-    query = DB.session.query(ExportVisits)
+    query = (DB.session
+        .query(ExportVisits)
+        .order_by(desc(ExportVisits.visit_date), ExportVisits.habitat_code)
+    )
+
     if "id_base_visit" in parameters:
-        query = query.filter(ExportVisits.idbvisit == parameters["id_base_visit"])
-    elif "id_base_site" in parameters:
-        query = query.filter(ExportVisits.idbsite == parameters["id_base_site"])
-    elif "organisme" in parameters:
-        query = query.filter(ExportVisits.organisme == parameters["organisme"])
-    elif "commune" in parameters:
-        query = query.filter(ExportVisits.area_name == parameters["commune"])
-    elif "year" in parameters:
-        query = query.filter(func.date_part("year", ExportVisits.visitdate) == parameters["year"])
-    elif "cd_hab" in parameters:
-        query = query.filter(ExportVisits.cd_hab == parameters["cd_hab"])
+        query = query.filter(ExportVisits.id_base_visit == parameters["id_base_visit"])
+
+    if "id_base_site" in parameters:
+        query = query.filter(ExportVisits.id_base_site == parameters["id_base_site"])
+
+    if "organisme" in parameters:
+        query = (query
+            .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == ExportVisits.id_base_visit)
+            .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+            .filter(User.id_organisme == parameters["organisme"])
+        )
+
+    if "commune" in parameters:
+        query = (query
+            .outerjoin(corSiteArea, corSiteArea.c.id_base_site == ExportVisits.id_base_site)
+            .filter(corSiteArea.c.id_area == parameters["commune"])
+        )
+
+    if "year" in parameters:
+        query = query.filter(func.date_part("year", ExportVisits.visit_date) == parameters["year"])
+
+    if "cd_hab" in parameters:
+        query = query.filter(ExportVisits.habitat_code == parameters["cd_hab"])
+
+    from sqlalchemy.dialects import postgresql;
+    print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
 
     data = query.all()
 
     # Format data
-    cor_hab_taxon = []
-    flag_cdhab = 0
-    mapping_columns = get_mapping_columns()
-    tab_visit = []
-
+    mapping_columns = get_export_mapping_columns()
+    taxons = []
+    visits = []
     for d in data:
         visit = d.as_dict()
 
         # Get list hab/taxon
-        cd_hab = visit["cd_hab"]
-        if flag_cdhab != cd_hab:
-            cor_hab_taxon = get_taxonlist_by_cdhab(cd_hab)
-            flag_cdhab = cd_hab
+        cd_hab = visit["habitat_code"]
+        taxons = taxons + list(set(get_taxonlist_by_cdhab(cd_hab)) - set(taxons))
 
-        # Remove html tag
-        visit["lbhab"] = striphtml(visit["lbhab"])
+        # Remove html tags
+        visit["habitat_name"] = strip_html(visit["habitat_name"])
 
         # Geom
-
         if export_format != "geojson":
             geom_wkt = to_shape(d.geom)
             visit["geom"] = geom_wkt
 
         # Translate label column
-        visit = dict(
+        translated_visit = dict(
             (mapping_columns[key], value)
             for (key, value) in visit.items()
             if key in mapping_columns
         )
 
         # Pivot taxon
-        if visit["nomvtaxon"]:
-            for taxon, cover in visit["nomvtaxon"].items():
-                visit[taxon] = cover
-        visit.pop("nomvtaxon", None)
+        if visit["taxons_scinames"]:
+            for taxon, cover in visit["taxons_scinames"].items():
+                translated_visit[taxon] = cover
 
-        tab_visit.append(visit)
+        visits.append(translated_visit)
 
-    features = []
     file_name = datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm%S")
     # Run export
     if export_format == "geojson":
-        for d in tab_visit:
+        features = []
+        for d in visits:
             feature = {
                 "type": "Feature",
                 "geometry": json.loads(d["geojson"]),
@@ -610,11 +622,8 @@ def export_visit(info_role):
         result = FeatureCollection(features)
         return to_json_resp(result, as_file=True, filename=file_name, indent=4)
     elif export_format == "csv":
-        column_name = get_base_column_name()
-        column_name_pro = get_pro_column_name()
-        tab_header = []
-        tab_header = column_name + [clean_string(x) for x in cor_hab_taxon] + column_name_pro
-        return to_csv_resp(file_name, tab_visit, tab_header, ";")
+        csv_header = get_export_columns_names() + [clean_string(x) for x in taxons]
+        return to_csv_resp(file_name, visits, csv_header, ";")
     else:
         dir_path = str(ROOT_DIR / "backend/static/shapefiles")
 

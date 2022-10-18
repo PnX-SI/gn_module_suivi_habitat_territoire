@@ -1,19 +1,7 @@
 # coding: utf-8
-from sqlalchemy import (
-    Boolean,
-    CheckConstraint,
-    Column,
-    Date,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    Numeric,
-    String,
-    Text
-)
+from sqlalchemy import ForeignKey
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.schema import FetchedValue
+
 from geoalchemy2.types import Geometry
 from sqlalchemy.dialects.postgresql.base import UUID
 from sqlalchemy.orm import relationship
@@ -153,22 +141,23 @@ class ExportVisits(DB.Model):
     __tablename__ = 'export_visits'
     __table_args__ = {'schema': 'pr_monitoring_habitat_territory'}
 
-    idbvisit = DB.Column(
+    id_base_visit = DB.Column(
         DB.Integer,
         primary_key=True
-    )
-
-    idbsite = DB.Column(DB.Integer)
-    visitdate = DB.Column(DB.DateTime)
-    observers = DB.Column(DB.Unicode)
-    organisms = DB.Column(DB.Unicode)
-    bsitename = DB.Column(DB.Unicode)
-    area_name = DB.Column(DB.Unicode)
-    lbhab = DB.Column(DB.Unicode)
-    nomvtaxon = DB.Column(DB.Unicode)
-    cd_hab = DB.Column(DB.Integer)
-    comments = DB.Column(DB.Unicode)
-    lbperturb = DB.Column(DB.Unicode)
+    ) # idbsite
+    visit_date = DB.Column(DB.DateTime)
+    visit_comment = DB.Column(DB.Unicode)
+    id_base_site = DB.Column(DB.Integer)
+    base_site_name = DB.Column(DB.Unicode)
+    base_site_code = DB.Column(DB.Unicode)
+    base_site_uuid = DB.Column(UUID(as_uuid=True))
     geom = DB.Column(Geometry('GEOMETRY', 2154))
     geojson = DB.Column(DB.Unicode)
-    covtaxons = DB.Column(DB.Unicode)
+    municipalities = DB.Column(DB.Unicode)
+    habitat_name = DB.Column(DB.Unicode)
+    habitat_code = DB.Column(DB.Integer)
+    perturbations = DB.Column(DB.Unicode)
+    observers = DB.Column(DB.Unicode)
+    organisms = DB.Column(DB.Unicode)
+    taxons_scinames = DB.Column(DB.Unicode)
+    taxons_scinames_codes = DB.Column(DB.Unicode)
