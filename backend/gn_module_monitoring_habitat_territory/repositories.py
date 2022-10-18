@@ -12,23 +12,23 @@ from geonature.utils.env import DB, ROOT_DIR
 from .models import CorHabitatTaxon
 
 
-class PostYearError (GeonatureApiError):
+class PostYearError(GeonatureApiError):
     pass
 
 
 def check_user_cruved_visit(user, visit, cruved_level):
-    '''
+    """
     Check if user have right on a visit object, related to his cruved
     if not, raise 403 error
     if allowed return void
-    '''
+    """
 
     is_allowed = False
-    if cruved_level == '1':
+    if cruved_level == "1":
 
         for role in visit.observers:
             if role.id_role == user.id_role:
-                print('même id ')
+                print("même id ")
                 is_allowed = True
                 break
             elif visit.id_digitiser == user.id_role:
@@ -36,15 +36,16 @@ def check_user_cruved_visit(user, visit, cruved_level):
                 break
         if not is_allowed:
             raise InsufficientRightsError(
-                ('User "{}" cannot update visit number {} ')
-                .format(user.id_role, visit.id_base_visit),
-                403
+                ('User "{}" cannot update visit number {} ').format(
+                    user.id_role, visit.id_base_visit
+                ),
+                403,
             )
 
-    elif cruved_level == '2':
+    elif cruved_level == "2":
         for role in visit.observers:
             if role.id_role == user.id_role:
-                print('même role')
+                print("même role")
                 is_allowed = True
                 break
             elif visit.id_digitiser == user.id_role:
@@ -55,22 +56,21 @@ def check_user_cruved_visit(user, visit, cruved_level):
                 break
         if not is_allowed:
             raise InsufficientRightsError(
-                ('User "{}" cannot update visit number {} ')
-                .format(user.id_role, visit.id_base_visit),
-                403
+                ('User "{}" cannot update visit number {} ').format(
+                    user.id_role, visit.id_base_visit
+                ),
+                403,
             )
 
 
 def check_year_visit(id_base_site, new_visit_date):
-    '''
+    """
     Check if there is already a visit of the same year.
     If yes, observer is not allowed to post the new visit
-    '''
-    q_year = DB.session.query(
-            func.date_part('year', TBaseVisits.visit_date_min)
-        ).filter(
-            TBaseVisits.id_base_site == id_base_site
-        )
+    """
+    q_year = DB.session.query(func.date_part("year", TBaseVisits.visit_date_min)).filter(
+        TBaseVisits.id_base_site == id_base_site
+    )
     tab_old_year = q_year.all()
     print(tab_old_year)
     year_new_visit = new_visit_date[0:4]
@@ -80,19 +80,17 @@ def check_year_visit(id_base_site, new_visit_date):
         if year_old_visit == year_new_visit:
             DB.session.rollback()
             raise PostYearError(
-                ('Maille {} has already been visited in {} ')
-                .format(id_base_site, year_old_visit),
-                403)
+                ("Maille {} has already been visited in {} ").format(id_base_site, year_old_visit),
+                403,
+            )
 
 
 def get_taxonlist_by_cdhab(cdhab):
-    q = DB.session.query(
-            CorHabitatTaxon.id_cor_habitat_taxon,
-            Taxref.lb_nom
-        ).join(
-            Taxref,
-            CorHabitatTaxon.cd_nom == Taxref.cd_nom
-        ).group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxref.lb_nom)
+    q = (
+        DB.session.query(CorHabitatTaxon.id_cor_habitat_taxon, Taxref.lb_nom)
+        .join(Taxref, CorHabitatTaxon.cd_nom == Taxref.cd_nom)
+        .group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxref.lb_nom)
+    )
 
     q = q.filter(CorHabitatTaxon.id_habitat == cdhab)
     data = q.all()
@@ -100,71 +98,73 @@ def get_taxonlist_by_cdhab(cdhab):
     taxons = []
     if data:
         for d in data:
-            taxons.append( str(d[1]) )
+            taxons.append(str(d[1]))
         return taxons
     return None
 
 
 def clean_string(my_string):
     my_string = my_string.strip()
-    chars_to_remove =  ';,'
+    chars_to_remove = ";,"
     for c in chars_to_remove:
-        my_string = my_string.replace(c, '-')
+        my_string = my_string.replace(c, "-")
 
     return my_string
 
 
 def striphtml(data):
-    p = re.compile(r'<.*?>')
-    return p.sub('', data)
+    p = re.compile(r"<.*?>")
+    return p.sub("", data)
 
 
 def get_base_column_name():
-    '''
+    """
     Return column name.
     See columns mapping label / name in : get_mapping_columns()
-    '''
+    """
     return [
-        'Identifiant site',
-        'Date visite',
-        'Nom du site',
-        'Communes',
-        'Observateurs',
-        'Organismes',
-        'Habitat',
-        'Perturbations',
-        'Commentaires',
-        'Géométrie'
+        "Identifiant site",
+        "Date visite",
+        "Nom du site",
+        "Communes",
+        "Observateurs",
+        "Organismes",
+        "Habitat",
+        "Perturbations",
+        "Commentaires",
+        "Géométrie",
     ]
+
 
 def get_pro_column_name():
-    '''
+    """
     Return column name.
     See columns mapping label / name in : get_mapping_columns()
-    '''
+    """
     return [
-        'cdhab',
-        'covtaxons',
+        "cdhab",
+        "covtaxons",
     ]
 
+
 def get_mapping_columns():
-    '''
+    """
     Return columns mapping label / name.
-    '''
+    """
     return {
-        'idbsite': 'Identifiant site',
-        'visitdate': 'Date visite',
-        'bsitename': 'Nom du site',
-        'area_name' : 'Communes',
-        'observers': 'Observateurs',
-        'organisms' : 'Organismes',
-        'lbhab': 'Habitat',
-        'lbperturb': 'Perturbations',
-        'comments': 'Commentaires',
-        'geom': 'Géométrie',
-        'geom_wkt': 'geom_wkt',
-        'geojson': 'geojson',
-        'cd_hab': 'cdhab',
-        'covtaxons': 'covtaxons',
-        'nomvtaxon': 'nomvtaxon'
+        "idbsite": "Identifiant site",
+        "visitdate": "Date visite",
+        "bsitename": "Nom du site",
+        "area_name": "Communes",
+        "observers": "Observateurs",
+        "organisms": "Organismes",
+        "lbhab": "Habitat",
+        "lbperturb": "Perturbations",
+        "comments": "Commentaires",
+        "geom": "Géométrie",
+        "geom_wkt": "geom_wkt",
+        "geojson": "geojson",
+        "cd_hab": "cdhab",
+        "covtaxons": "covtaxons",
+        "nomvtaxon": "nomvtaxon",
     }
