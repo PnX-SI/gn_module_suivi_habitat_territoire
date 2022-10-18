@@ -163,7 +163,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .subscribe(info => {
         info.forEach(com => {
-          this.tabCom.push(com.nom_commune);
+          this.tabCom.push({ label: com.nom_commune, id: com.id_area });
         });
         this.tabCom.sort((a, b) => {
           return ('' + a).localeCompare('' + b);

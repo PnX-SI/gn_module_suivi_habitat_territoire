@@ -154,7 +154,7 @@ def get_all_sites(info_role):
         q = q.filter(Organisme.id_organisme == parameters["organisme"])
 
     if "commune" in parameters:
-        q = q.filter(LAreas.area_name == parameters["commune"])
+        q = q.filter(LAreas.id_area == parameters["commune"])
 
     if "year" in parameters:
         # relance la requête pour récupérer la date_max exacte si on filtre sur l'année
@@ -487,12 +487,13 @@ def get_commune(module_code, info_role):
     """
     params = request.args
     q = (
-        DB.session.query(LAreas.area_name)
+        DB.session.query(LAreas.id_area, LAreas.area_name)
         .distinct()
         .outerjoin(corSiteArea, LAreas.id_area == corSiteArea.c.id_area)
         .outerjoin(corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site)
         .outerjoin(TModules, TModules.id_module == corSiteModule.c.id_module)
         .filter(TModules.module_code == module_code)
+        .order_by(LAreas.area_name)
     )
 
     if "id_area_type" in params:
@@ -504,7 +505,8 @@ def get_commune(module_code, info_role):
 
         for d in data:
             nom_com = dict()
-            nom_com["nom_commune"] = str(d[0])
+            nom_com["id_area"] = d[0]
+            nom_com["nom_commune"] = str(d[1])
             tab_commune.append(nom_com)
         return tab_commune
     return None

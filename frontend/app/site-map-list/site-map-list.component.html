@@ -55,7 +55,7 @@
                 [formControl]="filterForm.controls.filterCom"
               >
                 <option [ngValue]="null"> -- Sélectionnez un filtre -- </option>
-                <option *ngFor="let label of tabCom"> {{ label }} </option>
+                <option *ngFor="let com of tabCom" [value]="com.id"> {{ com.label }} </option>
               </select>
             </div>
           </div>
