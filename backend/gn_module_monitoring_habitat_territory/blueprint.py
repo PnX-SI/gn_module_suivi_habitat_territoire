@@ -232,14 +232,16 @@ def get_visits(info_role):
     """
     parameters = request.args
     query = (
-        DB.session.query(TVisitSHT, User)
+        DB.session.query(TVisitSHT, User.nom_complet, Organisme.nom_organisme)
         .options(joinedload(TVisitSHT.cor_visit_taxons))
         .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
         .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+        .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
     )
     if "id_base_site" in parameters:
-        query = query.filter(TVisitSHT.id_base_site == parameters["id_base_site"]).order_by(
-            desc(TVisitSHT.visit_date_min)
+        query = (query
+            .filter(TVisitSHT.id_base_site == parameters["id_base_site"])
+            .order_by(desc(TVisitSHT.visit_date_min))
         )
     data = query.all()
 
@@ -249,7 +251,10 @@ def get_visits(info_role):
         if infos["id_base_visit"] not in visits:
             infos["observers"] = []
             visits[infos["id_base_visit"]] = infos
-        visits[infos["id_base_visit"]]["observers"].append(d[1].as_dict())
+        visits[infos["id_base_visit"]]["observers"].append({
+            "userFullName": d[1],
+            "organismName": d[2]
+        })
     return list(visits.values())
 
 

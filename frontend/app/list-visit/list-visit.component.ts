@@ -126,15 +126,12 @@ export class ListVisitComponent implements OnInit, OnDestroy {
     this._api.getVisits({ id_base_site: this.idSite }).subscribe(
       data => {
         data.forEach(visit => {
-          let fullName = '';
+          let observersList = [];
           let count = visit.observers.length;
           visit.observers.forEach((obs, index) => {
-            if (count > 1) {
-              if (index + 1 == count) fullName += obs.nom_role + ' ' + obs.prenom_role;
-              else fullName += obs.nom_role + ' ' + obs.prenom_role + ', ';
-            } else fullName = obs.nom_role + ' ' + obs.prenom_role;
+            observersList.push(`${obs.userFullName} (${obs.organismName})`);
           });
-          visit.observers = fullName;
+          visit.observers = observersList.join(', ');
           let pres = 0;
           if (visit.cor_visit_taxons) {
             visit.cor_visit_taxons.forEach(taxon => {
