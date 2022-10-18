@@ -111,6 +111,9 @@ def get_taxa_by_habitats(cd_hab):
     return None
 
 
+# TODO: create 2 disctinct web service one for all sites and one for one site
+# TODO: use service site pagination
+# TODO: return a root object instead of an array
 @blueprint.route("/sites", methods=["GET"])
 @permissions.check_cruved_scope("R", True, module_code="SHT")
 @json_resp
@@ -121,19 +124,51 @@ def get_all_sites(info_role):
     parameters = request.args
     id_type_commune = blueprint.config["id_type_commune"]
 
-    q = (
+    # Get sites from visits
+    query = (
+        DB.session.query(TBaseSites.id_base_site)
+        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
+        .outerjoin(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
+        .outerjoin(Habref, TInfosSite.cd_hab == Habref.cd_hab)
+        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+        .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TBaseSites.id_base_site)
+    )
+
+    if "id_base_site" in parameters:
+        query = query.filter(TBaseSites.id_base_site == parameters["id_base_site"])
+
+    if "cd_hab" in parameters:
+        query = query.filter(TInfosSite.cd_hab == parameters["cd_hab"])
+
+    if "organisme" in parameters:
+        query = query.filter(User.id_organisme == parameters["organisme"])
+
+    if "commune" in parameters:
+        query = query.filter(corSiteArea.c.id_area == parameters["commune"])
+
+    if "year" in parameters:
+        query = query.filter(func.date_part("year", TBaseVisits.visit_date_min) == parameters["year"])
+
+    sites_ids = [id[0] for id in query.all()]
+
+    # Get sites infos
+    query = (
         DB.session.query(
+            TBaseSites,
             TInfosSite,
-            func.max(TBaseVisits.visit_date_min),
             Habref.lb_hab_fr,
+            func.max(TBaseVisits.visit_date_min),
             func.count(distinct(TBaseVisits.id_base_visit)),
             func.string_agg(distinct(Organisme.nom_organisme), ", "),
-            func.string_agg(distinct(LAreas.area_name), ", "),
-            TBaseSites,
+            func.string_agg(
+                distinct(func.concat(LAreas.area_name, " (", LAreas.area_code, ")")),
+                ", "
+            ).filter(LAreas.area_name != None),
         )
-        .outerjoin(TBaseSites, TBaseSites.id_base_site == TInfosSite.id_base_site)
-        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site)
-        .outerjoin(Habref, TInfosSite.cd_hab == Habref.cd_hab)
+        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
+        .outerjoin(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
+        .outerjoin(Habref, Habref.cd_hab == TInfosSite.cd_hab)
         .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
         .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
@@ -142,79 +177,45 @@ def get_all_sites(info_role):
             LAreas, and_(LAreas.id_area == corSiteArea.c.id_area, LAreas.id_type == id_type_commune)
         )
         .group_by(TInfosSite.id_infos_site, TBaseSites.id_base_site, Habref.lb_hab_fr)
+        .filter(TBaseSites.id_base_site.in_(sites_ids))
     )
 
-    if "cd_hab" in parameters:
-        q = q.filter(TInfosSite.cd_hab == parameters["cd_hab"])
-
-    if "id_base_site" in parameters:
-        q = q.filter(TInfosSite.id_base_site == parameters["id_base_site"])
-
-    if "organisme" in parameters:
-        q = q.filter(Organisme.id_organisme == parameters["organisme"])
-
-    if "commune" in parameters:
-        q = q.filter(LAreas.id_area == parameters["commune"])
-
-    if "year" in parameters:
-        # relance la requête pour récupérer la date_max exacte si on filtre sur l'année
-        q_year = (
-            DB.session.query(
-                TInfosSite.id_base_site,
-                func.max(TBaseVisits.visit_date_min),
-            )
-            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site)
-            .group_by(TInfosSite.id_base_site)
-        )
-        data_year = q_year.all()
-
-        q = q.filter(func.date_part("year", TBaseVisits.visit_date_min) == parameters["year"])
-
+    # Manage pagination
     page = request.args.get("page", 1, type=int)
     items_per_page = blueprint.config["items_per_page"]
+    pagination = query.paginate(page, items_per_page, False)
+    total_items = pagination.total
 
-    pagination = q.paginate(page, items_per_page, False)
-    totalItems = pagination.total
-    data = q.all()
+    data = query.all()
 
+    # Build output
     pageInfo = {
-        "totalItems": totalItems,
+        "totalItems": total_items,
         "items_per_page": items_per_page,
     }
-
     features = []
     if data:
         for d in data:
-            feature = d[0].get_geofeature()
-            id_site = feature["properties"]["id_base_site"]
+            feature = d[1].get_geofeature()
 
-            if d[1] == None:
-                feature["properties"]["date_max"] = "Aucune visite"
-            elif "year" not in parameters:
-                feature["properties"]["date_max"] = str(d[1])
-            else:
-                feature["properties"]["date_max"] = None
-                for dy in data_year:
-                    #  récupérer la bonne date max du site si on filtre sur année
-                    if id_site == dy[0]:
-                        current_date = str(dy[1])
-                        if (
-                            feature["properties"]["date_max"] is None
-                            or feature["properties"]["date_max"] < current_date
-                        ):
-                            feature["properties"]["date_max"] = current_date
-
-            feature["properties"]["nom_habitat"] = str(d[2])
-            feature["properties"]["nb_visit"] = str(d[3])
-            if d[4] == None:
-                feature["properties"]["organisme"] = "Aucun"
-            else:
-                feature["properties"]["organisme"] = str(d[4])
-            feature["properties"]["nom_commune"] = str(d[5])
-            base_site = d[6]
+            base_site = d[0]
+            # TODO: use simplify name, english and camelCase for properties
+            feature["properties"]["base_site_uuid"] = base_site.uuid_base_site
             feature["properties"]["base_site_code"] = base_site.base_site_code
             feature["properties"]["base_site_description"] = base_site.base_site_description
             feature["properties"]["base_site_name"] = base_site.base_site_name
+
+            feature["properties"]["nom_habitat"] = str(d[2])
+
+            date_max = "Aucune visite" if d[3] == None else str(d[3])
+            feature["properties"]["date_max"] = date_max
+
+            feature["properties"]["nb_visit"] = str(d[4])
+
+            organisms = "Aucun" if d[5] == None else str(d[5])
+            feature["properties"]["organisme"] = organisms
+
+            feature["properties"]["nom_commune"] = str(d[6])
 
             features.append(feature)
 
