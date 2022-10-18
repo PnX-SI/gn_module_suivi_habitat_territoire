@@ -118,7 +118,12 @@
 
   <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm">
     <pnx-map height="94vh" [center]="center" [zoom]="zoom">
-      <pnx-geojson [onEachFeature]="onEachFeature.bind(this)" [geojson]="sites"> </pnx-geojson>
+      <pnx-geojson
+        [onEachFeature]="onEachFeature.bind(this)"
+        [geojson]="sites"
+        [zoomOnLayer]="true"
+        [zoomOnFirstTime]="true"
+      ></pnx-geojson>
     </pnx-map>
   </div>
 </div>
