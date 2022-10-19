@@ -1,7 +1,7 @@
 .box-shadow {
     box-shadow: 4px 5px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  }
-  
+}
+
 .list-sht {
     max-height: 94vh;
     overflow-y: auto;
@@ -18,10 +18,82 @@
     margin-bottom: 18px;
 }
 
-.back-button{
+.back-button {
     text-align: left;
 }
-.end-btn{
+.end-btn {
     display: flex;
     justify-content: space-between;
+}
+
+// Map legend
+:host /deep/ .info.leaflet-control {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+}
+:host /deep/ .info.leaflet-control h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+:host /deep/ .legend.leaflet-control {
+    line-height: 18px;
+    color: #555;
+}
+:host /deep/ .legend.leaflet-control i {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    vertical-align: sub;
+    margin-right: 2px;
+}
+:host /deep/ .info.leaflet-control p {
+    margin-bottom: .3rem;
+}
+
+// Global spinner
+#cover-spin {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.39);
+    z-index: 9999;
+}
+@-webkit-keyframes spin {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+#cover-spin::after {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 48%;
+    top: 40%;
+    width: 40px;
+    height: 40px;
+    border-style: solid;
+    border-color: black;
+    border-top-color: transparent;
+    border-width: 4px;
+    border-radius: 50%;
+    -webkit-animation: spin 0.8s linear infinite;
+    animation: spin 0.8s linear infinite;
 }

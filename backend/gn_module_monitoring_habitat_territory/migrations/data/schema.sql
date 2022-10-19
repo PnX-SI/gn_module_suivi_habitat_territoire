@@ -137,87 +137,116 @@ ALTER TABLE ONLY cor_visit_taxons
 -- VIEWS
 
 -- Create view to export visits
-CREATE OR REPLACE VIEW pr_monitoring_habitat_territory.export_visits AS WITH
-observers AS(
+CREATE OR REPLACE VIEW pr_monitoring_habitat_territory.export_visits AS
+    WITH observers AS(
+        SELECT
+            v.id_base_visit,
+            string_agg(roles.nom_role || ' ' || roles.prenom_role, ', ') AS observers,
+            string_agg(org.nom_organisme, ', ' ) AS organisms
+        FROM gn_monitoring.t_base_visits AS v
+            JOIN gn_monitoring.cor_visit_observer AS observer
+                ON observer.id_base_visit = v.id_base_visit
+            JOIN utilisateurs.t_roles AS roles
+                ON roles.id_role = observer.id_role
+            JOIN utilisateurs.bib_organismes AS org
+                ON roles.id_organisme = org.id_organisme
+            JOIN gn_monitoring.cor_site_module AS csm
+                ON (
+                    csm.id_base_site = v.id_base_site
+                    AND csm.id_module = gn_commons.get_id_module_bycode('SHT')
+                )
+        GROUP BY v.id_base_visit
+    ),
+    perturbations AS(
+        SELECT
+            v.id_base_visit,
+            string_agg(n.label_default, ', ') AS perturbations
+        FROM gn_monitoring.t_base_visits v
+            JOIN pr_monitoring_habitat_territory.cor_visit_perturbation AS p
+                ON v.id_base_visit = p.id_base_visit
+            JOIN ref_nomenclatures.t_nomenclatures AS n
+                ON p.id_nomenclature_perturbation = n.id_nomenclature
+            JOIN gn_monitoring.cor_site_module AS csm
+                ON (
+                    csm.id_base_site = v.id_base_site
+                    AND csm.id_module = gn_commons.get_id_module_bycode('SHT')
+                )
+        GROUP BY v.id_base_visit
+    ),
+    taxons AS (
+        SELECT v.id_base_visit,
+            json_object_agg(
+                tr.lb_nom,
+                CASE tr.lb_nom
+                WHEN tr.lb_nom
+                THEN True
+                END ORDER BY tr.lb_nom
+            ) AS taxons_scinames,
+            string_agg(tr.cd_nom::text, ', ') AS taxons_scinames_codes
+        FROM gn_monitoring.t_base_visits AS v
+            JOIN pr_monitoring_habitat_territory.cor_visit_taxons AS t
+                ON t.id_base_visit = v.id_base_visit
+            JOIN taxonomie.taxref AS tr
+                ON t.cd_nom = tr.cd_nom
+            JOIN gn_monitoring.cor_site_module AS csm
+                ON (
+                    csm.id_base_site = v.id_base_site
+                    AND csm.id_module = gn_commons.get_id_module_bycode('SHT')
+                )
+        GROUP BY v.id_base_visit
+    ),
+    municipalities AS (
+        SELECT
+            v.id_base_visit,
+            string_agg(
+                areas.area_name || ' (' || areas.area_code || ')' ,
+                ', '
+            ) FILTER (WHERE areas.area_name IS NOT NULL) AS municipalities
+        FROM gn_monitoring.t_base_visits AS v
+            JOIN gn_monitoring.cor_site_module AS csm
+                ON (
+                    csm.id_base_site = v.id_base_site
+                    AND csm.id_module = gn_commons.get_id_module_bycode('SHT')
+                )
+            LEFT JOIN gn_monitoring.cor_site_area AS csa
+                ON csa.id_base_site = v.id_base_site
+            LEFT JOIN ref_geo.l_areas AS areas
+                ON (areas.id_area = csa.id_area AND areas.id_type = ref_geo.get_id_area_type('COM'))
+        GROUP BY v.id_base_visit
+    )
     SELECT
-        v.id_base_visit,
-        string_agg(roles.nom_role::text || ' ' || roles.prenom_role::text, ',') AS observateurs,
-        string_agg(roles.id_organisme::text, ',' ) AS organisme
-    FROM gn_monitoring.t_base_visits AS v
-        JOIN gn_monitoring.cor_visit_observer AS observer
-            ON observer.id_base_visit = v.id_base_visit
-        JOIN utilisateurs.t_roles AS roles
-            ON roles.id_role = observer.id_role
-    GROUP BY v.id_base_visit
-),
-perturbations AS(
-    SELECT
-        v.id_base_visit,
-        string_agg(n.label_default, ',') AS label_perturbation
-    FROM gn_monitoring.t_base_visits v
-        JOIN pr_monitoring_habitat_territory.cor_visit_perturbation p
-            ON v.id_base_visit = p.id_base_visit
-        JOIN ref_nomenclatures.t_nomenclatures n
-            ON p.id_nomenclature_perturbation = n.id_nomenclature
-    GROUP BY v.id_base_visit
-),
-sites_area AS(
-    SELECT
-        bs.id_base_site,
-        a.id_area,
-        a.area_name,
-        a.geom
-    FROM ref_geo.l_areas a
-        JOIN gn_monitoring.t_base_sites bs
-            ON a.area_name = bs.base_site_code
-),
-taxons AS (
-    SELECT v.id_base_visit,
-        json_object_agg(
-            tr.lb_nom,
-            CASE tr.lb_nom
-            WHEN tr.lb_nom
-            THEN True
-            END ORDER BY tr.lb_nom
-        ) AS nom_valide_taxon,
-        string_agg(tr.cd_nom::text, ',') AS cover_cdnom
-    FROM gn_monitoring.t_base_visits v
-        JOIN pr_monitoring_habitat_territory.cor_visit_taxons t
-            ON t.id_base_visit = v.id_base_visit
-        JOIN taxonomie.taxref tr
-            ON t.cd_nom = tr.cd_nom
-    GROUP BY v.id_base_visit
-)
--- All the meshes of a site with their visits
-SELECT sites.id_base_site AS idbsite,
-	visits.id_base_visit AS idbvisit,
-	visits.visit_date_min AS visitdate,
-	visits.comments,
-	sites_area.geom,
-	per.label_perturbation AS lbperturb,
-	obs.observateurs AS observers,
-	obs.organisme,
-	tax.nom_valide_taxon AS nomvtaxon,
-    tax.cover_cdnom AS covtaxons,
-	sites.base_site_name AS bsitename,
-	habref.lb_hab_fr AS lbhab,
-	habref.cd_hab,
-	sites_area.area_name
-FROM gn_monitoring.t_base_sites sites
-    JOIN gn_monitoring.t_base_visits visits
-        ON sites.id_base_site = visits.id_base_site
-    JOIN taxons tax
-        ON tax.id_base_visit = visits.id_base_visit
-    JOIN observers obs
-        ON obs.id_base_visit = visits.id_base_visit
-    LEFT JOIN perturbations per
-        ON per.id_base_visit = visits.id_base_visit
-    JOIN sites_area
-        ON sites_area.id_base_site = sites.id_base_site
-    JOIN pr_monitoring_habitat_territory.t_infos_site info
-        ON info.id_base_site = sites.id_base_site
-    JOIN ref_habitats.habref habref
-        ON habref.cd_hab = info.cd_hab
-ORDER BY visits.id_base_visit;
+        visits.id_base_visit AS id_base_visit,
+        visits.visit_date_min AS visit_date,
+        visits.comments AS visit_comment,
+        sites.id_base_site AS id_base_site,
+        sites.base_site_name AS base_site_name,
+        sites.base_site_code AS base_site_code,
+        sites.uuid_base_site AS base_site_uuid,
+        sites.geom_local AS geom,
+        public.ST_AsGeoJSON(sites.geom) AS geojson,
+        habref.lb_hab_fr AS habitat_name,
+        habref.cd_hab AS habitat_code,
+        mun.municipalities,
+        per.perturbations,
+        obs.observers,
+        obs.organisms,
+        tax.taxons_scinames,
+        tax.taxons_scinames_codes
+    FROM gn_monitoring.t_base_visits AS visits
+        JOIN gn_monitoring.t_base_sites AS sites
+            ON sites.id_base_site = visits.id_base_site
+        JOIN pr_monitoring_habitat_territory.t_infos_site AS infos_sites
+            ON infos_sites.id_base_site = sites.id_base_site
+        JOIN ref_habitats.habref AS habref
+            ON habref.cd_hab = infos_sites.cd_hab
+        JOIN municipalities AS mun
+            ON mun.id_base_visit = visits.id_base_visit
+        JOIN taxons AS tax
+            ON tax.id_base_visit = visits.id_base_visit
+        JOIN observers AS obs
+            ON obs.id_base_visit = visits.id_base_visit
+        LEFT JOIN perturbations AS per
+            ON per.id_base_visit = visits.id_base_visit
+    ORDER BY visits.visit_date_min DESC, visits.id_base_visit ASC ;
 
 

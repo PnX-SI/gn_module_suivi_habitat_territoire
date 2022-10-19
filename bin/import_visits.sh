@@ -106,6 +106,7 @@ function createTmpTables() {
             -v visitsHasPerturbationsTmpTable="${visits_table_tmp_has_perturbations}" \
             -v visitsHasObserversTmpTable="${visits_table_tmp_has_observers}" \
             -v visitsObserversTmpTable="${visits_table_tmp_observers}" \
+            -v obsTmpTable="${obs_table_tmp_obs}" \
             -f "${data_dir}/import_visits_tmp_tables.sql"
 }
 

@@ -27,6 +27,7 @@ $BODY$
 \echo 'Clean tables if necessary'
 DROP TABLE IF EXISTS :moduleSchema.:visitsHasPerturbationsTmpTable;
 DROP TABLE IF EXISTS :moduleSchema.:visitsHasObserversTmpTable;
+DROP TABLE IF EXISTS :moduleSchema.:obsTmpTable;
 DROP TABLE IF EXISTS :moduleSchema.:visitsTmpTable;
 DROP TABLE IF EXISTS :moduleSchema.:visitsObserversTmpTable;
 

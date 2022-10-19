@@ -4,6 +4,7 @@ __pycache__
 *.pyc
 
 settings.ini
+imports_settings.ini
 conf_gn_module.toml
 module.config.ts
 var/

@@ -28,6 +28,8 @@ legend {
 :host /deep/ .single-selection .datatable-body-row.active .datatable-row-group {
     background-color: rgb(154, 217, 247) !important;
 }
+
+// Global spinner
 #cover-spin {
     position: fixed;
     width: 100%;
@@ -37,29 +39,6 @@ legend {
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.39);
     z-index: 9999;
-}
-:host /deep/ #map .info.leaflet-control {
-    padding: 6px 8px;
-    font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-}
-:host /deep/ #map .info.leaflet-control h4 {
-    margin: 0 0 5px;
-    color: #777;
-}
-:host /deep/ #map .legend.leaflet-control {
-    line-height: 18px;
-    color: #555;
-}
-:host /deep/ #map .legend.leaflet-control i {
-    width: 18px;
-    height: 18px;
-    display: inline-block;
-    vertical-align: sub;
-    margin-right: 2px;
 }
 @-webkit-keyframes spin {
     from {
@@ -93,8 +72,37 @@ legend {
     -webkit-animation: spin 0.8s linear infinite;
     animation: spin 0.8s linear infinite;
 }
+
 :host /deep/ .ngx-datatable .datatable-footer .page-count {
     -webkit-box-flex: 1;
     -ms-flex: 1 1 30%;
     flex: 1 1 30%;
+}
+
+// Map legend
+:host /deep/ .info.leaflet-control {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+}
+:host /deep/ .info.leaflet-control h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+:host /deep/ .legend.leaflet-control {
+    line-height: 18px;
+    color: #555;
+}
+:host /deep/ .legend.leaflet-control i {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    vertical-align: sub;
+    margin-right: 2px;
+}
+:host /deep/ .info.leaflet-control p {
+    margin-bottom: .3rem;
 }

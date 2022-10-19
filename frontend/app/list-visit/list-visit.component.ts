@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import * as L from 'leaflet';
 
 import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { MapService } from '@geonature_common/map/map.service';
@@ -20,10 +21,12 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   public site;
   public currentSite = {};
   public show = true;
+  public loadingIndicator = false;
   public idSite;
   public nomHabitat;
   public organisme;
   public nomCommune;
+  public siteUuid;
   public siteName;
   public siteCode;
   public siteDesc;
@@ -36,7 +39,6 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   );
   public addIsAllowed = false;
   public exportIsAllowed = false;
-
 
   @ViewChild('geojson')
   geojson: GeojsonComponent;
@@ -61,22 +63,27 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   checkPermission() {
     this.userService.check_user_cruved_visit('E').subscribe(ucruved => {
       this.exportIsAllowed = ucruved;
-    })
+    });
     this.userService.check_user_cruved_visit('C').subscribe(ucruved => {
       this.addIsAllowed = ucruved;
-    })
+    });
   }
 
   ngAfterViewInit() {
     this.mapService.map.doubleClickZoom.disable();
     this.getSites();
+    this.addLegend();
   }
 
   onEachFeature(feature, layer) {
-    layer.setStyle(this.storeService.getLayerStyle(this.site));
+    let site = feature.properties;
+    let currentStyle = this.storeService.getLayerStyle(site);
+    layer.setStyle(currentStyle);
   }
 
   getSites() {
+    this.loadingIndicator = true;
+
     this.paramApp = this.paramApp.append('id_base_site', this.idSite);
     this._api.getSites(this.paramApp).subscribe(
       data => {
@@ -86,21 +93,16 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         this.organisme = properties.organisme;
         this.nomCommune = properties.nom_commune;
         this.nomHabitat = properties.nom_habitat;
+        this.siteUuid = properties.base_site_uuid;
         this.siteName = properties.base_site_name;
         this.siteCode = properties.base_site_code;
         this.siteDesc = properties.base_site_description;
         this.cdHabitat = properties.cd_hab;
 
         // UP cd_hab nom_habitat id site
-        this.storeService.setCurrentSite(
-          properties.cd_hab,
-          properties.nom_habitat,
-          this.idSite
-        );
+        this.storeService.setCurrentSite(properties.cd_hab, properties.nom_habitat, this.idSite);
 
         this.geojson.currentGeoJson$.subscribe(currentLayer => {
-          let currentStyle = this.storeService.getLayerStyle(properties);
-          currentLayer.setStyle(currentStyle);
           this.mapService.map.fitBounds(currentLayer.getBounds());
         });
 
@@ -113,30 +115,27 @@ export class ListVisitComponent implements OnInit, OnDestroy {
       error => {
         let msg = '';
         if (error.status == 403) {
-          msg = "Vous n'êtes pas autorisé à afficher ces données."
+          msg = "Vous n'êtes pas autorisé à afficher ces données.";
         } else {
-          msg = 'Une erreur est survenue lors de la récupération des informations sur le serveur.'
+          msg = 'Une erreur est survenue lors de la récupération des informations sur le serveur.';
         }
-        this.toastr.error(msg, '', {positionClass: 'toast-top-right'});
+        this.toastr.error(msg, '', { positionClass: 'toast-top-right' });
         console.log('Error: ', error);
       }
     );
   }
 
   getVisits() {
+    this.loadingIndicator = true;
+
     this._api.getVisits({ id_base_site: this.idSite }).subscribe(
       data => {
         data.forEach(visit => {
-          let fullName = '';
-          let count = visit.observers.length;
+          let observersList = [];
           visit.observers.forEach((obs, index) => {
-            if (count > 1) {
-              if (index + 1 == count)
-                fullName += obs.nom_role + ' ' + obs.prenom_role;
-              else fullName += obs.nom_role + ' ' + obs.prenom_role + ', ';
-            } else fullName = obs.nom_role + ' ' + obs.prenom_role;
+            observersList.push(`${obs.userFullName} (${obs.organismName})`);
           });
-          visit.observers = fullName;
+          visit.observers = observersList.join(', ');
           let pres = 0;
           if (visit.cor_visit_taxons) {
             visit.cor_visit_taxons.forEach(taxon => {
@@ -148,18 +147,28 @@ export class ListVisitComponent implements OnInit, OnDestroy {
           visit.state = pres + ' / ' + this.taxons.length;
         });
 
+        this.loadingIndicator = false;
         this.rows = data;
       },
       error => {
+        this.loadingIndicator = false;
         if (error.status != 404) {
           this.toastr.error(
             'Une erreur est survenue lors de la récupération des données du relevé.',
             '',
-            {positionClass: 'toast-top-right'}
+            { positionClass: 'toast-top-right' }
           );
         }
       }
     );
+  }
+
+  addLegend() {
+    let legend = new L.Control({ position: 'bottomright' });
+    legend.onAdd = () => {
+      return this.storeService.buildMapLegend();
+    };
+    legend.addTo(this.mapService.map);
   }
 
   backToSites() {

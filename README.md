@@ -7,6 +7,7 @@ Module GeoNature de Suivi des Habitats sur un Territoire (SHT) du réseau Flore 
 ## Documentation
 
 - [Installation et désinstallation du module](./docs/install.md)
+- [Import des données](./docs/imports-data.md)
 
 ## Licence
 
