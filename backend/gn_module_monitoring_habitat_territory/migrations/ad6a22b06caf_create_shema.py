@@ -11,8 +11,8 @@ from alembic import op
 from sqlalchemy.sql import text
 
 # revision identifiers, used by Alembic.
-revision = 'ad6a22b06caf'
-down_revision = '4a1972c1dcec'
+revision = "ad6a22b06caf"
+down_revision = "4a1972c1dcec"
 branch_labels = None
 depends_on = None
 
@@ -24,6 +24,7 @@ def upgrade():
         )
     )
     op.get_bind().execute(operations)
+
 
 def downgrade():
     op.execute("DROP SCHEMA pr_monitoring_habitat_territory CASCADE")

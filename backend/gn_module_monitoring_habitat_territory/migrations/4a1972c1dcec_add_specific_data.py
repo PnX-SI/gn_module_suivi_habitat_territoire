@@ -11,12 +11,12 @@ from sqlalchemy.sql import text
 
 
 # revision identifiers, used by Alembic.
-revision = '4a1972c1dcec'
+revision = "4a1972c1dcec"
 down_revision = None
 branch_labels = "sht"
 depends_on = (
     "0a97fffb151c",  # Add nomenclatures shared in conservation modules
-    "97d30ecf0cb1", # Add_M25m_mesh
+    "97d30ecf0cb1",  # Add_M25m_mesh
     "f3877ed851b9",  # Add_M50m_mesh
     "e9a5e1372bce",  # Add_M100m_mesh
 )
@@ -42,7 +42,8 @@ def downgrade():
 
 
 def delete_module(module_code):
-    operation = text("""
+    operation = text(
+        """
         -- Unlink module from dataset
         DELETE FROM gn_commons.cor_module_dataset
             WHERE id_module = (
@@ -53,8 +54,6 @@ def delete_module(module_code):
         -- Uninstall module (unlink this module of GeoNature)
         DELETE FROM gn_commons.t_modules
             WHERE module_code = :moduleCode ;
-    """)
-    op.get_bind().execute(operation, {"moduleCode" : module_code}
-)
-
-    
+    """
+    )
+    op.get_bind().execute(operation, {"moduleCode": module_code})

@@ -93,7 +93,7 @@ def get_taxa_by_habitats(cd_hab):
         .group_by(
             CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxref.nom_complet
         )
-       .order_by(Taxref.nom_complet)
+        .order_by(Taxref.nom_complet)
     )
 
     q = q.filter(CorHabitatTaxon.id_habitat == cd_hab)
@@ -147,7 +147,9 @@ def get_all_sites(info_role):
         query = query.filter(corSiteArea.c.id_area == parameters["commune"])
 
     if "year" in parameters:
-        query = query.filter(func.date_part("year", TBaseVisits.visit_date_min) == parameters["year"])
+        query = query.filter(
+            func.date_part("year", TBaseVisits.visit_date_min) == parameters["year"]
+        )
 
     sites_ids = [id[0] for id in query.all()]
 
@@ -161,8 +163,7 @@ def get_all_sites(info_role):
             func.count(distinct(TBaseVisits.id_base_visit)),
             func.string_agg(distinct(Organisme.nom_organisme), ", "),
             func.string_agg(
-                distinct(func.concat(LAreas.area_name, " (", LAreas.area_code, ")")),
-                ", "
+                distinct(func.concat(LAreas.area_name, " (", LAreas.area_code, ")")), ", "
             ).filter(LAreas.area_name != None),
         )
         .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
@@ -238,9 +239,8 @@ def get_visits(info_role):
         .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
     )
     if "id_base_site" in parameters:
-        query = (query
-            .filter(TVisitSHT.id_base_site == parameters["id_base_site"])
-            .order_by(desc(TVisitSHT.visit_date_min))
+        query = query.filter(TVisitSHT.id_base_site == parameters["id_base_site"]).order_by(
+            desc(TVisitSHT.visit_date_min)
         )
     data = query.all()
 
@@ -250,10 +250,9 @@ def get_visits(info_role):
         if infos["id_base_visit"] not in visits:
             infos["observers"] = []
             visits[infos["id_base_visit"]] = infos
-        visits[infos["id_base_visit"]]["observers"].append({
-            "userFullName": d[1],
-            "organismName": d[2]
-        })
+        visits[infos["id_base_visit"]]["observers"].append(
+            {"userFullName": d[1], "organismName": d[2]}
+        )
     return list(visits.values())
 
 
@@ -538,9 +537,8 @@ def export_visit(info_role):
     export_format = parameters["export_format"] if "export_format" in request.args else "shapefile"
 
     # Build query
-    query = (DB.session
-        .query(ExportVisits)
-        .order_by(desc(ExportVisits.visit_date), ExportVisits.habitat_code)
+    query = DB.session.query(ExportVisits).order_by(
+        desc(ExportVisits.visit_date), ExportVisits.habitat_code
     )
 
     if "id_base_visit" in parameters:
@@ -550,26 +548,24 @@ def export_visit(info_role):
         query = query.filter(ExportVisits.id_base_site == parameters["id_base_site"])
 
     if "organisme" in parameters:
-        query = (query
-            .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == ExportVisits.id_base_visit)
+        query = (
+            query.outerjoin(
+                corVisitObserver, corVisitObserver.c.id_base_visit == ExportVisits.id_base_visit
+            )
             .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
             .filter(User.id_organisme == parameters["organisme"])
         )
 
     if "commune" in parameters:
-        query = (query
-            .outerjoin(corSiteArea, corSiteArea.c.id_base_site == ExportVisits.id_base_site)
-            .filter(corSiteArea.c.id_area == parameters["commune"])
-        )
+        query = query.outerjoin(
+            corSiteArea, corSiteArea.c.id_base_site == ExportVisits.id_base_site
+        ).filter(corSiteArea.c.id_area == parameters["commune"])
 
     if "year" in parameters:
         query = query.filter(func.date_part("year", ExportVisits.visit_date) == parameters["year"])
 
     if "cd_hab" in parameters:
         query = query.filter(ExportVisits.habitat_code == parameters["cd_hab"])
-
-    from sqlalchemy.dialects import postgresql;
-    print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
 
     data = query.all()
 
