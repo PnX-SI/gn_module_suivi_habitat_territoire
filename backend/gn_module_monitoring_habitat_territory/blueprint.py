@@ -125,12 +125,12 @@ def get_all_sites(info_role):
 
     # Get sites from visits
     query = (
-        DB.session.query(TBaseSites.id_base_site)
+        DB.session.query(distinct(TBaseSites.id_base_site))
         .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
-        .outerjoin(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
-        .outerjoin(Habref, TInfosSite.cd_hab == Habref.cd_hab)
-        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+        .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
+        .join(Habref, TInfosSite.cd_hab == Habref.cd_hab)
+        .join(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+        .join(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TBaseSites.id_base_site)
     )
 
@@ -167,10 +167,10 @@ def get_all_sites(info_role):
             ).filter(LAreas.area_name != None),
         )
         .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
-        .outerjoin(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
-        .outerjoin(Habref, Habref.cd_hab == TInfosSite.cd_hab)
-        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+        .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
+        .join(Habref, Habref.cd_hab == TInfosSite.cd_hab)
+        .join(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+        .join(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
         .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TInfosSite.id_base_site)
         .outerjoin(
@@ -234,8 +234,8 @@ def get_visits(info_role):
     query = (
         DB.session.query(TVisitSHT, User.nom_complet, Organisme.nom_organisme)
         .options(joinedload(TVisitSHT.cor_visit_taxons))
-        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+        .join(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+        .join(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
     )
     if "id_base_site" in parameters:
@@ -295,11 +295,10 @@ def get_visit_details(id_visit):
         DB.session.query(TVisitSHT, User)
         .options(
             joinedload(TVisitSHT.cor_visit_taxons),
-            # joinedload(TVisitSHT.observers),
             joinedload(TVisitSHT.cor_visit_perturbation),
         )
-        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+        .join(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+        .join(User, User.id_role == corVisitObserver.c.id_role)
         .filter(TBaseVisits.id_base_visit == id_visit)
     )
     data_all = query.all()
@@ -481,7 +480,7 @@ def get_organisme(info_role):
         return tab_orga
     return None
 
-
+# TODO: use module code via config parameter...
 @blueprint.route("/communes/<module_code>", methods=["GET"])
 @permissions.check_cruved_scope("R", True, module_code="SHT")
 @json_resp
@@ -493,9 +492,9 @@ def get_commune(module_code, info_role):
     q = (
         DB.session.query(LAreas.id_area, LAreas.area_name)
         .distinct()
-        .outerjoin(corSiteArea, LAreas.id_area == corSiteArea.c.id_area)
-        .outerjoin(corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site)
-        .outerjoin(TModules, TModules.id_module == corSiteModule.c.id_module)
+        .join(corSiteArea, LAreas.id_area == corSiteArea.c.id_area)
+        .join(corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site)
+        .join(TModules, TModules.id_module == corSiteModule.c.id_module)
         .filter(TModules.module_code == module_code)
         .order_by(LAreas.area_name)
     )
@@ -549,15 +548,15 @@ def export_visit(info_role):
 
     if "organisme" in parameters:
         query = (
-            query.outerjoin(
+            query.join(
                 corVisitObserver, corVisitObserver.c.id_base_visit == ExportVisits.id_base_visit
             )
-            .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+            .join(User, User.id_role == corVisitObserver.c.id_role)
             .filter(User.id_organisme == parameters["organisme"])
         )
 
     if "commune" in parameters:
-        query = query.outerjoin(
+        query = query.join(
             corSiteArea, corSiteArea.c.id_base_site == ExportVisits.id_base_site
         ).filter(corSiteArea.c.id_area == parameters["commune"])
 
