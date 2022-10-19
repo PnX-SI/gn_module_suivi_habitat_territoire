@@ -145,5 +145,3 @@ export class StoreService {
     });
   }
 }
-
-

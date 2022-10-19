@@ -21,23 +21,9 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [
-    SiteMapListComponent,
-    ListVisitComponent,
-    ModalSHTComponent,
-  ],
-  imports: [
-    GN2CommonModule,
-    RouterModule.forChild(routes),
-    CommonModule,
-  ],
-  providers: [
-    HttpClient,
-    DataService,
-    StoreService,
-    FormService,
-    UserService,
-  ],
+  declarations: [SiteMapListComponent, ListVisitComponent, ModalSHTComponent],
+  imports: [GN2CommonModule, RouterModule.forChild(routes), CommonModule],
+  providers: [HttpClient, DataService, StoreService, FormService, UserService],
   bootstrap: []
 })
 export class GeonatureModule {}

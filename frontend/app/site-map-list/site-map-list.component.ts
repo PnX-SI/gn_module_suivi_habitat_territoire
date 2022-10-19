@@ -1,4 +1,4 @@
-import {Component, OnInit, AfterViewInit, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormGroup, FormBuilder } from '@angular/forms';
 
@@ -73,7 +73,6 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
       filterCom: this.getInitialFilterValue('commune'),
       filterHab: this.getInitialFilterValue('cd_hab')
     });
-    console.log(this.filterForm)
   }
 
   private getInitialFilterValue(filterName) {

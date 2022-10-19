@@ -5,7 +5,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 export class FormService {
   public disabled = true;
 
-  constructor(private fb: FormBuilder) { }
+  constructor(private fb: FormBuilder) {}
 
   initializeFormVisit(): FormGroup {
     const visitForm = this.fb.group({

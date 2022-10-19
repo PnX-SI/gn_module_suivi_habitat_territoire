@@ -4,7 +4,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { AppConfig } from '@geonature_config/app.config';
 import { ModuleConfig } from '../module.config';
 
-
 @Injectable()
 export class DataService {
   constructor(private http: HttpClient) {}
@@ -14,14 +13,13 @@ export class DataService {
     for (let key in params) {
       httpParams = httpParams.set(key, params[key]);
     }
-    return {params: httpParams};
+    return { params: httpParams };
   }
 
   getSites(params: HttpParams) {
-    return this.http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/sites`,
-      {params: params}
-    );
+    return this.http.get<any>(`${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/sites`, {
+      params: params
+    });
   }
 
   getInfoSite(id_base_site) {
@@ -44,9 +42,7 @@ export class DataService {
   }
 
   getOrganisme() {
-    return this.http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organismes`
-    );
+    return this.http.get<any>(`${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organismes`);
   }
 
   getCommune(module_code: string, params: any) {
@@ -57,9 +53,7 @@ export class DataService {
   }
 
   getVisitsYears() {
-    return this.http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits/years`
-    );
+    return this.http.get<any>(`${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits/years`);
   }
 
   getTaxons(cd_hab) {
@@ -75,10 +69,7 @@ export class DataService {
   }
 
   postVisit(data: any) {
-    return this.http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits`,
-      data
-    );
+    return this.http.post<any>(`${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/visits`, data);
   }
 
   patchVisit(data: any, idVisit) {
@@ -89,8 +80,6 @@ export class DataService {
   }
 
   getTaxonsInfos(scinameCode) {
-    return this.http.get<any>(
-      `${AppConfig.API_TAXHUB}/taxref/${scinameCode}`
-    );
+    return this.http.get<any>(`${AppConfig.API_TAXHUB}/taxref/${scinameCode}`);
   }
 }
