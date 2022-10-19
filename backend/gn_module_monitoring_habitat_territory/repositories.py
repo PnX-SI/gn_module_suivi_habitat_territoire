@@ -26,7 +26,6 @@ def check_user_cruved_visit(user, visit, cruved_level):
     if cruved_level == "1":
         for role in visit.observers:
             if role.id_role == user.id_role:
-                print("même id ")
                 is_allowed = True
                 break
             elif visit.id_digitiser == user.id_role:
@@ -42,7 +41,6 @@ def check_user_cruved_visit(user, visit, cruved_level):
     elif cruved_level == "2":
         for role in visit.observers:
             if role.id_role == user.id_role:
-                print("même role")
                 is_allowed = True
                 break
             elif visit.id_digitiser == user.id_role:
@@ -69,7 +67,6 @@ def check_year_visit(id_base_site, new_visit_date):
         TBaseVisits.id_base_site == id_base_site
     )
     tab_old_year = q_year.all()
-    print(tab_old_year)
     year_new_visit = new_visit_date[0:4]
 
     for y in tab_old_year:
