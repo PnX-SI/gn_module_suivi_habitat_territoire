@@ -63,6 +63,7 @@ Half the time it was not selectable.
 * Fixed visits export in GeoJson format which now use SRID 4326.
 * Fixed Web service `GET /sites` which return now correctly sites infos when organisms or year filters are used.
 * Fixed Web service `POST /visits`, correct use of module code to add new visit (#33).
+* Fixed use of join and outerjoin in backend queries.
 
 ### 🗑 Removed
 
