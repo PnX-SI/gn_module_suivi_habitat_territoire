@@ -578,6 +578,7 @@ def export_visit(info_role):
         # Get list hab/taxon
         cd_hab = visit["habitat_code"]
         taxons = taxons + list(set(get_taxonlist_by_cdhab(cd_hab)) - set(taxons))
+        taxons = sorted(taxons)
 
         # Remove html tags
         visit["habitat_name"] = strip_html(visit["habitat_name"])
