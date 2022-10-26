@@ -129,8 +129,8 @@ def get_all_sites(info_role):
         .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
         .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
         .join(Habref, TInfosSite.cd_hab == Habref.cd_hab)
-        .join(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .join(User, User.id_role == corVisitObserver.c.id_role)
+        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TBaseSites.id_base_site)
     )
 
@@ -169,8 +169,8 @@ def get_all_sites(info_role):
         .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
         .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
         .join(Habref, Habref.cd_hab == TInfosSite.cd_hab)
-        .join(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .join(User, User.id_role == corVisitObserver.c.id_role)
+        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
         .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TInfosSite.id_base_site)
         .outerjoin(

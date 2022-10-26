@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🐛 Fixed
+
+* Fixed Web service `GET /sites` which return now the sites whitout visits.
+
 ## [1.1.0] - 2022-10-22
 
 ### 🚀 Added
