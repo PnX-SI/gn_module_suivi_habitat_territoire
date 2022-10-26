@@ -457,7 +457,6 @@ def get_organisme(info_role):
     """
     Retourne la liste de tous les organismes présents
     """
-
     q = (
         DB.session.query(
             Organisme.nom_organisme, User.nom_role, User.prenom_role, User.id_organisme
