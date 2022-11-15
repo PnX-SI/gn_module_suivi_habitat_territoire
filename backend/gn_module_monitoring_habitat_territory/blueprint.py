@@ -407,7 +407,7 @@ def patch_visit(idv, info_role):
     dateIsUp = data["visit_date_min"] != existingVisit["visit_date_min"]
 
     if dateIsUp:
-        check_year_visit(data["id_base_site"], data["visit_date_min"][0:4])
+        check_year_visit(data["id_base_site"], data["visit_date_min"][0:4], id_base_visit=idv)
 
     tab_visit_taxons = []
     tab_observer = []

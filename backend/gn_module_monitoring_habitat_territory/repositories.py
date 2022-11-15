@@ -58,19 +58,21 @@ def check_user_cruved_visit(user, visit, cruved_level):
             )
 
 
-def check_year_visit(id_base_site, new_visit_date):
+def check_year_visit(id_base_site, new_visit_date, id_base_visit=None):
     """
     Check if there is already a visit of the same year.
     If yes, observer is not allowed to post the new visit
     """
-    q_year = DB.session.query(func.date_part("year", TBaseVisits.visit_date_min)).filter(
+    query = DB.session.query(func.date_part("year", TBaseVisits.visit_date_min)).filter(
         TBaseVisits.id_base_site == id_base_site
     )
-    tab_old_year = q_year.all()
-    year_new_visit = new_visit_date[0:4]
+    if id_base_visit is not None:
+        query = query.filter(TBaseVisits.id_base_visit != id_base_visit)
+    old_years = query.all()
 
-    for y in tab_old_year:
-        year_old_visit = str(int(y[0]))
+    year_new_visit = new_visit_date[0:4]
+    for year in old_years:
+        year_old_visit = str(int(year[0]))
         if year_old_visit == year_new_visit:
             DB.session.rollback()
             raise PostYearError(
