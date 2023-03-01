@@ -30,26 +30,6 @@ UPDATE gn_commons.t_modules
 SET
     module_label = 'S. Habitat Territoire',
     module_picto = 'fa-map',
-    module_desc = 'Module de Suivi des Habitats d''un Territoire'
-WHERE module_code ILIKE 'SHT' ;
-
-
--------------------------------------------------------------------------
-
--- COMMONS : update SHT module
-
--------------------------------------------------------------------------
-
-UPDATE gn_commons.t_modules
-
-SET
-
-    module_label = 'S. Habitat Territoire',
-
-    module_picto = 'fa-map',
-
     module_desc = 'Module de Suivi des Habitats d''un Territoire',
-
     module_doc_url = 'https://github.com/PnX-SI/gn_module_suivi_habitat_territoire'
-
-WHERE module_code = 'SHT' ;
+WHERE module_code ILIKE 'SHT' ;
