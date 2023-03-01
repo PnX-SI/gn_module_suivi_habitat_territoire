@@ -1,15 +1,16 @@
 .vscode
 
-__pycache__
+*.egg-info
 *.pyc
+__pycache__
 
 settings.ini
 imports_settings.ini
 conf_gn_module.toml
+
 module.config.ts
-var/
-log/*
-backend/*.egg-info
 frontend/node_modules
 frontend/tsconfig.json
 frontend/package.json
+log/
+var/
