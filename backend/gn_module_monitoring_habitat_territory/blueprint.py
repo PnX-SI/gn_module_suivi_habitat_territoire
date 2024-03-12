@@ -1,22 +1,25 @@
 import json
 import datetime
+import os
 
-from flask import Blueprint, request, session, send_from_directory, jsonify
+from flask import Blueprint, request, send_from_directory, g
 from sqlalchemy.sql.expression import func
-from sqlalchemy import and_, distinct, desc
+from sqlalchemy import and_, distinct, desc, delete
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql.expression import  select
 from geoalchemy2.shape import to_shape
 from geojson import FeatureCollection
 from shapely.geometry import *
+from werkzeug.exceptions import Forbidden, BadRequest
 
 from pypnusershub.db.models import User
-from pypn_habref_api.models import Habref, CorListHabitat
+from pypn_habref_api.models import Habref
 from utils_flask_sqla.response import json_resp, to_json_resp, to_csv_resp
 
 from geonature.utils.env import DB, ROOT_DIR
-from geonature.utils.utilsgeometry import FionaShapeService
+from utils_flask_sqla_geo.utilsgeometry  import FionaShapeService
 from geonature.core.gn_permissions import decorators as permissions
-from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
+from geonature.core.gn_permissions.tools import get_scopes_by_action
 from geonature.core.gn_monitoring.models import (
     corVisitObserver,
     corSiteArea,
@@ -25,13 +28,12 @@ from geonature.core.gn_monitoring.models import (
     TBaseSites,
 )
 from geonature.core.gn_commons.models import TModules
-from geonature.core.ref_geo.models import LAreas
+from ref_geo.models import LAreas
 from pypnusershub.db.models import Organisme
-from geonature.core.taxonomie.models import Taxref
+from apptax.taxonomie.models import Taxref
+from pypnnomenclature.models import TNomenclatures
 
 from .repositories import (
-    check_user_cruved_visit,
-    check_year_visit,
     get_taxonlist_by_cdhab,
     clean_string,
     strip_html,
@@ -44,9 +46,10 @@ from .models import (
     TVisitSHT,
     TInfosSite,
     CorVisitTaxon,
-    CorVisitPerturbation,
     ExportVisits,
 )
+
+from gn_module_monitoring_habitat_territory import MODULE_CODE
 
 
 blueprint = Blueprint("SHT", __name__)
@@ -59,26 +62,10 @@ def get_habitats(id_list):
     Récupère les habitats cor_list_habitat à partir de l'identifiant
     id_list de la table bib_lis_habitat.
     """
-    query = (
-        DB.session.query(CorListHabitat.cd_hab, CorListHabitat.id_list, Habref.lb_hab_fr)
-        .join(Habref, CorListHabitat.cd_hab == Habref.cd_hab)
-        .filter(CorListHabitat.id_list == id_list)
-        .group_by(
-            CorListHabitat.cd_hab,
-            CorListHabitat.id_list,
-            Habref.lb_hab_fr,
-        )
-    )
-    results = query.all()
-    habitats = []
-    if results:
-        for data in results:
-            habitat = {
-                "cd_hab": str(data[0]),
-                "nom_complet": str(data[2]),
-            }
-            habitats.append(habitat)
-    return habitats
+
+    query = select(Habref).where(Habref.lists.any(id_list=id_list))
+    results = DB.session.scalars(query).unique().all()
+    return [h.as_dict(fields=["cd_hab", "lb_hab_fr"]) for h in results]
 
 
 @blueprint.route("/habitats/<cd_hab>/taxons", methods=["GET"])
@@ -88,35 +75,31 @@ def get_taxa_by_habitats(cd_hab):
     Récupère tous les taxons d'un habitat.
     """
     q = (
-        DB.session.query(CorHabitatTaxon.cd_nom, Taxref.nom_complet)
-        .join(Taxref, CorHabitatTaxon.cd_nom == Taxref.cd_nom)
-        .group_by(
-            CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxref.nom_complet
+        select(CorHabitatTaxon).options(
+            joinedload(CorHabitatTaxon.taxref)
         )
-        .order_by(Taxref.nom_complet)
     )
 
-    q = q.filter(CorHabitatTaxon.id_habitat == cd_hab)
-    data = q.all()
+    q = q.where(CorHabitatTaxon.id_habitat == cd_hab)
+    data = DB.session.scalars(q).unique().all()
 
     taxons = []
-    if data:
-        for d in data:
-            taxon = dict()
-            taxon["cd_nom"] = str(d[0])
-            taxon["nom_complet"] = str(d[1])
-            taxons.append(taxon)
-        return taxons
-    return None
+    for d in data:
+        taxon = dict(
+            cd_nom = d.taxref.cd_nom,
+            nom_complet = d.taxref.nom_complet
+        )
+        taxons.append(taxon)
+    return taxons
 
 
 # TODO: create 2 disctinct web service one for all sites and one for one site
 # TODO: use service site pagination
 # TODO: return a root object instead of an array
 @blueprint.route("/sites", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="SHT")
+@permissions.check_cruved_scope("R", module_code="SHT")
 @json_resp
-def get_all_sites(info_role):
+def get_all_sites():
     """
     Retourne tous les sites.
     """
@@ -125,38 +108,37 @@ def get_all_sites(info_role):
 
     # Get sites from visits
     query = (
-        DB.session.query(distinct(TBaseSites.id_base_site))
-        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
+        select(TBaseSites.id_base_site)
         .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
         .join(Habref, TInfosSite.cd_hab == Habref.cd_hab)
+        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
         .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
         .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TBaseSites.id_base_site)
     )
 
     if "id_base_site" in parameters:
-        query = query.filter(TBaseSites.id_base_site == parameters["id_base_site"])
+        query = query.where(TBaseSites.id_base_site == parameters["id_base_site"])
 
     if "cd_hab" in parameters:
-        query = query.filter(TInfosSite.cd_hab == parameters["cd_hab"])
+        query = query.where(TInfosSite.cd_hab == parameters["cd_hab"])
 
     if "organisme" in parameters:
-        query = query.filter(User.id_organisme == parameters["organisme"])
+        query = query.where(User.id_organisme == parameters["organisme"])
 
     if "commune" in parameters:
-        query = query.filter(corSiteArea.c.id_area == parameters["commune"])
+        query = query.where(corSiteArea.c.id_area == parameters["commune"])
 
     if "year" in parameters:
-        query = query.filter(
+        query = query.where(
             func.date_part("year", TBaseVisits.visit_date_min) == parameters["year"]
         )
 
-    sites_ids = [id[0] for id in query.all()]
+    sites_ids = DB.session.scalars(query).unique().all()
 
     # Get sites infos
     query = (
-        DB.session.query(
-            TBaseSites,
+        select(
             TInfosSite,
             Habref.lb_hab_fr,
             func.max(TBaseVisits.visit_date_min),
@@ -164,10 +146,11 @@ def get_all_sites(info_role):
             func.string_agg(distinct(Organisme.nom_organisme), ", "),
             func.string_agg(
                 distinct(func.concat(LAreas.area_name, " (", LAreas.area_code, ")")), ", "
-            ).filter(LAreas.area_name != None),
+            ),
         )
-        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
-        .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
+        .where(TInfosSite.id_base_site.in_(sites_ids))
+        .where(LAreas.area_name != None)
+        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site)
         .join(Habref, Habref.cd_hab == TInfosSite.cd_hab)
         .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
         .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
@@ -177,83 +160,57 @@ def get_all_sites(info_role):
             LAreas, and_(LAreas.id_area == corSiteArea.c.id_area, LAreas.id_type == id_type_commune)
         )
         .group_by(TInfosSite.id_infos_site, TBaseSites.id_base_site, Habref.lb_hab_fr)
-        .filter(TBaseSites.id_base_site.in_(sites_ids))
     )
-
     # Manage pagination
-    page = request.args.get("page", 1, type=int)
+    page = request.args.get("page", 0, type=int)
     items_per_page = blueprint.config["items_per_page"]
-    pagination = query.paginate(page, items_per_page, False)
-    total_items = pagination.total
-
-    data = query.all()
-
+    total_items = DB.session.scalar(select(func.count("*")).select_from(query))
+    # we can't use DB.paginate() here because it use a .scalars() which return only the first item of the select
+    results = DB.session.execute(query.limit(items_per_page).offset(page * items_per_page)).unique().all()
     # Build output
     pageInfo = {
         "totalItems": total_items,
         "items_per_page": items_per_page,
     }
+    results = DB.session.execute(query).unique().all()
     features = []
-    if data:
-        for d in data:
-            feature = d[1].get_geofeature()
+    for d in results:
+        feature = d[0].get_geofeature()
+        feature["properties"]["nom_habitat"] = str(d[1])
+        date_max = "Aucune visite" if d[2] == None else str(d[2])
+        feature["properties"]["date_max"] = date_max
+        feature["properties"]["nb_visit"] = str(d[3])
+        organisms = "Aucun" if d[4] == None else str(d[4])
+        feature["properties"]["organisme"] = organisms
+        feature["properties"]["nom_commune"] = str(d[5])
+        features.append(feature)
 
-            base_site = d[0]
-            # TODO: use simplify name, english and camelCase for properties
-            feature["properties"]["base_site_uuid"] = base_site.uuid_base_site
-            feature["properties"]["base_site_code"] = base_site.base_site_code
-            feature["properties"]["base_site_description"] = base_site.base_site_description
-            feature["properties"]["base_site_name"] = base_site.base_site_name
-
-            feature["properties"]["nom_habitat"] = str(d[2])
-
-            date_max = "Aucune visite" if d[3] == None else str(d[3])
-            feature["properties"]["date_max"] = date_max
-
-            feature["properties"]["nb_visit"] = str(d[4])
-
-            organisms = "Aucun" if d[5] == None else str(d[5])
-            feature["properties"]["organisme"] = organisms
-
-            feature["properties"]["nom_commune"] = str(d[6])
-
-            features.append(feature)
-
-        return [pageInfo, FeatureCollection(features)]
     return [pageInfo, FeatureCollection(features)]
 
 
 @blueprint.route("/visits", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="SHT")
+@permissions.check_cruved_scope("R", module_code="SHT")
 @json_resp
-def get_visits(info_role):
+def get_visits():
     """
     Retourne toutes les visites du module
     """
     parameters = request.args
     query = (
-        DB.session.query(TVisitSHT, User.nom_complet, Organisme.nom_organisme)
-        .options(joinedload(TVisitSHT.cor_visit_taxons))
-        .join(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .join(User, User.id_role == corVisitObserver.c.id_role)
-        .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
+        select(TVisitSHT)
+        .options(
+            joinedload(TVisitSHT.cor_visit_taxons),
+            joinedload(TVisitSHT.observers).joinedload(User.organisme)
+        )
     )
     if "id_base_site" in parameters:
-        query = query.filter(TVisitSHT.id_base_site == parameters["id_base_site"]).order_by(
+        query = query.where(TVisitSHT.id_base_site == parameters["id_base_site"]).order_by(
             desc(TVisitSHT.visit_date_min)
         )
-    data = query.all()
+    results = DB.session.scalars(query).unique().all()
 
-    visits = {}
-    for d in data:
-        infos = d[0].as_dict(fields=["cor_visit_taxons"])
-        if infos["id_base_visit"] not in visits:
-            infos["observers"] = []
-            visits[infos["id_base_visit"]] = infos
-        visits[infos["id_base_visit"]]["observers"].append(
-            {"userFullName": d[1], "organismName": d[2]}
-        )
-    return list(visits.values())
+    fields =["observers.nom_complet", "observers.organisme.nom_organisme", "cor_visit_taxons"]
+    return [d.as_dict(fields=fields) for d in results]
 
 
 @blueprint.route("/visits/years", methods=["GET"])
@@ -263,27 +220,20 @@ def get_years_visits():
     Retourne toutes les années de visites du module
     """
     query = (
-        DB.session.query(func.to_char(TVisitSHT.visit_date_min, "YYYY"))
+        select(func.to_char(TVisitSHT.visit_date_min, "YYYY"))
         .join(TInfosSite, TInfosSite.id_base_site == TVisitSHT.id_base_site)
         .order_by(desc(func.to_char(TVisitSHT.visit_date_min, "YYYY")))
         .group_by(func.to_char(TVisitSHT.visit_date_min, "YYYY"))
     )
-    data = query.all()
+    data = DB.session.scalars(query).all()
+    return data
 
-    if data:
-        tab_years = []
-        for idx, d in enumerate(data):
-            info_year = dict()
-            info_year[idx] = d[0]
-            tab_years.append(info_year)
-        return tab_years
-    return None
 
 
 @blueprint.route("/visits/<id_visit>", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="SHT")
+@permissions.check_cruved_scope("R", module_code="SHT")
 @json_resp
-def get_visit(id_visit, info_role):
+def get_visit(id_visit):
     """
     Retourne une visite
     """
@@ -291,45 +241,20 @@ def get_visit(id_visit, info_role):
 
 
 def get_visit_details(id_visit):
-    query = (
-        DB.session.query(TVisitSHT, User)
-        .options(
-            joinedload(TVisitSHT.cor_visit_taxons),
-            joinedload(TVisitSHT.cor_visit_perturbation),
-        )
-        .join(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .join(User, User.id_role == corVisitObserver.c.id_role)
-        .filter(TBaseVisits.id_base_visit == id_visit)
-    )
-    data_all = query.all()
+    data = DB.session.get(TVisitSHT, id_visit)
 
-    if data_all:
-        data = data_all[0]
-        fields = [
-            "cor_visit_taxons",
-            "cor_visit_perturbation",
-            "cor_visit_perturbation.t_nomenclature",
-        ]
-        cvisit = data[0].as_dict(fields=fields)
-        cvisit["observers"] = [d[1].as_dict() for d in data_all]
-        if "cor_visit_perturbation" in cvisit:
-            tab_visit_perturbation = cvisit.pop("cor_visit_perturbation")
-            visit = []
-            for index, per in enumerate(tab_visit_perturbation):
-                visit.append(per["t_nomenclature"])
-            cvisit["cor_visit_perturbation"] = visit
-        else:
-            cvisit["cor_visit_perturbation"] = []
-        if "cor_visit_taxons" not in cvisit:
-            cvisit["cor_visit_taxons"] = []
-        return cvisit
-    return None
+    fields = [
+        "cor_visit_taxons",
+        "perturbations",
+        "observers"
+    ]
+    return data.as_dict(fields=fields)
 
 
 @blueprint.route("/visits", methods=["POST"])
-@permissions.check_cruved_scope("C", True, module_code="SHT")
+@permissions.check_cruved_scope("C", module_code="SHT")
 @json_resp
-def post_visit(info_role):
+def post_visit():
     """
     Poster une nouvelle visite
     """
@@ -337,14 +262,15 @@ def post_visit(info_role):
     data = dict(request.get_json())
 
     # Check data
-    check_year_visit(data["id_base_site"], data["visit_date_min"][0:4])
+    if TInfosSite.has_already_visit_in_year(data["id_base_site"], data["visit_date_min"][0:4]):
+        raise BadRequest(f"A visit already exist for year {data['visit_date_min'][0:4]} ")
 
     # Set generic infos got from config
     data["id_dataset"] = blueprint.config["id_dataset"]
     data["id_module"] = (
-        DB.session.query(TModules.id_module)
-        .filter(TModules.module_code == blueprint.config["MODULE_CODE"])
-        .scalar()
+        DB.session.execute(select(TModules.id_module)
+        .where(TModules.module_code == blueprint.config["MODULE_CODE"])
+        ).scalar()
     )
 
     # Remove data properties before create SQLA object with it
@@ -362,9 +288,13 @@ def post_visit(info_role):
     visit = TVisitSHT(**data)
 
     # Add perturbations
-    for perturbation in perturbations:
-        visit_perturbation = CorVisitPerturbation(**perturbation)
-        visit.cor_visit_perturbation.append(visit_perturbation)
+    if len(perturbations) > 0:
+        list_id_nomenc = list(map(lambda n : n["id_nomenclature_perturbation"], perturbations))
+        nomenclatures = DB.session.scalars(select(TNomenclatures).where(
+            TNomenclatures.id_nomenclature.in_(list_id_nomenc)
+        ))
+        for nomenc in nomenclatures:  
+            visit.perturbations.append(nomenc)
 
     # Add taxons
     for taxon in taxons:
@@ -372,7 +302,7 @@ def post_visit(info_role):
         visit.cor_visit_taxons.append(visit_taxon)
 
     # Add observers
-    observers = DB.session.query(User).filter(User.id_role.in_(observers_ids)).all()
+    observers = DB.session.scalars(select(User).where(User.id_role.in_(observers_ids))).all()
     for observer in observers:
         visit.observers.append(observer)
 
@@ -386,28 +316,23 @@ def post_visit(info_role):
 
 
 @blueprint.route("/visits/<int:idv>", methods=["PATCH"])
-@permissions.check_cruved_scope("U", True, module_code="SHT")
+@permissions.check_cruved_scope("U", get_scope=True, module_code="SHT")
 @json_resp
-def patch_visit(idv, info_role):
+def patch_visit(idv, scope):
     """
     Mettre à jour une visite
     Si une donnée n'est pas présente dans les objets observer, cor_visit_taxons ou cor_visit_perurbations, elle sera supprimée de la base de données
     """
     data = dict(request.get_json())
-    try:
-        existingVisit = TVisitSHT.query.filter_by(id_base_visit=idv).first()
-        if existingVisit == None:
-            raise ValueError("This visit does not exist")
-    except ValueError:
-        resp = jsonify({"error": "This visit does not exist"})
-        resp.status_code = 404
-        return resp
-
+    existingVisit = DB.get_or_404(TVisitSHT, idv)
+    if not existingVisit.has_instance_permission(scope):
+        raise Forbidden("You don't have the permissison to edit this Visit")
     existingVisit = existingVisit.as_dict()
     dateIsUp = data["visit_date_min"] != existingVisit["visit_date_min"]
 
     if dateIsUp:
-        check_year_visit(data["id_base_site"], data["visit_date_min"][0:4], id_base_visit=idv)
+        if TInfosSite.has_already_visit_in_year(data["id_base_site"], data["visit_date_min"][0:4]):
+            raise BadRequest(f"A visit already exist for year {data['visit_date_min'][0:4]} ")
 
     tab_visit_taxons = []
     tab_observer = []
@@ -422,26 +347,26 @@ def patch_visit(idv, info_role):
 
     visit = TVisitSHT(**data)
 
-    DB.session.query(CorVisitPerturbation).filter_by(id_base_visit=idv).delete()
-    for per in tab_perturbation:
-        visitPer = CorVisitPerturbation(**per)
-        visit.cor_visit_perturbation.append(visitPer)
+    if len(tab_perturbation) > 0:
+        list_id_nomenc = list(map(lambda n : n["id_nomenclature_perturbation"], tab_perturbation))
+        nomenclatures = DB.session.scalars(select(TNomenclatures).where(
+            TNomenclatures.id_nomenclature.in_(list_id_nomenc)
+        ))
+        # clean perturbations
+        visit.perturbations = []
+        for nomenc in nomenclatures:  
+            visit.perturbations.append(nomenc)
 
-    DB.session.query(CorVisitTaxon).filter_by(id_base_visit=idv).delete()
+    delete_cor_visit_taxons = delete(CorVisitTaxon).where(CorVisitTaxon.id_base_visit == idv)
+    DB.session.execute(delete_cor_visit_taxons)
     for taxon in tab_visit_taxons:
         visitTaxons = CorVisitTaxon(**taxon)
         visit.cor_visit_taxons.append(visitTaxons)
 
     visit.observers = []
-    observers = DB.session.query(User).filter(User.id_role.in_(tab_observer)).all()
+    observers = DB.session.scalars(select(User).where(User.id_role.in_(tab_observer))).all()
     for o in observers:
         visit.observers.append(o)
-
-    user_cruved = get_or_fetch_user_cruved(
-        session=session, id_role=info_role.id_role, module_code=blueprint.config["MODULE_CODE"]
-    )
-    update_cruved = user_cruved["U"]
-    check_user_cruved_visit(info_role, visit, update_cruved)
 
     mergeVisit = DB.session.merge(visit)
 
@@ -451,23 +376,21 @@ def patch_visit(idv, info_role):
 
 
 @blueprint.route("/organismes", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="SHT")
+@permissions.check_cruved_scope("R", module_code="SHT")
 @json_resp
-def get_organisme(info_role):
+def get_organisme():
     """
     Retourne la liste de tous les organismes présents
     """
-    q = (
-        DB.session.query(
+    q = DB.session.execute(
+        select(
             Organisme.nom_organisme, User.nom_role, User.prenom_role, User.id_organisme
-        )
-        .outerjoin(User, Organisme.id_organisme == User.id_organisme)
-        .distinct()
+        ).outerjoin(User, Organisme.id_organisme == User.id_organisme)
         .join(corVisitObserver, User.id_role == corVisitObserver.c.id_role)
         .join(TVisitSHT, corVisitObserver.c.id_base_visit == TVisitSHT.id_base_visit)
     )
 
-    data = q.all()
+    data = q.unique().all()
     if data:
         tab_orga = []
         for d in data:
@@ -481,27 +404,27 @@ def get_organisme(info_role):
 
 # TODO: use module code via config parameter...
 @blueprint.route("/communes/<module_code>", methods=["GET"])
-@permissions.check_cruved_scope("R", True, module_code="SHT")
+@permissions.check_cruved_scope("R", module_code="SHT")
 @json_resp
-def get_commune(module_code, info_role):
+def get_commune(module_code):
     """
     Retourne toutes les communes présents dans le module
     """
     params = request.args
-    q = (
-        DB.session.query(LAreas.id_area, LAreas.area_name)
-        .distinct()
-        .join(corSiteArea, LAreas.id_area == corSiteArea.c.id_area)
-        .join(corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site)
-        .join(TModules, TModules.id_module == corSiteModule.c.id_module)
-        .filter(TModules.module_code == module_code)
-        .order_by(LAreas.area_name)
-    )
+    q = select(
+        LAreas.id_area, LAreas.area_name) \
+    .distinct() \
+    .join(corSiteArea, LAreas.id_area == corSiteArea.c.id_area) \
+    .join(corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site) \
+    .join(TModules, TModules.id_module == corSiteModule.c.id_module) \
+    .where(TModules.module_code == module_code) \
+    .order_by(LAreas.area_name)
+
 
     if "id_area_type" in params:
-        q = q.filter(LAreas.id_type == params["id_area_type"])
+        q = q.where(LAreas.id_type == params["id_area_type"])
 
-    data = q.all()
+    data = DB.session.execute(q).all()
     if data:
         tab_commune = []
 
@@ -515,19 +438,19 @@ def get_commune(module_code, info_role):
 
 
 @blueprint.route("/user/cruved", methods=["GET"])
-@permissions.check_cruved_scope("R", True)
+@permissions.check_cruved_scope("R", module_code="SHT")
 @json_resp
-def returnUserCruved(info_role):
+def returnUserCruved():
     # récupérer le CRUVED complet de l'utilisateur courant
-    user_cruved = get_or_fetch_user_cruved(
-        session=session, id_role=info_role.id_role, module_code=blueprint.config["MODULE_CODE"]
+    user_cruved = get_scopes_by_action(
+        id_role=g.current_user.id_role, module_code=MODULE_CODE
     )
     return user_cruved
 
 
 @blueprint.route("/export_visit", methods=["GET"])
-@permissions.check_cruved_scope("E", True)
-def export_visit(info_role):
+@permissions.check_cruved_scope("E", module_code="SHT")
+def export_visit():
     """
     Télécharge les données d'une visite (ou des visites )
     """
@@ -535,15 +458,15 @@ def export_visit(info_role):
     export_format = parameters["export_format"] if "export_format" in request.args else "shapefile"
 
     # Build query
-    query = DB.session.query(ExportVisits).order_by(
+    query = select(ExportVisits).order_by(
         desc(ExportVisits.visit_date), ExportVisits.habitat_code
     )
 
     if "id_base_visit" in parameters:
-        query = query.filter(ExportVisits.id_base_visit == parameters["id_base_visit"])
+        query = query.where(ExportVisits.id_base_visit == parameters["id_base_visit"])
 
     if "id_base_site" in parameters:
-        query = query.filter(ExportVisits.id_base_site == parameters["id_base_site"])
+        query = query.where(ExportVisits.id_base_site == parameters["id_base_site"])
 
     if "organisme" in parameters:
         query = (
@@ -551,21 +474,21 @@ def export_visit(info_role):
                 corVisitObserver, corVisitObserver.c.id_base_visit == ExportVisits.id_base_visit
             )
             .join(User, User.id_role == corVisitObserver.c.id_role)
-            .filter(User.id_organisme == parameters["organisme"])
+            .where(User.id_organisme == parameters["organisme"])
         )
 
     if "commune" in parameters:
         query = query.join(
             corSiteArea, corSiteArea.c.id_base_site == ExportVisits.id_base_site
-        ).filter(corSiteArea.c.id_area == parameters["commune"])
+        ).where(corSiteArea.c.id_area == parameters["commune"])
 
     if "year" in parameters:
-        query = query.filter(func.date_part("year", ExportVisits.visit_date) == parameters["year"])
+        query = query.where(func.date_part("year", ExportVisits.visit_date) == parameters["year"])
 
     if "cd_hab" in parameters:
-        query = query.filter(ExportVisits.habitat_code == parameters["cd_hab"])
+        query = query.where(ExportVisits.habitat_code == parameters["cd_hab"])
 
-    data = query.all()
+    data = DB.session.scalars(query).all()
 
     # Format data
     mapping_columns = get_export_mapping_columns()
@@ -621,7 +544,8 @@ def export_visit(info_role):
         return to_csv_resp(file_name, visits, csv_header, ";")
     else:
         dir_path = str(ROOT_DIR / "backend/static/shapefiles")
-
+        if not os.path.exists(dir_path):
+            os.mkdir(dir_path)
         FionaShapeService.create_shapes_struct(
             db_cols=ExportVisits.__mapper__.c,
             srid=2154,

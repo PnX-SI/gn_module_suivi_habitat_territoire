@@ -5,30 +5,29 @@ import { BehaviorSubject } from 'rxjs';
 import { Layer } from 'leaflet';
 import * as L from 'leaflet';
 
-import { ModuleConfig } from '../module.config';
-import { AppConfig } from '@geonature_config/app.config';
+import { ConfigService } from '@geonature/services/config.service';
 
 @Injectable()
 export class StoreService {
   public currentLayer: Layer;
-
-  public shtConfig = ModuleConfig;
-
+  public shtConfig: any = {};
   public visitStyle = {
     color: 'rgba(123, 123, 123, .5)',
     fill: true,
     fillOpacity: 0.5,
     weight: 3
   };
-
   public presence = 0;
-
   public queryString = new HttpParams();
-
   public currentSite$: BehaviorSubject<any | undefined> = new BehaviorSubject(undefined);
+  public urlLoad = `${this.config.API_ENDPOINT}/${this.config['SHT']['MODULE_URL']}/export_visit`;
 
-  public urlLoad = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/export_visit`;
-
+  constructor(
+    public config: ConfigService,
+  ) {
+    this.shtConfig = this.config['SHT']
+   }
+  
   getCurrentSite() {
     return this.currentSite$.asObservable();
   }

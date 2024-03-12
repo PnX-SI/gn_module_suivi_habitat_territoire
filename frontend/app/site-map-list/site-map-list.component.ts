@@ -5,14 +5,15 @@ import { FormGroup, FormBuilder } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import * as L from 'leaflet';
 import 'Leaflet.Deflate';
+import { filter } from 'rxjs/operators';
 
 import { MapService } from '@geonature_common/map/map.service';
 import { MapListService } from '@geonature_common/map-list/map-list.service';
+import { ConfigService } from '@geonature/services/config.service';
 
 import { Page } from '../shared/page';
 import { DataService } from '../services/data.service';
 import { StoreService } from '../services/store.service';
-import { ModuleConfig } from '../module.config';
 import { UserService } from '../services/user.service';
 
 @Component({
@@ -41,6 +42,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   onDeleteFiltre = new EventEmitter<any>();
 
   constructor(
+    public config: ConfigService,
     public mapService: MapService,
     private api: DataService,
     public storeService: StoreService,
@@ -84,69 +86,77 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initializeFilterControls() {
-    this.filterForm.controls.filterYear.valueChanges
-      .filter(input => {
+    this.filterForm.controls.filterYear.valueChanges.pipe(
+      filter(input => {
         return input != null && input.toString().length === 4;
       })
+    )
       .subscribe(year => {
         this.onSearchDate(year);
       });
 
-    this.filterForm.controls.filterYear.valueChanges
-      .filter(input => {
+    this.filterForm.controls.filterYear.valueChanges.pipe(
+      filter(input => {
         return input === null;
       })
+    )
       .subscribe(year => {
         this.onDeleteParams('year', year);
         this.onDeleteFiltre.emit();
       });
 
-    this.filterForm.controls.filterOrga.valueChanges
-      .filter(select => {
+    this.filterForm.controls.filterOrga.valueChanges.pipe(
+      filter(select => {
         return select !== null;
       })
+    )
       .subscribe(org => {
         this.onSearchOrganisme(org);
       });
 
-    this.filterForm.controls.filterOrga.valueChanges
-      .filter(input => {
+    this.filterForm.controls.filterOrga.valueChanges.pipe(
+      filter(input => {
         return input === null;
       })
+    )
       .subscribe(org => {
         this.onDeleteParams('organisme', org);
         this.onDeleteFiltre.emit();
       });
 
-    this.filterForm.controls.filterCom.valueChanges
-      .filter(select => {
+    this.filterForm.controls.filterCom.valueChanges.pipe(
+      filter(select => {
         return select !== null;
       })
+    )
       .subscribe(com => {
         this.onSearchCom(com);
       });
 
-    this.filterForm.controls.filterCom.valueChanges
-      .filter(input => {
+    this.filterForm.controls.filterCom.valueChanges.pipe(
+      filter(input => {
         return input === null;
       })
+    )
       .subscribe(com => {
         this.onDeleteParams('commune', com);
         this.onDeleteFiltre.emit();
       });
 
-    this.filterForm.controls.filterHab.valueChanges
-      .filter(select => {
+    this.filterForm.controls.filterHab.valueChanges.pipe(
+      filter(select => {
         return select !== null;
       })
+    )
       .subscribe(hab => {
         this.onSearchHab(hab);
       });
 
-    this.filterForm.controls.filterHab.valueChanges
-      .filter(input => {
+    this.filterForm.controls.filterHab.valueChanges.pipe(
+      filter(input => {
         return input === null;
       })
+    )
       .subscribe(hab => {
         this.onDeleteParams('cd_hab', hab);
         this.onDeleteFiltre.emit();
@@ -176,7 +186,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.api
-      .getCommune(ModuleConfig.MODULE_CODE, {
+      .getCommune(this.config['SHT']['MODULE_CODE'], {
         id_area_type: this.storeService.shtConfig.id_type_commune
       })
       .subscribe(info => {
@@ -188,9 +198,9 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       });
 
-    this.api.getHabitatsList(ModuleConfig.id_bib_list_habitat).subscribe(habs => {
+    this.api.getHabitatsList(this.config['SHT'].id_bib_list_habitat).subscribe(habs => {
       habs.forEach(hab => {
-        this.tabHab.push({ label: hab.nom_complet, id: hab.cd_hab });
+        this.tabHab.push({ label: hab.lb_hab_fr, id: hab.cd_hab });
       });
       this.tabHab.sort((a, b) => {
         return ('' + a).localeCompare('' + b);
@@ -198,9 +208,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.api.getVisitsYears().subscribe(years => {
-      years.forEach((year, i) => {
-        this.tabYears.push({ label: year[i], id: year[i] });
-      });
+      this.tabYears = years
     });
   }
 
@@ -272,19 +280,19 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onInfo(id_base_site) {
-    this.router.navigate([`${ModuleConfig.MODULE_URL}/listVisit`, id_base_site]);
+    this.router.navigate([`${this.config['SHT']['MODULE_URL'].MODULE_URL}/listVisit`, id_base_site]);
   }
 
   private addDeflateFeature() {
     // Init leaflet.deflate
-    this.deflateFeatures = L.deflate({
+    this.deflateFeatures = (L as any).deflate({
       minSize: 10,
       markerOptions: layer => {
-        let color = this.storeService.getYearColor(layer['feature'].properties);
+        let color = this.storeService.getYearColor(layer['feature'].properties);        
         let iconMarker = {
           icon: new L.Icon({
-            iconUrl: `external_assets/${ModuleConfig.MODULE_URL}//marker-icon-2x-${color}.png`,
-            shadowUrl: `external_assets/${ModuleConfig.MODULE_URL}/marker-shadow.png`,
+            iconUrl: `./assets/sht/marker-icon-2x-${color}.png`,
+            shadowUrl: `./marker-shadow.png`,
             iconSize: [25, 41],
             iconAnchor: [12, 41],
             popupAnchor: [1, -34],

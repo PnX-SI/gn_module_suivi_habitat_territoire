@@ -233,17 +233,17 @@ CREATE OR REPLACE VIEW pr_monitoring_habitat_territory.export_visits AS
         tax.taxons_scinames,
         tax.taxons_scinames_codes
     FROM gn_monitoring.t_base_visits AS visits
-        JOIN gn_monitoring.t_base_sites AS sites
+        LEFT JOIN gn_monitoring.t_base_sites AS sites
             ON sites.id_base_site = visits.id_base_site
-        JOIN pr_monitoring_habitat_territory.t_infos_site AS infos_sites
+        LEFT JOIN pr_monitoring_habitat_territory.t_infos_site AS infos_sites
             ON infos_sites.id_base_site = sites.id_base_site
-        JOIN ref_habitats.habref AS habref
+        LEFT JOIN ref_habitats.habref AS habref
             ON habref.cd_hab = infos_sites.cd_hab
-        JOIN municipalities AS mun
+        LEFT JOIN municipalities AS mun
             ON mun.id_base_visit = visits.id_base_visit
-        JOIN taxons AS tax
+        LEFT JOIN taxons AS tax
             ON tax.id_base_visit = visits.id_base_visit
-        JOIN observers AS obs
+        LEFT JOIN observers AS obs
             ON obs.id_base_visit = visits.id_base_visit
         LEFT JOIN perturbations AS per
             ON per.id_base_visit = visits.id_base_visit

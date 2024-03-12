@@ -10,7 +10,7 @@
 
 1. Téléchargez le module sur votre serveur [à partir d'une release](https://github.com/PnX-SI/gn_module_suivi_habitat_territoire/releases) :
     ```bash
-    wget https://github.com/PnX-SI/gn_module_suivi_habitat_territoire/archive/X.Y.Z.zip
+    wget https://github.com/PnX-SI/gn_module_suivi_habitat_territoire/releases/X.Y.Z.zip
     ```
 2. Créez un dossier qui contiendra vos modules :
     ```bash
@@ -26,7 +26,7 @@
     ```
 5. Installez le module avec la commande :
     ```bash
-    geonature install-packaged-gn-module --build false /home/${USER}/modules/gn_module_suivi_habitat_territoire SHT
+    geonature install-gn-module --build=false /home/${USER}/modules/gn_module_suivi_habitat_territoire
     ```
     - Adaptez le chemin `/home/${USER}/modules/gn_module_suivi_habitat_territoire` à votre installation.
 6. Complétez la configuration du module uniquement si nécessaire :
@@ -37,9 +37,25 @@
     - Les valeurs par défaut dans : `backend/gn_module_monitoring_habitat_territory/conf_schema_toml.py`
 7. Mettre à jour le frontend :
     ```bash
-    geonature update-configuration --build false && geonature generate-frontend-tsconfig && geonature generate-frontend-tsconfig-app && geonature generate-frontend-modules-route
+    geonature update-configuration
     ```
 8. Vous pouvez sortir du venv en lançant la commande : `deactivate`
+
+## Réglage des droits
+
+Une fois le module installé, vous pouvez régler les droits du module pour votre groupe d'utilisateur :
+- Via le module *Admin* de GeoNature, accéder à l'interface d'administration des permissions (CRUVED).
+- Définissez les permissions suivant votre besoin. Voici un exemple :
+  - `C` (Créer) à `3` (Toutes les données)
+  - `R` (Lire) à `3` (Toutes les données)
+  - `U` (Mise à jour) à `2` (Les données de mon organisme)
+  - `E` (Export) à `3` (Toutes les données)
+  - `D` (Supprimer) à `1` (Mes données)
+
+Vous pouvez aussi utiliser la commande suivante pour attribuer tous les droits à un groupe spécifique (ici groupe admin) :
+```bash
+geonature permissions supergrant --group --nom "Grp_admin" --yes
+```
 
 
 ## Désinstallation

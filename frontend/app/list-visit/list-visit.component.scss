@@ -27,7 +27,7 @@
 }
 
 // Map legend
-:host /deep/ .info.leaflet-control {
+:host::ng-deep.info.leaflet-control {
     padding: 6px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
     background: white;
@@ -35,22 +35,22 @@
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
     border-radius: 5px;
 }
-:host /deep/ .info.leaflet-control h4 {
+:host ::ng-deep .info.leaflet-control h4 {
     margin: 0 0 5px;
     color: #777;
 }
-:host /deep/ .legend.leaflet-control {
+:host ::ng-deep .legend.leaflet-control {
     line-height: 18px;
     color: #555;
 }
-:host /deep/ .legend.leaflet-control i {
+:host ::ng-deep .legend.leaflet-control i {
     width: 18px;
     height: 18px;
     display: inline-block;
     vertical-align: sub;
     margin-right: 2px;
 }
-:host /deep/ .info.leaflet-control p {
+:host ::ng-deep .info.leaflet-control p {
     margin-bottom: .3rem;
 }
 

@@ -3,13 +3,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import * as L from 'leaflet';
 
+import { ConfigService } from '@geonature/services/config.service';
 import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { MapService } from '@geonature_common/map/map.service';
 import { GeojsonComponent } from '@geonature_common/map/geojson/geojson.component';
 
 import { DataService } from '../services/data.service';
 import { StoreService } from '../services/store.service';
-import { ModuleConfig } from '../module.config';
 import { UserService } from '../services/user.service';
 
 @Component({
@@ -31,11 +31,11 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   public siteCode;
   public siteDesc;
   public cdHabitat;
-  public taxons;
-  public rows = [];
+  public taxons = []
+  public rows: Array<any> = [];
   public paramApp = this.storeService.queryString.append(
     'id_application',
-    ModuleConfig.MODULE_CODE.toString()
+    this.config['SHT']['MODULE_CODE'].toString()
   );
   public addIsAllowed = false;
   public exportIsAllowed = false;
@@ -44,6 +44,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   geojson: GeojsonComponent;
 
   constructor(
+    private config: ConfigService,
     public mapService: MapService,
     public mapListService: MapListService,
     public storeService: StoreService,
@@ -133,7 +134,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         data.forEach(visit => {
           let observersList = [];
           visit.observers.forEach((obs, index) => {
-            observersList.push(`${obs.userFullName} (${obs.organismName})`);
+            observersList.push(`${obs.nom_complet} (${obs.organisme.nom_organisme})`);
           });
           visit.observers = observersList.join(', ');
           let pres = 0;
@@ -148,7 +149,8 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         });
 
         this.loadingIndicator = false;
-        this.rows = data;
+        
+        this.rows = data        
       },
       error => {
         this.loadingIndicator = false;
@@ -172,7 +174,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   }
 
   backToSites() {
-    this.router.navigate([`${ModuleConfig.MODULE_URL}/`]);
+    this.router.navigate([`${this.config['SHT']['MODULE_URL']}/`]);
   }
 
   ngOnDestroy() {
