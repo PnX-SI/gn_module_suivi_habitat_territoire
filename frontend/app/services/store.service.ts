@@ -6,7 +6,7 @@ import { Layer } from 'leaflet';
 import * as L from 'leaflet';
 
 import { ModuleConfig } from '../module.config';
-import { AppConfig } from '@geonature_config/app.config';
+import { ConfigService } from '@geonature/services/config.service';
 
 @Injectable()
 export class StoreService {
@@ -27,8 +27,8 @@ export class StoreService {
 
   public currentSite$: BehaviorSubject<any | undefined> = new BehaviorSubject(undefined);
 
-  public urlLoad = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/export_visit`;
-
+  public urlLoad = `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/export_visit`;
+  constructor(public config: ConfigService) {}
   getCurrentSite() {
     return this.currentSite$.asObservable();
   }

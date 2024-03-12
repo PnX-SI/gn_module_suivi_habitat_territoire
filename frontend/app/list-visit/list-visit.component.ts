@@ -31,8 +31,8 @@ export class ListVisitComponent implements OnInit, OnDestroy {
   public siteCode;
   public siteDesc;
   public cdHabitat;
-  public taxons;
-  public rows = [];
+  public taxons = []
+  public rows: Array<any> = [];
   public paramApp = this.storeService.queryString.append(
     'id_application',
     ModuleConfig.MODULE_CODE.toString()
@@ -133,7 +133,7 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         data.forEach(visit => {
           let observersList = [];
           visit.observers.forEach((obs, index) => {
-            observersList.push(`${obs.userFullName} (${obs.organismName})`);
+            observersList.push(`${obs.nom_complet} (${obs.organisme.nom_organisme})`);
           });
           visit.observers = observersList.join(', ');
           let pres = 0;
@@ -148,7 +148,8 @@ export class ListVisitComponent implements OnInit, OnDestroy {
         });
 
         this.loadingIndicator = false;
-        this.rows = data;
+        
+        this.rows = data        
       },
       error => {
         this.loadingIndicator = false;
