@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { of } from 'rxjs/observable/of';
+import { mergeMap } from 'rxjs/operators';
 
 import { DataService } from '../services/data.service';
 import { StoreService } from '../services/store.service';
@@ -86,27 +87,28 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
 
   initializeData() {
     this.formDataSubscription = this.storeService
-      .getCurrentSite()
-      .flatMap(currentSite => {
-        this.cd_hab = currentSite.cd_hab;
-        this.nom_habitat = currentSite.nom_habitat;
-        this.id_base_site = currentSite.id_base_site;
-
-        return forkJoin({
-          currentVisit: this.getCurrentVisit(),
-          taxons: this._api.getTaxons(this.cd_hab)
-        });
-      })
-      .flatMap(results => {
-        this.visit =
-          Object.keys(results.currentVisit).length > 0 ? results.currentVisit : this.visit;
-        this.species = this.formatTaxons(results.taxons);
-        this.nonHabitatTaxa = this.extractNonHabitatTaxa(
-          this.visit['cor_visit_taxons'],
-          results.taxons
-        );
-        return of({ visit: this.visit, species: this.species });
-      })
+      .getCurrentSite().pipe(
+        mergeMap(currentSite => {
+          this.cd_hab = currentSite.cd_hab;
+          this.nom_habitat = currentSite.nom_habitat;
+          this.id_base_site = currentSite.id_base_site;
+  
+          return forkJoin({
+            currentVisit: this.getCurrentVisit(),
+            taxons: this._api.getTaxons(this.cd_hab)
+          });
+        }),
+        mergeMap(results => {
+          this.visit =
+            Object.keys(results.currentVisit).length > 0 ? results.currentVisit : this.visit;
+          this.species = this.formatTaxons(results.taxons);
+          this.nonHabitatTaxa = this.extractNonHabitatTaxa(
+            this.visit['cor_visit_taxons'],
+            results.taxons
+          );
+          return of({ visit: this.visit, species: this.species });
+        })
+      )
       .subscribe(data => {
         this.patchForm();
         this.clearTaxonsControls();
@@ -177,7 +179,7 @@ export class ModalSHTComponent implements OnInit, OnDestroy {
       id_base_visit: this.visit.id_base_visit,
       visit_date_min: this.dateParser.parse(this.visit.visit_date_min),
       cor_visit_observer: this.visit.observers,
-      cor_visit_perturbation: this.visit.cor_visit_perturbation,
+      cor_visit_perturbation: this.visit.perturbations,
       id_base_site: this.id_base_site,
       comments: this.visit.comments
     });

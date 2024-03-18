@@ -1,12 +1,11 @@
 import re
 
-from flask import Blueprint, request, session, current_app
-from sqlalchemy.sql.expression import func
+from sqlalchemy.sql.expression import func, select
 from pypnusershub.db.tools import InsufficientRightsError
 
 from geonature.utils.errors import GeonatureApiError
 from geonature.core.gn_monitoring.models import TBaseVisits
-from geonature.core.taxonomie.models import Taxref
+from apptax.taxonomie.models import Taxref
 from geonature.utils.env import DB, ROOT_DIR
 
 from .models import CorHabitatTaxon
@@ -16,86 +15,15 @@ class PostYearError(GeonatureApiError):
     pass
 
 
-def check_user_cruved_visit(user, visit, cruved_level):
-    """
-    Check if user have right on a visit object, related to his cruved
-    if not, raise 403 error
-    if allowed return void
-    """
-    is_allowed = False
-    if cruved_level == "1":
-        for role in visit.observers:
-            if role.id_role == user.id_role:
-                is_allowed = True
-                break
-            elif visit.id_digitiser == user.id_role:
-                is_allowed = True
-                break
-        if not is_allowed:
-            raise InsufficientRightsError(
-                ('User "{}" cannot update visit number {} ').format(
-                    user.id_role, visit.id_base_visit
-                ),
-                403,
-            )
-    elif cruved_level == "2":
-        for role in visit.observers:
-            if role.id_role == user.id_role:
-                is_allowed = True
-                break
-            elif visit.id_digitiser == user.id_role:
-                is_allowed = True
-                break
-            elif role.id_organisme == user.id_organisme:
-                is_allowed = True
-                break
-        if not is_allowed:
-            raise InsufficientRightsError(
-                ('User "{}" cannot update visit number {} ').format(
-                    user.id_role, visit.id_base_visit
-                ),
-                403,
-            )
-
-
-def check_year_visit(id_base_site, new_visit_date, id_base_visit=None):
-    """
-    Check if there is already a visit of the same year.
-    If yes, observer is not allowed to post the new visit
-    """
-    query = DB.session.query(func.date_part("year", TBaseVisits.visit_date_min)).filter(
-        TBaseVisits.id_base_site == id_base_site
-    )
-    if id_base_visit is not None:
-        query = query.filter(TBaseVisits.id_base_visit != id_base_visit)
-    old_years = query.all()
-
-    year_new_visit = new_visit_date[0:4]
-    for year in old_years:
-        year_old_visit = str(int(year[0]))
-        if year_old_visit == year_new_visit:
-            DB.session.rollback()
-            raise PostYearError(
-                ("Maille {} has already been visited in {} ").format(id_base_site, year_old_visit),
-                403,
-            )
-
-
 def get_taxonlist_by_cdhab(habitat_code):
     query = (
-        DB.session.query(CorHabitatTaxon.id_cor_habitat_taxon, Taxref.lb_nom)
+        select(CorHabitatTaxon.id_cor_habitat_taxon, Taxref.lb_nom)
         .join(Taxref, CorHabitatTaxon.cd_nom == Taxref.cd_nom)
-        .group_by(CorHabitatTaxon.id_habitat, CorHabitatTaxon.id_cor_habitat_taxon, Taxref.lb_nom)
-        .filter(CorHabitatTaxon.id_habitat == habitat_code)
+        .where(CorHabitatTaxon.id_habitat == habitat_code)
     )
-    data = query.all()
+    data = DB.session.execute(query).unique().all()
 
-    if data:
-        taxons = []
-        for d in data:
-            taxons.append(str(d[1]))
-        return taxons
-    return None
+    return  [str(d[1]) for d in data]
 
 
 def clean_string(my_string):

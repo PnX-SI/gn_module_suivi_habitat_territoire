@@ -16,7 +16,7 @@
                 [formControl]="filterForm.controls.filterYear"
               >
                 <option [ngValue]="null"> -- Sélectionnez un filtre -- </option>
-                <option *ngFor="let year of tabYears" [value]="year.id" [innerHTML]="year.label">
+                <option *ngFor="let year of tabYears" [value]="year" [innerHTML]="year">
                 </option>
               </select>
             </div>
@@ -128,3 +128,5 @@
     </pnx-map>
   </div>
 </div>
+
+<img src="./test/counting.png" alt="">
