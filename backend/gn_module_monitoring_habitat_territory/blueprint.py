@@ -106,10 +106,10 @@ def get_all_sites():
 
     # Get sites from visits
     query = (
-        select(distinct(TBaseSites.id_base_site))
-        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
+        select(TBaseSites.id_base_site)
         .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
         .join(Habref, TInfosSite.cd_hab == Habref.cd_hab)
+        .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
         .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
         .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TBaseSites.id_base_site)
@@ -132,7 +132,7 @@ def get_all_sites():
             func.date_part("year", TBaseVisits.visit_date_min) == parameters["year"]
         )
 
-    sites_ids = DB.session.scalars(query)
+    sites_ids = DB.session.scalars(query).unique().all()
 
     # Get sites infos
     query = (
