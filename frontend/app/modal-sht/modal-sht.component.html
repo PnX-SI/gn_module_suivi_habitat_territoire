@@ -35,13 +35,13 @@
         <div class="form-group">
           <label> Observateur(s) : </label>
           <div class="" id="newObserver">
-            <!-- <pnx-observers
+            <pnx-observers
               [parentFormControl]="formVisit.controls.cor_visit_observer"
               [bindAllItem]="true"
               [disabled]="disabledForm"
               [idMenu]="storeService.shtConfig.id_menu_list_user"
             >
-            </pnx-observers> -->
+            </pnx-observers>
           </div>
         </div>
 
@@ -49,7 +49,6 @@
           <label> Perturbation(s) : </label>
           <div class="" id="newPerturs">
             <pnx-nomenclature
-              label="PERTURBBBB"
               [parentFormControl]="formVisit.controls.cor_visit_perturbation"
               [multiSelect]="true"
               keyValue="id_nomenclature"
@@ -61,7 +60,7 @@
             </pnx-nomenclature>
           </div>
         </div>
-        {{disabledForm |json}}
+        
 
         <div class="form-group" formArrayName="taxonsVisit">
           <label> Espèces présentes : </label>
