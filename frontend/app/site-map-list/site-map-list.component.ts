@@ -9,11 +9,11 @@ import { filter } from 'rxjs/operators';
 
 import { MapService } from '@geonature_common/map/map.service';
 import { MapListService } from '@geonature_common/map-list/map-list.service';
+import { ConfigService } from '@geonature/services/config.service';
 
 import { Page } from '../shared/page';
 import { DataService } from '../services/data.service';
 import { StoreService } from '../services/store.service';
-import { ModuleConfig } from '../module.config';
 import { UserService } from '../services/user.service';
 
 @Component({
@@ -42,6 +42,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   onDeleteFiltre = new EventEmitter<any>();
 
   constructor(
+    public config: ConfigService,
     public mapService: MapService,
     private api: DataService,
     public storeService: StoreService,
@@ -185,7 +186,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.api
-      .getCommune(ModuleConfig.MODULE_CODE, {
+      .getCommune(this.config['SHT']['MODULE_CODE'], {
         id_area_type: this.storeService.shtConfig.id_type_commune
       })
       .subscribe(info => {
@@ -197,7 +198,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       });
 
-    this.api.getHabitatsList(ModuleConfig.id_bib_list_habitat).subscribe(habs => {
+    this.api.getHabitatsList(this.config['SHT'].id_bib_list_habitat).subscribe(habs => {
       habs.forEach(hab => {
         this.tabHab.push({ label: hab.lb_hab_fr, id: hab.cd_hab });
       });
@@ -279,7 +280,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onInfo(id_base_site) {
-    this.router.navigate([`${ModuleConfig.MODULE_URL}/listVisit`, id_base_site]);
+    this.router.navigate([`${this.config['SHT']['MODULE_URL'].MODULE_URL}/listVisit`, id_base_site]);
   }
 
   private addDeflateFeature() {

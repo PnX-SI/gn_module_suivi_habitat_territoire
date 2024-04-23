@@ -3,14 +3,16 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 
 import { ConfigService } from '@geonature/services/config.service';
-import { ModuleConfig } from '../module.config';
 
 @Injectable()
 export class UserService {
   public currentUser;
   private _cruved = {};
 
-  constructor(private _http: HttpClient, public config: ConfigService) {
+  constructor(
+    private _http: HttpClient,
+    public config: ConfigService,
+  ) {
     this.currentUser = this.getUser();
   }
 
@@ -23,7 +25,7 @@ export class UserService {
   getUserCruved() {
     if (Object.keys(this._cruved).length == 0) {
       return this._http.get<any>(
-        `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/user/cruved`
+        `${this.config.API_ENDPOINT}/${this.config['SHT']['MODULE_URL']}/user/cruved`
       );
     } else {
       //return Observable.create( (ucruved: Observer<string>) => ucruved.next(this._cruved));
