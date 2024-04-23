@@ -1,5 +1,6 @@
 import json
 import datetime
+import os
 
 from flask import Blueprint, request, send_from_directory, g
 from sqlalchemy.sql.expression import func
@@ -543,7 +544,8 @@ def export_visit():
         return to_csv_resp(file_name, visits, csv_header, ";")
     else:
         dir_path = str(ROOT_DIR / "backend/static/shapefiles")
-
+        if not os.path.exists(dir_path):
+            os.mkdir(dir_path)
         FionaShapeService.create_shapes_struct(
             db_cols=ExportVisits.__mapper__.c,
             srid=2154,
