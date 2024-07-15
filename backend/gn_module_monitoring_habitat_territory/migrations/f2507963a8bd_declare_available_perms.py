@@ -5,16 +5,16 @@ Revises: ad6a22b06caf
 Create Date: 2024-03-12 16:10:05.003198
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f2507963a8bd'
-down_revision = 'ad6a22b06caf'
+revision = "f2507963a8bd"
+down_revision = "ad6a22b06caf"
 branch_labels = None
 depends_on = None
-
 
 
 def upgrade():
@@ -37,11 +37,11 @@ def upgrade():
         FROM
             (
                 VALUES
-                     ('SHT', 'ALL', 'C', True, 'Créer des ZP et AP')
-                    ,('SHT', 'ALL', 'R', True, 'Voir les ZP et AP')
-                    ,('SHT', 'ALL', 'U', True, 'Modifier les ZP et AP')
-                    ,('SHT', 'ALL', 'E', True, 'Exporter les ZP et AP')
-                    ,('SHT', 'ALL', 'D', True, 'Supprimer des ZP et AP')
+                     ('SHT', 'ALL', 'C', True, 'Créer des visites')
+                    ,('SHT', 'ALL', 'R', True, 'Voir les visites')
+                    ,('SHT', 'ALL', 'U', True, 'Modifier les visites')
+                    ,('SHT', 'ALL', 'E', True, 'Exporter les visites')
+                    ,('SHT', 'ALL', 'D', True, 'Supprimer des visites')
             ) AS v (module_code, object_code, action_code, scope_filter, label)
         JOIN
             gn_commons.t_modules m ON m.module_code = v.module_code
