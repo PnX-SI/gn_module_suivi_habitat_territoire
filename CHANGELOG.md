@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed Web service `GET /sites` which return now the sites whitout visits.
 - Fixed Web service `PATCH /visits/<int:idv>`. We exclude the current patched visit from visits year check.
+- Fix the module assets path used for URL (PnX-SI/GeoNature#2957)
 
 ## [1.1.0] - 2022-10-22
 
