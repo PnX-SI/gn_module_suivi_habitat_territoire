@@ -280,7 +280,7 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onInfo(id_base_site) {
-    this.router.navigate([`${this.config['SHT']['MODULE_URL'].MODULE_URL}/listVisit`, id_base_site]);
+    this.router.navigate([`${this.config['SHT']['MODULE_URL']}/listVisit`, id_base_site]);
   }
 
   private addDeflateFeature() {
