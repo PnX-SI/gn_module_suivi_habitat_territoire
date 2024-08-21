@@ -288,16 +288,16 @@ export class SiteMapListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.deflateFeatures = (L as any).deflate({
       minSize: 10,
       markerOptions: layer => {
-        let color = this.storeService.getYearColor(layer['feature'].properties);        
+        let color = this.storeService.getYearColor(layer['feature'].properties);
         let iconMarker = {
           icon: new L.Icon({
-            iconUrl: `./assets/sht/marker-icon-2x-${color}.png`,
-            shadowUrl: `./marker-shadow.png`,
+            iconUrl: `./assets/sht/assets/marker-icon-2x-${color}.png`,
+            shadowUrl: `./assets/sht/assets/marker-shadow.png`,
             iconSize: [25, 41],
             iconAnchor: [12, 41],
             popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-          })
+            shadowSize: [41, 41],
+          }),
         };
         return iconMarker;
       }
