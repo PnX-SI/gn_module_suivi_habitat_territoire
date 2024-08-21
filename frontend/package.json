@@ -1,0 +1,8 @@
+{
+  "name": "monitoring_habitat_territory",
+  "version": "1.2.0",
+  "license": "MIT",
+  "dependencies": {
+    "Leaflet.Deflate": "2.1.0"
+  }
+}

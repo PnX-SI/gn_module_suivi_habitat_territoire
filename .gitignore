@@ -11,6 +11,5 @@ conf_gn_module.toml
 module.config.ts
 frontend/node_modules
 frontend/tsconfig.json
-frontend/package.json
 log/
 var/
