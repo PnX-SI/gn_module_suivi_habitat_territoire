@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+        "importHelpers": true,
+        "outDir": "/home/<user>/workspace/geonature/frontend/dist/out-tsc",
+        "sourceMap": true,
+        "declaration": false,
+        "module": "es2015",
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "target": "es5",
+        "typeRoots": [
+            "node_modules/@types",
+            "/home/<user>/workspace/geonature/frontend/src/typings.d.ts"
+        ],
+        "lib": [
+            "es2015",
+            "es2016",
+            "es2017",
+            "dom"
+        ],
+        "baseUrl": "/home/<user>/workspace/geonature/frontend/",
+        "paths": {
+            "@angular/*": [
+                "node_modules/@angular/*"
+            ],
+            "@geonature_common/*": [
+                "src/app/GN2CommonModule/*"
+            ],
+            "@geonature/*": [
+                "src/app/*"
+            ],
+            "@geonature_config/*": [
+                "src/conf/*"
+            ],
+            "@librairies/*": [
+                "node_modules/*"
+            ],
+        }
+    }
+}
