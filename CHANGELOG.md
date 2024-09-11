@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compatibility with GeoNature 2.14
 - Module permissions (CRUVED) declared in alembic branch.
 - Add default creation date (now) in `pr_monitoring_habitat_territory.cor_visit_perturbation`
+- Use new `pyproject.toml` file for installation and requirements instead of `setup.py`
+- Add the example `tsconfig.json` file to use with module development outside the GeoNature directory
 
 ### 🔄 Changed
 
