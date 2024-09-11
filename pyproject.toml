@@ -1,0 +1,81 @@
+[project]
+name = "gn-module-monitoring-habitat-territory"
+description = "GeoNature Monitoring Habitat Territory module for Conservation."
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["conservation", "monitoring", "habitat", "territory"]
+license = {file = "LICENSE"}
+maintainers = [
+    {name = "Conservatoire Botanique National Alpin", email = "geonature@cbn-alpin.fr"},
+    {name = "Parcs national des Écrins", email = "geonature@ecrins-parcnational.fr"},
+]
+authors = [
+    {name = "Amine HAMOUDA", email = "amine_hamouda@natural-solutions.eu"},
+    {name = "Cendrine HOARAU", email = "c.hoarau@cbn-alpin.fr"},
+    {name = "Théo LECHEMIA"},
+    {name = "Jean-Pascal MILCENT", email = "jp.milcent@cbn-alpin.fr"},
+    {name = "Camille MONCHICOURT"},
+    {name = "Nicolas ROUYER"},
+    {name = "Céline VIDAL", email = "celine_vidal@natural-solutions.eu"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: OS Independent",
+]
+urls.homepage = "https://github.com/PnX-SI/gn_module_suivi_habitat_territoire"
+urls.documentation = "https://github.com/PnX-SI/gn_module_suivi_habitat_territoire"
+urls.repository = "https://github.com/PnX-SI/gn_module_suivi_habitat_territoire"
+dynamic = ["version"]
+dependencies = [
+    "gn_conservation_backend_shared>=0.5.2",
+    "geonature>=2.13"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    # Manually install gn_conservation_backend_shared with `pip install -e <path-to-gn-conservation-backend-shared>` if not installed in venv
+]
+prod = [
+    "gn_conservation_backend_shared@git+https://github.com/cbn-alpin/gn_conservation_backend_shared.git@0.5.2",
+]
+
+[project.entry-points.gn_module]
+code = "gn_module_monitoring_habitat_territory:MODULE_CODE"
+picto = "gn_module_monitoring_habitat_territory:MODULE_PICTO"
+blueprint = "gn_module_monitoring_habitat_territory.blueprint:blueprint"
+config_schema = "gn_module_monitoring_habitat_territory.conf_schema_toml:GnModuleSchemaConf"
+migrations = "gn_module_monitoring_habitat_territory:migrations"
+alembic_branch = "gn_module_monitoring_habitat_territory:MODULE_DB_BRANCH"
+
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["setuptools>=60.0.0", "wheel"]  # PEP 508 specifications.
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+include = ["gn_module_monitoring_habitat_territory*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"gn_module_monitoring_habitat_station.migrations.data" = ["*.sql", "*.csv"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "backend",
+]
+
+[tool.distutils.bdist_wheel]
+universal = true
+
+[tool.black]
+line-length = 100
