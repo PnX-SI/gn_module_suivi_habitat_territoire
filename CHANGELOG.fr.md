@@ -30,6 +30,7 @@ et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Correction du service Web `GET /sites` qui renvoie désormais les sites sans visites.
 - Correction du service Web `PATCH /visits/<int:idv>`. Nous excluons la visite corrigée actuelle de la vérification de l'année des visites.
 - Correction du chemin des assets du module utilisé pour l'URL (PnX-SI/GeoNature#2957)
+- Réduction de la durée de chargement de la liste des sites sur la page d'accueil.
 
 
 ## [1.1.0] - 2022-10-22
