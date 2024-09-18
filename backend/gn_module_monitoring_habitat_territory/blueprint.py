@@ -109,6 +109,7 @@ def get_all_sites():
     # Get sites from visits
     query = (
         select(TBaseSites.id_base_site)
+        .distinct()
         .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
         .join(Habref, TInfosSite.cd_hab == Habref.cd_hab)
         .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
@@ -116,7 +117,6 @@ def get_all_sites():
         .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
         .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TBaseSites.id_base_site)
     )
-
     if "id_base_site" in parameters:
         query = query.where(TBaseSites.id_base_site == parameters["id_base_site"])
 
@@ -133,8 +133,7 @@ def get_all_sites():
         query = query.where(
             func.date_part("year", TBaseVisits.visit_date_min) == parameters["year"]
         )
-
-    sites_ids = DB.session.scalars(query).unique().all()
+    sites_ids = DB.session.scalars(query).all()
 
     # Get sites infos
     query = (
@@ -165,8 +164,11 @@ def get_all_sites():
     page = request.args.get("page", 0, type=int)
     items_per_page = blueprint.config["items_per_page"]
     total_items = DB.session.scalar(select(func.count("*")).select_from(query))
+
     # we can't use DB.paginate() here because it use a .scalars() which return only the first item of the select
-    results = DB.session.execute(query.limit(items_per_page).offset(page * items_per_page)).unique().all()
+    limited_query = query.limit(items_per_page).offset(page * items_per_page)
+    results = DB.session.execute(limited_query).unique().all()
+
     # Build output
     pageInfo = {
         "totalItems": total_items,
@@ -227,7 +229,6 @@ def get_years_visits():
     )
     data = DB.session.scalars(query).all()
     return data
-
 
 
 @blueprint.route("/visits/<id_visit>", methods=["GET"])
@@ -293,7 +294,7 @@ def post_visit():
         nomenclatures = DB.session.scalars(select(TNomenclatures).where(
             TNomenclatures.id_nomenclature.in_(list_id_nomenc)
         ))
-        for nomenc in nomenclatures:  
+        for nomenc in nomenclatures:
             visit.perturbations.append(nomenc)
 
     # Add taxons
@@ -354,7 +355,7 @@ def patch_visit(idv, scope):
         ))
         # clean perturbations
         visit.perturbations = []
-        for nomenc in nomenclatures:  
+        for nomenc in nomenclatures:
             visit.perturbations.append(nomenc)
 
     delete_cor_visit_taxons = delete(CorVisitTaxon).where(CorVisitTaxon.id_base_visit == idv)
