@@ -328,12 +328,6 @@ def patch_visit(idv, scope):
     existingVisit = DB.get_or_404(TVisitSHT, idv)
     if not existingVisit.has_instance_permission(scope):
         raise Forbidden("You don't have the permissison to edit this Visit")
-    existingVisit = existingVisit.as_dict()
-    dateIsUp = data["visit_date_min"] != existingVisit["visit_date_min"]
-
-    if dateIsUp:
-        if TInfosSite.has_already_visit_in_year(data["id_base_site"], data["visit_date_min"][0:4]):
-            raise BadRequest(f"A visit already exist for year {data['visit_date_min'][0:4]} ")
 
     tab_visit_taxons = []
     tab_observer = []
