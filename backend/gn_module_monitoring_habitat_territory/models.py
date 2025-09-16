@@ -63,7 +63,7 @@ class VisitAuthMixin(object):
 
     def user_is_in_organism_of_visit(self, user):
         for obs in self.observers:
-            if obs.id_organisme == user.id_organism:
+            if obs.id_organisme == user.id_organisme:
                 return True
         return False
     
