@@ -4,7 +4,8 @@ description = "GeoNature Monitoring Habitat Territory module for Conservation."
 readme = "README.md"
 requires-python = ">=3.11"
 keywords = ["conservation", "monitoring", "habitat", "territory"]
-license = {file = "LICENSE"}
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 maintainers = [
     {name = "Conservatoire Botanique National Alpin", email = "geonature@cbn-alpin.fr"},
     {name = "Parcs national des Écrins", email = "geonature@ecrins-parcnational.fr"},
@@ -23,7 +24,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: OS Independent",
 ]
 urls.homepage = "https://github.com/PnX-SI/gn_module_suivi_habitat_territoire"
@@ -54,7 +54,7 @@ alembic_branch = "gn_module_monitoring_habitat_territory:MODULE_DB_BRANCH"
 
 [build-system]
 # Minimum requirements for the build system to execute.
-requires = ["setuptools>=60.0.0", "wheel"]  # PEP 508 specifications.
+requires = ["setuptools>=77.0.0", "wheel"]  # PEP 508 specifications.
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
@@ -73,9 +73,6 @@ minversion = "6.0"
 testpaths = [
     "backend",
 ]
-
-[tool.distutils.bdist_wheel]
-universal = true
 
 [tool.black]
 line-length = 100

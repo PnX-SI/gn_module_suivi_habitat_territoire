@@ -21,9 +21,9 @@ from utils_flask_sqla_geo.utilsgeometry  import FionaShapeService
 from geonature.core.gn_permissions import decorators as permissions
 from geonature.core.gn_permissions.tools import get_scopes_by_action
 from geonature.core.gn_monitoring.models import (
-    corVisitObserver,
-    corSiteArea,
-    corSiteModule,
+    CorVisitObserver,
+    cor_site_area,
+    cor_site_module,
     TBaseVisits,
     TBaseSites,
 )
@@ -113,9 +113,9 @@ def get_all_sites():
         .join(TInfosSite, TInfosSite.id_base_site == TBaseSites.id_base_site)
         .join(Habref, TInfosSite.cd_hab == Habref.cd_hab)
         .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TBaseSites.id_base_site)
-        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
-        .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TBaseSites.id_base_site)
+        .outerjoin(CorVisitObserver.__table__, CorVisitObserver.__table__.c.id_base_visit == TBaseVisits.id_base_visit)
+        .outerjoin(User, User.id_role == CorVisitObserver.__table__.c.id_role)
+        .outerjoin(cor_site_area, cor_site_area.c.id_base_site == TBaseSites.id_base_site)
     )
     if "id_base_site" in parameters:
         query = query.where(TBaseSites.id_base_site == parameters["id_base_site"])
@@ -127,7 +127,7 @@ def get_all_sites():
         query = query.where(User.id_organisme == parameters["organisme"])
 
     if "commune" in parameters:
-        query = query.where(corSiteArea.c.id_area == parameters["commune"])
+        query = query.where(cor_site_area.c.id_area == parameters["commune"])
 
     if "year" in parameters:
         query = query.where(
@@ -151,12 +151,12 @@ def get_all_sites():
         .where(LAreas.area_name != None)
         .outerjoin(TBaseVisits, TBaseVisits.id_base_site == TInfosSite.id_base_site)
         .join(Habref, Habref.cd_hab == TInfosSite.cd_hab)
-        .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-        .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+        .outerjoin(CorVisitObserver.__table__, CorVisitObserver.__table__.c.id_base_visit == TBaseVisits.id_base_visit)
+        .outerjoin(User, User.id_role == CorVisitObserver.__table__.c.id_role)
         .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
-        .outerjoin(corSiteArea, corSiteArea.c.id_base_site == TInfosSite.id_base_site)
+        .outerjoin(cor_site_area, cor_site_area.c.id_base_site == TInfosSite.id_base_site)
         .outerjoin(
-            LAreas, and_(LAreas.id_area == corSiteArea.c.id_area, LAreas.id_type == id_type_commune)
+            LAreas, and_(LAreas.id_area == cor_site_area.c.id_area, LAreas.id_type == id_type_commune)
         )
         .group_by(TInfosSite.id_infos_site, TBaseSites.id_base_site, Habref.lb_hab_fr)
     )
@@ -381,8 +381,8 @@ def get_organisme():
         select(
             Organisme.nom_organisme, User.nom_role, User.prenom_role, User.id_organisme
         ).outerjoin(User, Organisme.id_organisme == User.id_organisme)
-        .join(corVisitObserver, User.id_role == corVisitObserver.c.id_role)
-        .join(TVisitSHT, corVisitObserver.c.id_base_visit == TVisitSHT.id_base_visit)
+        .join(CorVisitObserver.__table__, User.id_role == CorVisitObserver.__table__.c.id_role)
+        .join(TVisitSHT, CorVisitObserver.__table__.c.id_base_visit == TVisitSHT.id_base_visit)
     )
 
     data = q.unique().all()
@@ -409,9 +409,9 @@ def get_commune(module_code):
     q = select(
         LAreas.id_area, LAreas.area_name) \
     .distinct() \
-    .join(corSiteArea, LAreas.id_area == corSiteArea.c.id_area) \
-    .join(corSiteModule, corSiteModule.c.id_base_site == corSiteArea.c.id_base_site) \
-    .join(TModules, TModules.id_module == corSiteModule.c.id_module) \
+    .join(cor_site_area, LAreas.id_area == cor_site_area.c.id_area) \
+    .join(cor_site_module, cor_site_module.c.id_base_site == cor_site_area.c.id_base_site) \
+    .join(TModules, TModules.id_module == cor_site_module.c.id_module) \
     .where(TModules.module_code == module_code) \
     .order_by(LAreas.area_name)
 
@@ -466,16 +466,16 @@ def export_visit():
     if "organisme" in parameters:
         query = (
             query.join(
-                corVisitObserver, corVisitObserver.c.id_base_visit == ExportVisits.id_base_visit
+                CorVisitObserver.__table__, CorVisitObserver.__table__.c.id_base_visit == ExportVisits.id_base_visit
             )
-            .join(User, User.id_role == corVisitObserver.c.id_role)
+            .join(User, User.id_role == CorVisitObserver.__table__.c.id_role)
             .where(User.id_organisme == parameters["organisme"])
         )
 
     if "commune" in parameters:
         query = query.join(
-            corSiteArea, corSiteArea.c.id_base_site == ExportVisits.id_base_site
-        ).where(corSiteArea.c.id_area == parameters["commune"])
+            cor_site_area, cor_site_area.c.id_base_site == ExportVisits.id_base_site
+        ).where(cor_site_area.c.id_area == parameters["commune"])
 
     if "year" in parameters:
         query = query.where(func.date_part("year", ExportVisits.visit_date) == parameters["year"])
