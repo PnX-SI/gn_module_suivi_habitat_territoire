@@ -14,7 +14,7 @@ from utils_flask_sqla.generic import GenericQuery
 from utils_flask_sqla_geo.serializers import geoserializable, shapeserializable
 from geonature.utils.env import DB
 
-from geonature.core.gn_monitoring.models import TBaseSites, TBaseVisits, corVisitObserver
+from geonature.core.gn_monitoring.models import TBaseSites, TBaseVisits
 
 from pypnnomenclature.models import TNomenclatures
 
